@@ -371,7 +371,7 @@ export default function App() {
   };
 
   const nextRound = () => {
-    if (playedCardIds.length >= 10) { // Đã đánh 11 lá (0 đến 10 là 11 lá, check sau khi cộng)
+    if (playedCardIds.length >= 11) { // Đã đánh 11 lá (0 đến 11 là 11 lá, check sau khi cộng)
       // Trận đấu kết thúc -> Tính thưởng
       let reward = 10;
       if (matchScore.player > matchScore.ai) reward = 50;
@@ -898,10 +898,27 @@ export default function App() {
                 <div className="fixed inset-0 z-[90] flex flex-col items-center justify-center pointer-events-none p-4">
                   <div className="text-2xl sm:text-4xl font-black uppercase tracking-widest text-center text-white drop-shadow-[0_0_30px_rgba(255,255,255,1)] bg-black/60 backdrop-blur-md px-8 sm:px-12 py-6 rounded-3xl border border-white/20 animate-fade-in shadow-2xl flex flex-col items-center gap-2 pointer-events-auto">
                     {roundResultMsg}
+                    {playedCardIds.length >= 11 && (
+                      <button
+                        className="mt-6 px-8 py-3 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 font-black tracking-widest uppercase rounded-full shadow-[0_0_30px_rgba(251,191,36,0.5)] transition-all hover:scale-105 pointer-events-auto cursor-pointer"
+                        onClick={() => {
+                          playFx('click');
+                          nextRound();
+                        }}
+                      >
+                        Xem Kết Quả Trận Đấu 🏆
+                      </button>
+                    )}
                   </div>
-                  <div className="mt-8 text-amber-400 text-[10px] sm:text-xs font-bold tracking-widest uppercase animate-pulse bg-black/50 px-6 py-2 rounded-full border border-amber-400/30">
-                     Chạm vào thẻ bất kỳ trên sân 3D để chơi tiếp
-                  </div>
+                  {playedCardIds.length < 11 ? (
+                    <div className="mt-8 text-amber-400 text-[10px] sm:text-xs font-bold tracking-widest uppercase animate-pulse bg-black/50 px-6 py-2 rounded-full border border-amber-400/30">
+                       Chạm vào thẻ bất kỳ trên sân 3D để chơi tiếp
+                    </div>
+                  ) : (
+                    <div className="mt-8 text-green-400 text-[10px] sm:text-xs font-bold tracking-widest uppercase animate-pulse bg-black/50 px-6 py-2 rounded-full border border-green-400/30">
+                       Nhấp nút phía trên để kết thúc trận đấu
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -963,7 +980,7 @@ export default function App() {
                                 if (matchPhase === 'playing') {
                                   setSelectedPlayerCard(player);
                                 } else if (matchPhase === 'roundResult') {
-                                  if (playedCardIds.length >= 10) {
+                                  if (playedCardIds.length >= 11) {
                                     nextRound(); // Xử lý GameOver
                                   } else {
                                     setMatchPhase('playing');
