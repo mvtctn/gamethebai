@@ -533,7 +533,69 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
         <div className="flex-1 flex flex-col overflow-hidden">
 
           {/* SÂN ĐẤU */}
-          <div className="flex-1 relative flex flex-col md:flex-row-reverse items-center justify-center p-4 gap-6 md:gap-16 lg:gap-24 xl:gap-32 overflow-hidden" style={{ minHeight: 0 }}>
+          <div className="stadium-battlefield animate-fade-in" style={{ minHeight: 0 }}>
+            <style>{`
+              .stadium-battlefield {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 1.5rem;
+                position: relative;
+                flex: 1 1 0%;
+                overflow: hidden;
+                width: 100%;
+                padding: 1rem;
+              }
+
+              /* MÀN HÌNH CHỮ NHẬT / DESKTOP (Chiều rộng lớn hơn chiều cao) */
+              @media (min-aspect-ratio: 1.1/1) and (min-width: 640px) {
+                .stadium-battlefield {
+                  flex-direction: row-reverse !important;
+                  gap: 8vw !important;
+                  padding-left: 2rem !important;
+                  padding-right: 2rem !important;
+                }
+                .stadium-card-wrapper {
+                  flex: none !important;
+                  align-items: center !important;
+                  padding: 0 !important;
+                }
+                .stadium-separator-h {
+                  display: none !important;
+                }
+                .stadium-separator-v {
+                  display: block !important;
+                }
+              }
+
+              /* MÀN HÌNH DỌC / ĐIỆN THOẠI (Chiều cao lớn hơn chiều rộng) */
+              @media (max-aspect-ratio: 1.1/1), (max-width: 639px) {
+                .stadium-battlefield {
+                  flex-direction: column !important;
+                  gap: 1rem !important;
+                }
+                .stadium-card-wrapper {
+                  flex: 1 1 0% !important;
+                }
+                .stadium-card-wrapper-opp {
+                  align-items: flex-start !important;
+                  padding-top: 1.5rem !important;
+                  padding-bottom: 0 !important;
+                }
+                .stadium-card-wrapper-my {
+                  align-items: flex-end !important;
+                  padding-bottom: 1.5rem !important;
+                  padding-top: 0 !important;
+                }
+                .stadium-separator-h {
+                  display: block !important;
+                }
+                .stadium-separator-v {
+                  display: none !important;
+                }
+              }
+            `}</style>
 
             {/* Battle Overlay for Effects */}
             {phase === 'result' && (
@@ -544,11 +606,11 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
             )}
 
             {/* Đường phân cách giữa sân (Ngang trên Mobile, Dọc trên Desktop) */}
-            <div className="absolute top-1/2 left-8 right-8 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none z-10 md:hidden" />
-            <div className="absolute left-1/2 top-12 bottom-12 w-px bg-gradient-to-b from-transparent via-white/15 to-transparent pointer-events-none z-10 hidden md:block" />
+            <div className="stadium-separator-h absolute top-1/2 left-8 right-8 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none z-10" />
+            <div className="stadium-separator-v absolute left-1/2 top-12 bottom-12 w-px bg-gradient-to-b from-transparent via-white/15 to-transparent pointer-events-none z-10" />
 
             {/* Khu vực đối thủ — bên phải trên Desktop, bên trên trên Mobile */}
-            <div className="flex-1 md:flex-none flex items-start md:items-center justify-center pt-3 sm:pt-5 md:pt-0 z-10">
+            <div className="stadium-card-wrapper stadium-card-wrapper-opp flex justify-center z-10">
               <div className="w-28 sm:w-40 md:w-56 lg:w-64 xl:w-72 aspect-[5/7] transition-all duration-300">
                 {opponentPlayedCard ? (
                   phase === 'result' ? (
@@ -572,7 +634,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
             </div>
 
             {/* Khu vực của tôi — bên trái trên Desktop, bên dưới trên Mobile */}
-            <div className="flex-1 md:flex-none flex items-end md:items-center justify-center pb-3 sm:pb-5 md:pb-0 z-10">
+            <div className="stadium-card-wrapper stadium-card-wrapper-my flex justify-center z-10">
               <div className="relative">
                 <div className="w-28 sm:w-40 md:w-56 lg:w-64 xl:w-72 aspect-[5/7] transition-all duration-300">
                   {myPlayedCard ? (
