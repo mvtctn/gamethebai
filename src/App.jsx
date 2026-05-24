@@ -481,9 +481,9 @@ export default function App() {
           <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_transparent_0%,_rgba(0,0,0,0.8)_100%)] z-50 mix-blend-overlay"></div>
           <div className="fixed inset-0 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 z-50"></div>
           
-          {/* Copyright Header */}
-          <div className="absolute top-4 left-4 z-50 hidden sm:flex items-center gap-2 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg animate-fade-in pointer-events-none">
-            <span className="text-xs font-bold text-gray-300 whitespace-nowrap">
+          {/* Copyright Footer */}
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-1 rounded-full pointer-events-none opacity-50 hover:opacity-100 transition-opacity">
+            <span className="text-[10px] sm:text-xs font-bold text-gray-400 whitespace-nowrap drop-shadow-md">
               Tác giả: <span className="text-blue-400">Mai Quang Vinh</span> - Tiểu học Nghĩa Tân - Vibecoding với Antigravity
             </span>
           </div>

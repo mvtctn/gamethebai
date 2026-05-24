@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Peer } from 'peerjs';
 import { Swords, Shield, Copy, CheckCircle2, ChevronLeft, Wifi, User, Play, AlertCircle } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { Card } from './App'; // Assuming Card is exported from App.jsx, I need to make sure of that! Or I can recreate/extract it.
 
 // LƯU Ý: File này cần được App.jsx import và truyền Card component vào hoặc Card phải được tách ra.
@@ -34,45 +35,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     stateRef.current = { myPlayedCard, currentChallenge, myDeck };
   }, [myPlayedCard, currentChallenge, myDeck]);
 
-  useEffect(() => {
-    // Tạo Peer ID dựa trên tên người dùng (thêm prefix để tránh trùng lặp trên server public toàn cầu)
-    const normalizedUsername = currentUser.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const myHostId = `wc26-panini-${normalizedUsername}`;
-    
-    // Initialize Peer
-    const peer = new Peer(myHostId);
-    
-    peer.on('open', (id) => {
-      setPeerId(currentUser); // Chỉ hiện thị tên cho user dễ hiểu
-    });
-
-    peer.on('connection', (conn) => {
-      // Nhận kết nối từ người khác (Mình là Host)
-      setConnection(conn);
-      setStatus('playing');
-      setIsMyTurn(true); // Host đi trước
-      setupConnectionHandlers(conn, true);
-    });
-
-    peer.on('error', (err) => {
-      console.error(err);
-      if (err.type === 'unavailable-id') {
-         alert("Tên của bạn đang được ai đó sử dụng để làm máy chủ! Vui lòng đổi tên đăng nhập khác.");
-      } else if (err.type === 'peer-unavailable') {
-         alert("Không tìm thấy đối thủ hoặc đối thủ chưa sẵn sàng! Vui lòng kiểm tra lại link/tên hoặc chờ đối thủ tạo phòng.");
-      } else {
-         alert("Lỗi kết nối mạng: " + err.type);
-      }
-      setStatus('lobby');
-    });
-
-    peerInstance.current = peer;
-
-    return () => {
-      peer.destroy();
-    };
-  }, []);
-
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   function setupConnectionHandlers(conn, isHost) {
     conn.on('data', (data) => {
       handleNetworkData(data, isHost);
@@ -83,6 +46,68 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       onExit();
     });
   }
+
+  useEffect(() => {
+    let peer = null;
+
+    const initPeer = (attempt = 0) => {
+      const normalizedUsername = currentUser.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const myHostId = attempt === 0 
+        ? `wc26-panini-${normalizedUsername}` 
+        : `wc26-panini-${normalizedUsername}-${Math.floor(Math.random() * 10000)}`;
+      
+      peer = new Peer(myHostId);
+      
+      peer.on('open', (id) => {
+        setPeerId(attempt === 0 ? currentUser : `${currentUser} (Tạm)`);
+        
+        // Tự động kết nối nếu vào từ link
+        if (initialJoinId && initialJoinId !== currentUser) {
+          const normalizedOpponent = initialJoinId.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+          const targetHostId = `wc26-panini-${normalizedOpponent}`;
+          setStatus('connecting');
+          const conn = peer.connect(targetHostId);
+          conn.on('open', () => {
+            setConnection(conn);
+            setStatus('playing');
+            setIsMyTurn(false);
+            setupConnectionHandlers(conn, false);
+          });
+        }
+      });
+
+      peer.on('connection', (conn) => {
+        setConnection(conn);
+        setStatus('playing');
+        setIsMyTurn(true); // Host đi trước
+        setupConnectionHandlers(conn, true);
+      });
+
+      peer.on('error', (err) => {
+        console.error(err);
+        if (err.type === 'unavailable-id' && attempt === 0) {
+           // Lỗi trùng ID do F5 chưa kịp nhả kết nối cũ -> Thử lại với ID ngẫu nhiên
+           if (peer) peer.destroy();
+           initPeer(1);
+        } else if (err.type === 'peer-unavailable') {
+           alert("Không tìm thấy đối thủ hoặc đối thủ chưa sẵn sàng! Vui lòng kiểm tra lại link/tên hoặc chờ đối thủ tạo phòng.");
+           setStatus('lobby');
+        } else {
+           alert("Lỗi kết nối mạng: " + err.type);
+           setStatus('lobby');
+        }
+      });
+
+      peerInstance.current = peer;
+    };
+
+    initPeer(0);
+
+    return () => {
+      if (peer) peer.destroy();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const connectToPeer = () => {
     const targetId = remotePeerId;
@@ -102,7 +127,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     });
   };
 
-  const handleNetworkData = (data, isHost) => {
+  function handleNetworkData(data, isHost) {
     if (data.type === 'challenge') {
       // Đối thủ ra bài và thách đấu chỉ số
       setOpponentPlayedCard(data.card);
@@ -143,9 +168,9 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
         }
       }, 3000);
     }
-  };
+  }
 
-  const handleCardSelect = (card) => {
+  function handleCardSelect(card) {
     if (!isMyTurn) return;
     if (currentChallenge) {
       // Đang phòng thủ
@@ -154,10 +179,10 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       // Đang tấn công, phải chờ chọn chỉ số
       setMyPlayedCard(card);
     }
-  };
+  }
 
-  const handleStatSelect = (stat) => {
-    if (!myPlayedCard || !isMyTurn || currentChallenge) return;
+  function handleStatSelect(stat) {
+    if (!stateRef.current.myPlayedCard || !isMyTurn || stateRef.current.currentChallenge) return;
     
     // Gửi yêu cầu thách đấu
     connection.send({
@@ -170,9 +195,9 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     setCurrentChallenge(stat);
     setIsMyTurn(false);
     setRoundResult(`Đang chờ đối thủ đỡ đòn ${stat.toUpperCase()}...`);
-  };
+  }
 
-  const playDefense = (defenseCard) => {
+  function playDefense(defenseCard) {
     setMyPlayedCard(defenseCard);
     setMyDeck(myDeck.filter(c => c.id !== defenseCard.id));
     
@@ -184,9 +209,9 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     
     setIsMyTurn(false);
     setRoundResult("Đang phân định thắng thua...");
-  };
+  }
 
-  const resolveRound = (hostCard, joinerCard, stat, isHostContext) => {
+  function resolveRound(hostCard, joinerCard, stat, isHostContext) {
     const hostStat = hostCard.stats[stat];
     const joinerStat = joinerCard.stats[stat];
     
@@ -265,16 +290,28 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
             </div>
 
             {peerId && (
-              <button 
-                className="btn !bg-green-600 hover:!bg-green-500 mt-6 flex justify-center items-center gap-2 w-full max-w-[200px]"
-                onClick={() => {
-                  const link = `${window.location.origin}?pvp=${peerId}`;
-                  navigator.clipboard.writeText(link);
-                  alert("Đã copy link mời! Hãy gửi cho bạn bè để họ vào thi đấu ngay.");
-                }}
-              >
-                <Copy size={18} /> Sao Chép Link
-              </button>
+              <div className="mt-6 flex flex-col items-center gap-4 w-full">
+                <div className="bg-white p-2 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                  <QRCodeSVG 
+                    value={`${window.location.origin}?pvp=${peerId.replace(' (Tạm)', '')}`} 
+                    size={120} 
+                    bgColor={"#ffffff"}
+                    fgColor={"#000000"}
+                    level={"L"}
+                    includeMargin={false}
+                  />
+                </div>
+                <button 
+                  className="btn !bg-green-600 hover:!bg-green-500 flex justify-center items-center gap-2 w-full max-w-[200px]"
+                  onClick={() => {
+                    const link = `${window.location.origin}?pvp=${peerId.replace(' (Tạm)', '')}`;
+                    navigator.clipboard.writeText(link);
+                    alert("Đã copy link mời! Hãy gửi cho bạn bè để họ vào thi đấu ngay.");
+                  }}
+                >
+                  <Copy size={18} /> Sao Chép Link
+                </button>
+              </div>
             )}
           </div>
 
