@@ -18,6 +18,59 @@ const PITCH_POSITIONS = [
   { top: '20%', left: '75%' }, // RW
 ];
 
+const playFx = (type) => {
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    const now = audioCtx.currentTime;
+
+    if (type === 'click') {
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(800, now);
+      oscillator.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+      gainNode.gain.setValueAtTime(0.1, now);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+      oscillator.start(now);
+      oscillator.stop(now + 0.1);
+    } else if (type === 'winPoint') {
+      oscillator.type = 'triangle';
+      oscillator.frequency.setValueAtTime(400, now);
+      oscillator.frequency.setValueAtTime(600, now + 0.1);
+      oscillator.frequency.setValueAtTime(800, now + 0.2);
+      gainNode.gain.setValueAtTime(0.1, now);
+      gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
+      oscillator.start(now);
+      oscillator.stop(now + 0.3);
+      new Audio('https://actions.google.com/sounds/v1/crowds/crowd_cheer.ogg').play().catch(()=>{});
+    } else if (type === 'losePoint') {
+      oscillator.type = 'sawtooth';
+      oscillator.frequency.setValueAtTime(300, now);
+      oscillator.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+      gainNode.gain.setValueAtTime(0.1, now);
+      gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
+      oscillator.start(now);
+      oscillator.stop(now + 0.3);
+      new Audio('https://actions.google.com/sounds/v1/weather/thunder_crack.ogg').play().catch(()=>{});
+    } else if (type === 'winGame') {
+      oscillator.type = 'square';
+      oscillator.frequency.setValueAtTime(440, now);
+      oscillator.frequency.setValueAtTime(554, now + 0.2);
+      oscillator.frequency.setValueAtTime(659, now + 0.4);
+      oscillator.frequency.setValueAtTime(880, now + 0.6);
+      gainNode.gain.setValueAtTime(0.1, now);
+      gainNode.gain.linearRampToValueAtTime(0, now + 1.0);
+      oscillator.start(now);
+      oscillator.stop(now + 1.0);
+      confetti({ particleCount: 300, spread: 100, origin: { y: 0.6 } });
+    }
+  } catch (e) {
+    console.error('Audio play error:', e);
+  }
+};
+
 // --- Card Component ---
 export const Card = ({ player, onClick, isSelectable, isSelected, hideStats }) => {
   if (!player) return null;
@@ -330,6 +383,26 @@ export default function App() {
       setMatchPhase('playing');
     }
   };
+
+  useEffect(() => {
+    if (matchPhase === 'roundResult') {
+      if (roundResultMsg.includes('THẮNG')) {
+        playFx('winPoint');
+        confetti({
+          particleCount: 150,
+          spread: 80,
+          origin: { y: 0.6 },
+          colors: ['#22c55e', '#3b82f6', '#fbbf24']
+        });
+      } else if (roundResultMsg.includes('THUA')) {
+        playFx('losePoint');
+      }
+    } else if (matchPhase === 'gameOver') {
+      if (matchScore.player > matchScore.ai) {
+        playFx('winGame');
+      }
+    }
+  }, [matchPhase, roundResultMsg, matchScore.player, matchScore.ai]);
 
   const returnToLobby = () => {
     setGameState('lobby');
@@ -784,6 +857,7 @@ export default function App() {
                             style={{ top: pos.top, left: pos.left, zIndex: Math.round(parseFloat(pos.top)) }}
                             onClick={() => {
                               if (!isPlayed) {
+                                playFx('click');
                                 if (matchPhase === 'playing') {
                                   setSelectedPlayerCard(player);
                                 } else if (matchPhase === 'roundResult') {
