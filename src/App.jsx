@@ -171,6 +171,10 @@ export default function App() {
     return 'lobby';
   }); // 'lobby', 'packOpening', 'teamBuilder', 'matchEngine', 'quests', 'multiplayer'
   
+  const [activePvpTarget, setActivePvpTarget] = useState(pvpTarget);
+  const [showPvpJoinModal, setShowPvpJoinModal] = useState(false);
+  const [pvpJoinInput, setPvpJoinInput] = useState('');
+
   // Auth State
   const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
   const [authUsername, setAuthUsername] = useState("");
@@ -588,7 +592,11 @@ export default function App() {
                       <p className="text-gray-300 text-center font-medium text-sm">Đấu với Máy nhận phần thưởng.</p>
                     </button>
 
-                    <button className={`glass-menu-card p-8 rounded-3xl flex flex-col items-center group cursor-pointer ${squad.length < 11 ? 'opacity-50 grayscale' : ''}`} onClick={() => squad.length === 11 && setGameState('multiplayer')}>
+                    <button className={`glass-menu-card p-8 rounded-3xl flex flex-col items-center group cursor-pointer ${squad.length < 11 ? 'opacity-50 grayscale' : ''}`} onClick={() => {
+                        if (squad.length === 11) {
+                          setShowPvpJoinModal(true);
+                        }
+                      }}>
                       <div className="relative mb-4">
                         <Wifi size={64} className="text-red-400 group-hover:scale-110 transition-transform duration-300 drop-shadow-[0_0_20px_rgba(248,113,113,0.6)]" />
                         <span className="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded-full animate-pulse">HOT</span>
@@ -597,6 +605,48 @@ export default function App() {
                       <p className="text-gray-300 text-center font-medium text-sm">Đấu với bạn bè qua mạng.</p>
                     </button>
                   </div>
+
+                  {/* PVP Join Modal */}
+                  {showPvpJoinModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+                      <div className="glass-panel p-8 sm:p-10 rounded-[2rem] max-w-sm w-full flex flex-col items-center bg-gradient-to-t from-red-900/40 to-slate-900 shadow-[0_0_50px_rgba(0,0,0,0.8)] relative border border-white/10">
+                        <button 
+                          className="absolute top-4 right-4 text-gray-400 hover:text-white bg-black/40 hover:bg-black/80 p-2 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
+                          onClick={() => setShowPvpJoinModal(false)}
+                        >
+                          ✕
+                        </button>
+                        <Wifi size={48} className="text-red-400 mb-6 drop-shadow-[0_0_15px_rgba(248,113,113,0.8)]" />
+                        <h2 className="text-2xl font-black text-white mb-2 uppercase tracking-widest text-center">Đấu PVP</h2>
+                        <p className="text-sm text-gray-400 text-center mb-6">Tạo trận mới hoặc nhập mã để tham gia trận của bạn bè.</p>
+                        
+                        <input 
+                          type="text"
+                          className="w-full bg-black/50 border border-white/20 rounded-xl p-3 text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 mb-4 text-center font-mono text-lg"
+                          placeholder="Nhập mã trận đấu..."
+                          value={pvpJoinInput}
+                          onChange={(e) => setPvpJoinInput(e.target.value)}
+                        />
+                        
+                        <div className="flex flex-col gap-3 w-full">
+                          <button 
+                            className="btn !bg-red-600 hover:!bg-red-500 w-full"
+                            onClick={() => {
+                              if (pvpJoinInput.trim()) {
+                                setActivePvpTarget(pvpJoinInput.trim());
+                              } else {
+                                setActivePvpTarget(null); // Tạo trận mới
+                              }
+                              setGameState('multiplayer');
+                              setShowPvpJoinModal(false);
+                            }}
+                          >
+                            {pvpJoinInput.trim() ? 'Tham Gia Trận' : 'Tạo Trận Mới'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Quests Quick Button */}
                   <div className="mt-12 mb-8">
@@ -612,7 +662,7 @@ export default function App() {
         <MultiplayerEngine 
           squad={squad} 
           currentUser={currentUser} 
-          initialJoinId={pvpTarget}
+          initialJoinId={activePvpTarget}
           CardComponent={Card}
           onExit={() => setGameState('lobby')}
           onWin={() => {

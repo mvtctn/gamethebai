@@ -914,13 +914,22 @@ h2 {
 .landing-tab-btn {
   flex: 1;
   padding-bottom: 0.5rem;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 0.85rem;
   border-bottom: 3px solid;
   transition: all 0.3s;
   background: transparent;
   cursor: pointer;
   outline: none;
+  white-space: nowrap;
+}
+
+@media (min-width: 400px) {
+  .landing-tab-btn {
+    font-size: 0.95rem;
+  }
 }
 
 .landing-tab-btn.active {
