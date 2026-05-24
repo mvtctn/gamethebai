@@ -146,26 +146,42 @@ export const Card = ({ player, onClick, isSelectable, isSelected, hideStats }) =
 export default function App() {
   const currentUser = localStorage.getItem('panini_currentUser');
 
-  // Load state directly based on currentUser prefix
-  const [collection, setCollection] = useState(() => JSON.parse(localStorage.getItem(`panini_${currentUser}_collection`)) || []);
-  const [squad, setSquad] = useState(() => JSON.parse(localStorage.getItem(`panini_${currentUser}_squad`)) || []);
+  // Load state directly based on currentUser prefix with fallback to starter deck for new users
+  const [collection, setCollection] = useState(() => {
+    if (!currentUser) return [];
+    const saved = localStorage.getItem(`panini_${currentUser}_collection`);
+    if (saved) return JSON.parse(saved);
+    // Starter pack for new users: 11 Base players
+    return playersData.filter(p => p.type === 'Base').slice(0, 11);
+  });
+
+  const [squad, setSquad] = useState(() => {
+    if (!currentUser) return [];
+    const saved = localStorage.getItem(`panini_${currentUser}_squad`);
+    if (saved) return JSON.parse(saved);
+    // Starter squad for new users: 11 Base players
+    return playersData.filter(p => p.type === 'Base').slice(0, 11);
+  });
+
   const [coins, setCoins] = useState(() => {
+    if (!currentUser) return 200;
     const saved = localStorage.getItem(`panini_${currentUser}_coins`);
     return saved !== null ? parseInt(saved) : 200; // Starting coins
   });
-  const [completedQuests, setCompletedQuests] = useState(() => JSON.parse(localStorage.getItem(`panini_${currentUser}_quests`)) || []);
-  
+
   const urlParams = new URLSearchParams(window.location.search);
   const pvpTarget = urlParams.get('pvp');
 
   const [gameState, setGameState] = useState(() => {
     const currentUser = localStorage.getItem('panini_currentUser');
     if (currentUser && pvpTarget) {
-      const storedSquad = JSON.parse(localStorage.getItem(`panini_squad_${currentUser}`)) || [];
-      if (storedSquad.length === 11) return 'multiplayer';
+      const storedSquad = JSON.parse(localStorage.getItem(`panini_${currentUser}_squad`)) || [];
+      const finalSquad = storedSquad.length === 11 ? storedSquad : playersData.filter(p => p.type === 'Base').slice(0, 11);
+      if (finalSquad.length === 11) return 'multiplayer';
       
-      const storedCollection = JSON.parse(localStorage.getItem(`panini_collection_${currentUser}`)) || [];
-      if (storedCollection.length < 11) return 'packOpening';
+      const storedCollection = JSON.parse(localStorage.getItem(`panini_${currentUser}_collection`)) || [];
+      const finalCollection = storedCollection.length >= 11 ? storedCollection : playersData.filter(p => p.type === 'Base').slice(0, 11);
+      if (finalCollection.length < 11) return 'packOpening';
       return 'teamBuilder';
     }
     return 'lobby';
@@ -184,11 +200,19 @@ export default function App() {
   const [openedCards, setOpenedCards] = useState([]);
 
   // Economy State
-  const [quests, setQuests] = useState([
-    { id: 'play1', title: 'Đá 1 trận với AI', target: 1, progress: 0, reward: 50, isCompleted: false, isClaimed: false },
-    { id: 'win1', title: 'Thắng 1 trận với AI', target: 1, progress: 0, reward: 100, isCompleted: false, isClaimed: false },
-    { id: 'collect20', title: 'Sưu tầm 20 thẻ khác nhau', target: 20, progress: 0, reward: 150, isCompleted: false, isClaimed: false }
-  ]);
+  const [quests, setQuests] = useState(() => {
+    if (!currentUser) return [
+      { id: 'play1', title: 'Đá 1 trận với AI', target: 1, progress: 0, reward: 50, isCompleted: false, isClaimed: false },
+      { id: 'win1', title: 'Thắng 1 trận với AI', target: 1, progress: 0, reward: 100, isCompleted: false, isClaimed: false },
+      { id: 'collect20', title: 'Sưu tầm 20 thẻ khác nhau', target: 20, progress: 0, reward: 150, isCompleted: false, isClaimed: false }
+    ];
+    const saved = localStorage.getItem(`panini_${currentUser}_quests`);
+    return saved ? JSON.parse(saved) : [
+      { id: 'play1', title: 'Đá 1 trận với AI', target: 1, progress: 0, reward: 50, isCompleted: false, isClaimed: false },
+      { id: 'win1', title: 'Thắng 1 trận với AI', target: 1, progress: 0, reward: 100, isCompleted: false, isClaimed: false },
+      { id: 'collect20', title: 'Sưu tầm 20 thẻ khác nhau', target: 20, progress: 0, reward: 150, isCompleted: false, isClaimed: false }
+    ];
+  });
   const [lastReward, setLastReward] = useState(0);
 
   useEffect(() => {
@@ -201,6 +225,31 @@ export default function App() {
       return q;
     }));
   }, [collection]);
+
+  // Auto-save state to localStorage when they change
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(`panini_${currentUser}_collection`, JSON.stringify(collection));
+    }
+  }, [collection, currentUser]);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(`panini_${currentUser}_squad`, JSON.stringify(squad));
+    }
+  }, [squad, currentUser]);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(`panini_${currentUser}_coins`, coins.toString());
+    }
+  }, [coins, currentUser]);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(`panini_${currentUser}_quests`, JSON.stringify(quests));
+    }
+  }, [quests, currentUser]);
 
   // Match State
   const [difficulty, setDifficulty] = useState('Easy');
