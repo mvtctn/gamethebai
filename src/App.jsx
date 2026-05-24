@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { PackageOpen, Users, Swords, ChevronRight, CheckCircle2, Lock, Coins, Sparkles, Play, Trophy, Shield, Target, Wifi } from 'lucide-react';
+import { PackageOpen, Users, Swords, ChevronRight, CheckCircle2, Lock, Coins, Sparkles, Play, Trophy, Shield, Target, Wifi, User, ChevronLeft } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import playersData from './players.json';
 import MultiplayerEngine from './MultiplayerEngine';
 
 const PITCH_POSITIONS = [
-  { top: '85%', left: '50%' }, // GK
-  { top: '65%', left: '15%' }, // LB
-  { top: '70%', left: '35%' }, // CB1
-  { top: '70%', left: '65%' }, // CB2
-  { top: '65%', left: '85%' }, // RB
-  { top: '45%', left: '25%' }, // CM1
-  { top: '50%', left: '50%' }, // CM2
-  { top: '45%', left: '75%' }, // CM3
+  { top: '80%', left: '50%' }, // GK
+  { top: '60%', left: '15%' }, // LB
+  { top: '65%', left: '35%' }, // CB1
+  { top: '65%', left: '65%' }, // CB2
+  { top: '60%', left: '85%' }, // RB
+  { top: '40%', left: '25%' }, // CM1
+  { top: '45%', left: '50%' }, // CM2
+  { top: '40%', left: '75%' }, // CM3
   { top: '20%', left: '25%' }, // LW
   { top: '15%', left: '50%' }, // ST
   { top: '20%', left: '75%' }, // RW
@@ -101,7 +102,13 @@ export default function App() {
   });
   const [completedQuests, setCompletedQuests] = useState(() => JSON.parse(localStorage.getItem(`panini_${currentUser}_quests`)) || []);
   
-  const [gameState, setGameState] = useState('lobby'); // 'lobby', 'packOpening', 'teamBuilder', 'matchEngine', 'quests', 'multiplayer'
+  const urlParams = new URLSearchParams(window.location.search);
+  const pvpTarget = urlParams.get('pvp');
+
+  const [gameState, setGameState] = useState(() => {
+    if (currentUser && pvpTarget) return 'multiplayer';
+    return 'lobby';
+  }); // 'lobby', 'packOpening', 'teamBuilder', 'matchEngine', 'quests', 'multiplayer'
   
   // Auth State
   const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
@@ -494,6 +501,7 @@ export default function App() {
         <MultiplayerEngine 
           squad={squad} 
           currentUser={currentUser} 
+          initialJoinId={pvpTarget}
           CardComponent={Card}
           onExit={() => setGameState('lobby')}
           onWin={() => {
@@ -616,158 +624,236 @@ export default function App() {
       )}
 
       {gameState === 'matchEngine' && (
-        <div className="match-engine w-full">
+        <div className="w-full h-[100dvh] flex flex-col overflow-hidden bg-black/50 animate-fade-in relative z-10">
           
           {matchPhase === 'setup' && (
-            <div className="flex flex-col items-center">
-              <button className="btn !bg-gray-700 self-start mb-8" onClick={() => setGameState('lobby')}>← Về Sảnh</button>
-              <h2>Đấu trường AI</h2>
-              <div className="difficulty-selector mb-8">
-                {['Easy', 'Medium', 'Hard'].map(diff => (
-                  <button 
-                    key={diff}
-                    className={difficulty === diff ? 'active' : ''}
-                    onClick={() => setDifficulty(diff)}
-                  >
-                    {diff}
-                  </button>
-                ))}
-              </div>
-              <button className="btn flex items-center gap-2" onClick={startMatch}>
-                <Play /> BẮT ĐẦU TRẬN ĐẤU
-              </button>
-            </div>
-          )}
-
-          {(matchPhase === 'playing' || matchPhase === 'roundResult') && (
-            <div className="flex flex-col items-center w-full">
-              <div className="score-board mb-4 text-center">
-                <span className={matchScore.player > matchScore.ai ? 'text-green-400' : ''}>{matchScore.player}</span>
-                <div className="text-xl mx-4">TỈ SỐ</div>
-                <span className={matchScore.ai > matchScore.player ? 'text-green-400' : ''}>{matchScore.ai}</span>
-              </div>
-              
-              <div className="flex flex-col lg:flex-row gap-8 w-full">
-                
-                {/* Sân cỏ đội hình của bạn */}
-                <div className="flex-1">
-                  <h3 className="mb-4 text-center text-xl text-blue-300 font-bold tracking-widest drop-shadow-md">ĐỘI HÌNH RA SÂN CỦA BẠN</h3>
-                  <div className="pitch-wrapper">
-                    <div className="pitch-container">
-                      <div className="pitch-lines">
-                        <div className="penalty-box-top"></div>
-                        <div className="penalty-box-bottom"></div>
-                      </div>
-                      {playerHand.map((player, index) => {
-                        const pos = PITCH_POSITIONS[index] || { top: '50%', left: '50%' };
-                        const isPlayed = playedCardIds.includes(player.id);
-                        return (
-                          <div 
-                            key={player.id} 
-                            className={`pitch-player-slot pitch-card-wrapper ${isPlayed ? 'played' : ''}`}
-                            style={{ top: pos.top, left: pos.left }}
-                          >
-                            <Card 
-                              player={player} 
-                              isSelectable={!isPlayed && matchPhase === 'playing'} 
-                              isSelected={selectedPlayerCard?.id === player.id}
-                              onClick={(p) => {
-                                if (!isPlayed && matchPhase === 'playing') setSelectedPlayerCard(p);
-                              }}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+            <div className="flex-1 flex flex-col items-center justify-center p-4">
+              <div className="glass-panel p-8 sm:p-12 rounded-3xl text-center w-full max-w-lg">
+                <button className="btn !bg-gray-700 self-start mb-4" onClick={() => setGameState('lobby')}>← Về Sảnh</button>
+                <h2 className="text-3xl font-black uppercase text-amber-400 mb-8">Đấu trường AI</h2>
+                <div className="flex gap-4 justify-center mb-8">
+                  {['Easy', 'Medium', 'Hard'].map(diff => (
+                    <button 
+                      key={diff}
+                      className={`px-6 py-2 rounded-full font-bold transition-all ${difficulty === diff ? 'bg-amber-500 text-black scale-110' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                      onClick={() => setDifficulty(diff)}
+                    >
+                      {diff}
+                    </button>
+                  ))}
                 </div>
-
-                {/* Bàn điều khiển đấu */}
-                <div className="flex-1 flex flex-col items-center justify-center bg-gray-900/80 p-6 rounded-2xl border border-gray-700 h-fit">
-                  <h3 className="mb-6 text-xl text-yellow-400 font-bold uppercase tracking-widest text-center">Bàn Điều Khiển</h3>
-                  
-                  {matchPhase === 'playing' && selectedPlayerCard && (
-                    <div className="flex flex-col items-center animate-fade-in w-full">
-                      <h4 className="mb-4 text-gray-300">Chọn 1 chỉ số để tấn công:</h4>
-                      <div className="flex gap-4 mb-8">
-                        <button className="btn !bg-red-600 !px-6" onClick={() => playRound('attack')}>ATK: {selectedPlayerCard.stats.attack}</button>
-                        <button className="btn !bg-green-600 !px-6" onClick={() => playRound('control')}>CTRL: {selectedPlayerCard.stats.control}</button>
-                        <button className="btn !bg-blue-600 !px-6" onClick={() => playRound('defense')}>DEF: {selectedPlayerCard.stats.defense}</button>
-                      </div>
-                      <div className="text-sm text-gray-500 max-w-sm text-center bg-black/30 p-4 rounded-lg">
-                        Luật: <strong>ATK</strong> đấu DEF, <strong>DEF</strong> đấu ATK, <strong>CTRL</strong> đấu CTRL.
-                      </div>
-                    </div>
-                  )}
-
-                  {matchPhase === 'playing' && !selectedPlayerCard && (
-                    <div className="text-center text-gray-400 py-12 px-6 border-2 border-dashed border-gray-600 rounded-xl bg-black/20 w-full">
-                      <Sparkles size={48} className="mx-auto mb-4 opacity-30" />
-                      Nhấp vào một cầu thủ trên sân cỏ<br/>để tung ra sân khấu.
-                    </div>
-                  )}
-
-                  {matchPhase === 'roundResult' && (
-                    <div className="round-result-panel animate-fade-in w-full flex flex-col items-center">
-                      <div className="flex gap-12 justify-center items-center mb-8">
-                        <div className="transform scale-125"><Card player={selectedPlayerCard} /></div>
-                        <div className="text-6xl font-black text-yellow-500 drop-shadow-[0_0_15px_rgba(234,179,8,0.8)]">VS</div>
-                        <div className="transform scale-125"><Card player={currentAiCard} /></div>
-                      </div>
-                      <div className="text-3xl font-black mb-8 px-8 py-3 bg-red-900/50 rounded-xl border-2 border-red-500 text-white uppercase italic tracking-wider">
-                        {roundResultMsg}
-                      </div>
-                      <button className="btn !px-12 !py-4 text-xl" onClick={nextRound}>
-                        HIỆP TIẾP THEO <ChevronRight className="inline" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* AI Side */}
-                <div className="flex-1 flex flex-col items-center justify-center bg-gray-900/80 p-6 rounded-2xl border border-gray-700 h-fit">
-                  <h3 className="mb-6 text-xl text-red-400 font-bold uppercase tracking-widest text-center">Đội Hình AI</h3>
-                  <div className="flex gap-4 flex-wrap justify-center opacity-80 pointer-events-none">
-                     {aiHand.map((_, i) => (
-                       <div key={i} className="w-16 h-24 bg-gradient-to-br from-gray-700 to-gray-900 border-2 border-dashed border-gray-500 rounded-lg flex flex-col items-center justify-center">
-                         <div className="text-2xl text-gray-500 font-black">?</div>
-                       </div>
-                     ))}
-                  </div>
-                  <div className="mt-6 text-gray-400 font-bold uppercase tracking-widest">
-                    Số thẻ còn lại: <span className="text-red-400">{aiHand.length}</span>
-                  </div>
-                </div>
-
+                <button className="btn w-full flex items-center justify-center gap-2 !bg-red-600 hover:!bg-red-500" onClick={startMatch}>
+                  <Play /> BẮT ĐẦU TRẬN ĐẤU
+                </button>
               </div>
             </div>
           )}
 
           {matchPhase === 'gameOver' && (
-            <div className="flex flex-col items-center w-full">
-              <div className="score-board mb-8 text-center">
-                <span className={matchScore.player > matchScore.ai ? 'text-green-400' : ''}>{matchScore.player}</span>
-                <div className="text-xl mx-4">-</div>
-                <span className={matchScore.ai > matchScore.player ? 'text-green-400' : ''}>{matchScore.ai}</span>
+            <div className="flex-1 flex flex-col items-center justify-center p-4">
+              <div className="glass-panel p-8 sm:p-12 rounded-3xl text-center w-full max-w-lg">
+                <div className="text-xl mx-4 text-gray-400 font-bold mb-2">TỈ SỐ CHUNG CUỘC</div>
+                <div className="score-board mb-8 text-center flex justify-center items-center gap-4 text-5xl font-black">
+                  <span className={matchScore.player > matchScore.ai ? 'text-green-400' : ''}>{matchScore.player}</span>
+                  <span className="text-gray-500">-</span>
+                  <span className={matchScore.ai > matchScore.player ? 'text-green-400' : ''}>{matchScore.ai}</span>
+                </div>
+                <h3 className="text-3xl font-black mb-8 uppercase text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 drop-shadow-md">
+                  {matchScore.player > matchScore.ai ? "BẠN ĐÃ CHIẾN THẮNG! 🏆" : matchScore.player < matchScore.ai ? "BẠN ĐÃ THUA! 💀" : "HÒA NHAU! 🤝"}
+                </h3>
+                {matchScore.player > matchScore.ai && (
+                  <div className="bg-yellow-900/40 border border-yellow-500/50 px-6 py-3 rounded-xl mb-6 flex items-center justify-center gap-3">
+                    <Coins className="text-yellow-400" size={28} />
+                    <span className="text-2xl font-bold text-yellow-400">+{lastReward} Xu</span>
+                  </div>
+                )}
+                <button className="btn w-full" onClick={returnToLobby}>Trở Về Sảnh Chính</button>
               </div>
-              <h3 className="text-3xl font-bold mb-4">
-                {matchScore.player > matchScore.ai ? "BẠN ĐÃ CHIẾN THẮNG! 🏆" : matchScore.player < matchScore.ai ? "BẠN ĐÃ THUA! 💀" : "HÒA NHAU! 🤝"}
-              </h3>
-              <div className="bg-yellow-900/40 border border-yellow-500/50 px-6 py-3 rounded-xl mb-6 flex items-center gap-3">
-                <Coins className="text-yellow-400" size={28} />
-                <span className="text-2xl font-bold text-yellow-400">+{lastReward} Xu</span>
-              </div>
-              <div className="match-log">
-                {matchLogs.map((log, i) => (
-                  <div key={i} className="log-entry">{log}</div>
-                ))}
-              </div>
-              <button className="btn mt-8" onClick={returnToLobby}>Trở Về Sảnh Chính</button>
             </div>
+          )}
+
+          {(matchPhase === 'playing' || matchPhase === 'roundResult') && (
+            <div className="flex-1 w-full flex flex-col md:flex-row p-2 sm:p-4 gap-4 overflow-y-auto hide-scrollbar z-20 relative">
+              
+              {/* Battle Overlay for Effects */}
+              {matchPhase === 'roundResult' && (
+                <div className={`battle-overlay active ${
+                  roundResultMsg.includes('THẮNG') ? '' : 
+                  roundResultMsg.includes('THUA') ? 'cloud-overlay' : 'draw-overlay'
+                }`}></div>
               )}
+
+              {/* Stat Selection Modal */}
+              {selectedPlayerCard && matchPhase === 'playing' && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+                  <div className="glass-panel p-6 sm:p-8 rounded-[2rem] max-w-sm w-full flex flex-col items-center bg-gradient-to-t from-blue-900/60 to-slate-900 shadow-[0_0_50px_rgba(0,0,0,0.8)] relative border border-white/10">
+                    <button 
+                      className="absolute top-4 right-4 text-gray-400 hover:text-white bg-black/40 hover:bg-black/80 p-2 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
+                      onClick={() => setSelectedPlayerCard(null)}
+                    >
+                      ✕
+                    </button>
+
+                    <h2 className="text-sm sm:text-base font-black text-amber-400 mb-6 uppercase tracking-widest text-center">Chọn Chỉ Số Tấn Công</h2>
+                    
+                    <div className="w-40 sm:w-48 mb-8 scale-110 drop-shadow-2xl">
+                      <Card player={selectedPlayerCard} hideStats={false} />
+                    </div>
+
+                    <div className="flex gap-3 sm:gap-4 w-full">
+                      <button className="flex-1 flex flex-col items-center bg-black/60 hover:bg-red-900/50 border border-red-500/50 hover:border-red-400 rounded-xl py-3 transition-all group shadow-[0_0_15px_rgba(239,68,68,0.3)] hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(239,68,68,0.6)]" onClick={() => playRound('attack')}>
+                          <span className="text-[10px] sm:text-xs font-bold text-red-400 tracking-widest uppercase group-hover:text-white transition-colors">ATK</span>
+                          <span className="text-2xl sm:text-3xl font-black text-white">{selectedPlayerCard.stats.attack}</span>
+                      </button>
+                      <button className="flex-1 flex flex-col items-center bg-black/60 hover:bg-green-900/50 border border-green-500/50 hover:border-green-400 rounded-xl py-3 transition-all group shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(34,197,94,0.6)]" onClick={() => playRound('control')}>
+                          <span className="text-[10px] sm:text-xs font-bold text-green-400 tracking-widest uppercase group-hover:text-white transition-colors">CTRL</span>
+                          <span className="text-2xl sm:text-3xl font-black text-white">{selectedPlayerCard.stats.control}</span>
+                      </button>
+                      <button className="flex-1 flex flex-col items-center bg-black/60 hover:bg-blue-900/50 border border-blue-500/50 hover:border-blue-400 rounded-xl py-3 transition-all group shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(59,130,246,0.6)]" onClick={() => playRound('defense')}>
+                          <span className="text-[10px] sm:text-xs font-bold text-blue-400 tracking-widest uppercase group-hover:text-white transition-colors">DEF</span>
+                          <span className="text-2xl sm:text-3xl font-black text-white">{selectedPlayerCard.stats.defense}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Round Result Overlay */}
+              {matchPhase === 'roundResult' && (
+                <div className="fixed inset-0 z-[90] flex flex-col items-center justify-center pointer-events-none p-4">
+                  <div className="text-2xl sm:text-4xl font-black uppercase tracking-widest text-center text-white drop-shadow-[0_0_30px_rgba(255,255,255,1)] bg-black/60 backdrop-blur-md px-8 sm:px-12 py-6 rounded-3xl border border-white/20 animate-fade-in shadow-2xl flex flex-col items-center gap-2 pointer-events-auto">
+                    {roundResultMsg}
+                  </div>
+                  <div className="mt-8 text-amber-400 text-[10px] sm:text-xs font-bold tracking-widest uppercase animate-pulse bg-black/50 px-6 py-2 rounded-full border border-amber-400/30">
+                     Chạm vào thẻ bất kỳ trên sân 3D để chơi tiếp
+                  </div>
+                </div>
+              )}
+
+              {/* Màn hình 1: Sân vận động 3D (Cột Trái) */}
+              <div className="flex-1 flex flex-col gap-2 h-full justify-between">
+                
+                {/* HUD Score */}
+                <div className="glass-panel px-6 py-3 rounded-2xl flex justify-between items-center bg-black/40 border border-white/10 shadow-lg">
+                  <div className="flex items-center gap-3 w-1/3">
+                     <div className="w-10 h-10 bg-blue-900/50 rounded-full flex items-center justify-center border border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                       <User className="text-blue-400"/>
+                     </div>
+                     <div>
+                       <div className="text-[10px] text-blue-400 font-bold uppercase tracking-widest">{currentUser}</div>
+                       <div className="text-2xl font-black text-white">{matchScore.player}</div>
+                     </div>
+                  </div>
+                  
+                  <div className="text-3xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-red-400 drop-shadow-lg shrink-0">
+                    VS
+                  </div>
+                  
+                  <div className="flex items-center gap-3 w-1/3 justify-end text-right">
+                     <div>
+                       <div className="text-[10px] text-red-400 font-bold uppercase tracking-widest">AI</div>
+                       <div className="text-2xl font-black text-white">{matchScore.ai}</div>
+                     </div>
+                     <div className="w-10 h-10 bg-red-900/50 rounded-full flex items-center justify-center border border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+                       <span className="text-red-400 font-black text-xs">AI</span>
+                     </div>
+                  </div>
+                </div>
+
+                {/* Sân 3D */}
+                <div className="glass-panel p-2 pb-6 rounded-3xl flex-1 flex flex-col relative bg-black/30 border border-white/10">
+                  <h3 className="text-xs font-bold text-blue-400 tracking-widest uppercase mb-1 text-center w-full z-20">Đội hình ra sân của bạn</h3>
+                  
+                  <div className="pitch-wrapper flex-1 mt-1">
+                    <div className="pitch-container">
+                      <div className="pitch-lines"></div>
+                      <div className="penalty-box-top"></div>
+                      <div className="penalty-box-bottom"></div>
+                      
+                      {playerHand.map((player, idx) => {
+                        const isPlayed = playedCardIds.includes(player.id);
+                        const isSelected = selectedPlayerCard?.id === player.id;
+                        const pos = PITCH_POSITIONS[idx] || { top: '50%', left: '50%' };
+                        
+                        if (isPlayed) return null; // Ẩn thẻ đã đánh
+                        
+                        return (
+                          <div 
+                            key={player.id}
+                            className={`pitch-player-slot cursor-pointer ${isSelected ? 'selected' : ''}`}
+                            style={{ top: pos.top, left: pos.left, zIndex: Math.round(parseFloat(pos.top)) }}
+                            onClick={() => {
+                              if (!isPlayed) {
+                                if (matchPhase === 'playing') {
+                                  setSelectedPlayerCard(player);
+                                } else if (matchPhase === 'roundResult') {
+                                  if (playedCardIds.length >= 10) {
+                                    nextRound(); // Xử lý GameOver
+                                  } else {
+                                    setMatchPhase('playing');
+                                    setSelectedStat(null);
+                                    setCurrentAiCard(null);
+                                    setSelectedPlayerCard(player);
+                                  }
+                                }
+                              }
+                            }}
+                          >
+                            <Card player={player} hideStats={false} />
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Màn hình 2: Đội hình đối thủ (Cột Phải) */}
+              <div className="flex-1 glass-panel p-4 rounded-3xl flex flex-col justify-between bg-black/40 border border-white/5 relative">
+                 <button className="absolute top-4 right-4 z-50 text-gray-500 hover:text-white bg-black/50 p-2 rounded-full border border-white/10 transition-colors" onClick={() => setGameState('lobby')} title="Thoát trận">
+                    <Lock size={16} className="opacity-0 hidden" /> {/* Dummy icon if needed */}
+                    Thoát
+                 </button>
+                 
+                 <div className="flex justify-between items-center mb-6 pr-12">
+                    <h3 className="text-sm font-bold text-red-400 tracking-widest uppercase">Đội Hình AI</h3>
+                    <div className="text-xs text-gray-400 uppercase font-bold tracking-widest bg-black/50 px-3 py-1 rounded-full border border-white/10">Còn lại: {aiHand.length}/11</div>
+                 </div>
+
+                 {/* Sàn đấu trung tâm (Thẻ đang đánh của AI) */}
+                 <div className="flex-1 flex flex-col items-center justify-center relative my-2">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-red-600/10 rounded-full blur-[50px] pointer-events-none"></div>
+                    <div className="w-40 sm:w-52 aspect-[5/7] relative z-10 transition-all duration-500">
+                      {matchPhase === 'roundResult' && currentAiCard ? (
+                        <div className="w-full h-full animate-fade-in drop-shadow-[0_0_30px_rgba(239,68,68,0.5)] scale-110">
+                           <Card player={currentAiCard} />
+                        </div>
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-red-400/30 border-2 border-dashed border-red-900/30 rounded-2xl bg-black/50 backdrop-blur-sm shadow-inner">
+                           <div className="w-3 h-3 rounded-full bg-red-500/50 animate-ping mb-3"></div>
+                           <span className="text-[10px] font-bold uppercase tracking-widest text-center px-2">Đang chờ<br/>phản hồi</span>
+                        </div>
+                      )}
+                    </div>
+                 </div>
+
+                 {/* Các lá bài chưa đánh của AI xếp dạng Grid nhỏ ở dưới */}
+                 <div className="bg-black/60 p-4 rounded-2xl border border-white/5">
+                   <h4 className="text-[10px] font-bold text-gray-500 tracking-widest uppercase text-center mb-3">Thẻ chưa lật</h4>
+                   <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 sm:gap-3 place-items-center">
+                      {aiHand.map((_, i) => (
+                         <div key={i} className="w-full aspect-[5/7] bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-700 rounded-lg flex items-center justify-center shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] opacity-60">
+                            <span className="text-gray-600 font-black text-xs">?</span>
+                         </div>
+                      ))}
+                   </div>
+                 </div>
+              </div>
             </div>
           )}
         </div>
+      )}
+          </div>
         </>
       )}
     </>

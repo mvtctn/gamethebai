@@ -6,9 +6,9 @@ import { Card } from './App'; // Assuming Card is exported from App.jsx, I need 
 // LƯU Ý: File này cần được App.jsx import và truyền Card component vào hoặc Card phải được tách ra.
 // Tạm thời nhận Card component qua props để tránh circular dependency.
 
-export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, CardComponent }) {
+export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, initialJoinId, CardComponent }) {
   const [peerId, setPeerId] = useState('');
-  const [remotePeerId, setRemotePeerId] = useState('');
+  const [remotePeerId, setRemotePeerId] = useState(initialJoinId || '');
   const [connection, setConnection] = useState(null);
   const [status, setStatus] = useState('lobby'); // 'lobby', 'connecting', 'playing', 'gameover'
   const [copied, setCopied] = useState(false);
@@ -55,6 +55,8 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, C
       console.error(err);
       if (err.type === 'unavailable-id') {
          alert("Tên của bạn đang được ai đó sử dụng để làm máy chủ! Vui lòng đổi tên đăng nhập khác.");
+      } else if (err.type === 'peer-unavailable') {
+         alert("Không tìm thấy đối thủ hoặc đối thủ chưa sẵn sàng! Vui lòng kiểm tra lại link/tên hoặc chờ đối thủ tạo phòng.");
       } else {
          alert("Lỗi kết nối mạng: " + err.type);
       }
@@ -79,11 +81,11 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, C
     });
   };
 
-  const connectToPeer = () => {
-    if (!remotePeerId.trim()) return;
+  const connectToPeer = (targetId = remotePeerId) => {
+    if (!targetId || !targetId.trim()) return;
     setStatus('connecting');
     
-    const normalizedOpponent = remotePeerId.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    const normalizedOpponent = targetId.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
     const targetHostId = `wc26-panini-${normalizedOpponent}`;
     
     const conn = peerInstance.current.connect(targetHostId);
@@ -252,6 +254,19 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, C
               <span className="relative flex h-3 w-3"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-yellow-500"></span></span>
               Đang chờ bạn bè kết nối...
             </div>
+
+            {peerId && (
+              <button 
+                className="btn !bg-green-600 hover:!bg-green-500 mt-6 flex justify-center items-center gap-2 w-full max-w-[200px]"
+                onClick={() => {
+                  const link = `${window.location.origin}?pvp=${peerId}`;
+                  navigator.clipboard.writeText(link);
+                  alert("Đã copy link mời! Hãy gửi cho bạn bè để họ vào thi đấu ngay.");
+                }}
+              >
+                <Copy size={18} /> Sao Chép Link
+              </button>
+            )}
           </div>
 
           {/* VÀO PHÒNG */}
@@ -291,119 +306,138 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, C
 
   // --- GAME PLAYING ---
   return (
-    <div className="w-full flex flex-col items-center animate-fade-in relative z-10 pt-4">
-      {/* HUD Mạng */}
-      <div className="w-full max-w-6xl flex justify-between items-center bg-black/40 backdrop-blur-md p-4 rounded-2xl border border-white/10 mb-8">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-red-900/50 rounded-full flex items-center justify-center border border-red-500">
-            <User className="text-red-400" />
+    <div className="w-full h-[100dvh] flex flex-col overflow-hidden bg-black/50 animate-fade-in relative z-10">
+      {/* HUD Mạng (Top ~10vh) */}
+      <div className="w-full flex-none flex justify-between items-center bg-black/60 backdrop-blur-md px-4 py-2 border-b border-white/10 shadow-lg">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <div className="w-8 h-8 sm:w-12 sm:h-12 bg-red-900/50 rounded-full flex items-center justify-center border border-red-500">
+            <User className="text-red-400 w-4 h-4 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <div className="font-bold text-red-400 uppercase">Đối Thủ</div>
-            <div className="text-2xl font-black text-white">{opponentScore} <span className="text-sm text-gray-400 font-normal">điểm</span></div>
+            <div className="text-[10px] sm:text-xs font-bold text-red-400 uppercase">Đối Thủ</div>
+            <div className="text-xl sm:text-2xl font-black text-white leading-none">{opponentScore}</div>
           </div>
         </div>
         
         <div className="flex flex-col items-center">
-          <div className="text-sm font-bold tracking-widest text-gray-400 uppercase mb-1">Trận Chiến Online</div>
-          <div className="text-3xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-blue-500">VS</div>
+          <div className="text-[10px] sm:text-xs font-bold tracking-widest text-gray-400 uppercase mb-0.5">PVP</div>
+          <div className="text-2xl sm:text-3xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-blue-500 leading-none">VS</div>
         </div>
 
-        <div className="flex items-center gap-4 text-right">
+        <div className="flex items-center gap-2 sm:gap-4 text-right">
           <div>
-            <div className="font-bold text-blue-400 uppercase">{currentUser}</div>
-            <div className="text-2xl font-black text-white">{myScore} <span className="text-sm text-gray-400 font-normal">điểm</span></div>
+            <div className="text-[10px] sm:text-xs font-bold text-blue-400 uppercase truncate max-w-[80px]">{currentUser}</div>
+            <div className="text-xl sm:text-2xl font-black text-white leading-none">{myScore}</div>
           </div>
-          <div className="w-12 h-12 bg-blue-900/50 rounded-full flex items-center justify-center border border-blue-500">
-            <User className="text-blue-400" />
+          <div className="w-8 h-8 sm:w-12 sm:h-12 bg-blue-900/50 rounded-full flex items-center justify-center border border-blue-500">
+            <User className="text-blue-400 w-4 h-4 sm:w-6 sm:h-6" />
           </div>
         </div>
       </div>
 
       {status === 'gameover' ? (
-        <div className="glass-panel p-12 rounded-3xl text-center max-w-lg w-full">
-          <h2 className="text-5xl font-black mb-4 uppercase">
-            {myScore > opponentScore ? <span className="text-green-400">Chiến Thắng!</span> : myScore < opponentScore ? <span className="text-red-400">Thất Bại!</span> : <span className="text-yellow-400">Hòa Trận!</span>}
-          </h2>
-          <p className="text-xl mb-8">Tỉ số chung cuộc: {myScore} - {opponentScore}</p>
-          <div className="flex gap-4 justify-center">
-            <button className="btn !bg-gray-600" onClick={onExit}>Thoát</button>
-            {myScore > opponentScore && <button className="btn !bg-yellow-500 text-black" onClick={() => { onWin(); onExit(); }}>Nhận Thưởng</button>}
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="glass-panel p-8 sm:p-12 rounded-3xl text-center w-full max-w-lg">
+            <h2 className="text-4xl sm:text-5xl font-black mb-4 uppercase">
+              {myScore > opponentScore ? <span className="text-green-400">Chiến Thắng!</span> : myScore < opponentScore ? <span className="text-red-400">Thất Bại!</span> : <span className="text-yellow-400">Hòa Trận!</span>}
+            </h2>
+            <p className="text-lg sm:text-xl mb-8">Tỉ số chung cuộc: {myScore} - {opponentScore}</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button className="btn !bg-gray-600 w-full sm:w-auto" onClick={onExit}>Thoát</button>
+              {myScore > opponentScore && <button className="btn !bg-yellow-500 text-black w-full sm:w-auto" onClick={() => { onWin(); onExit(); }}>Nhận Thưởng</button>}
+            </div>
           </div>
         </div>
       ) : (
-        <div className="w-full max-w-6xl flex flex-col items-center relative">
-          
-          {/* Sân Đấu Giữa */}
-          <div className="w-full h-[400px] bg-gradient-to-b from-red-900/10 via-black/40 to-blue-900/10 border-y border-white/10 relative flex justify-center items-center mb-8">
-            {/* Bài đối thủ (nếu chưa lật thì úp) */}
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 -translate-y-1/4 scale-75 origin-top">
-              {opponentPlayedCard ? (
-                currentChallenge && !myPlayedCard ? (
-                  // Đang chờ mình đỡ, giấu bài đối thủ
-                  <div className="w-[220px] h-[320px] bg-red-900/50 border-2 border-red-500/50 rounded-2xl flex items-center justify-center">
-                    <Shield size={64} className="text-red-400 animate-pulse" />
-                  </div>
+        <>
+          {/* Sân Đấu (Middle ~55vh) */}
+          <div className="flex-1 w-full relative bg-gradient-to-b from-red-900/10 via-black/40 to-blue-900/10 overflow-hidden flex flex-col justify-between py-4">
+            
+            {/* Vùng bài đối thủ */}
+            <div className="h-[45%] w-full flex items-start justify-center pt-2">
+              <div className="w-28 sm:w-40 aspect-[5/7] transition-all duration-500 transform translate-y-0 relative">
+                {opponentPlayedCard ? (
+                  currentChallenge && !myPlayedCard ? (
+                    // Đang chờ mình đỡ, giấu bài đối thủ
+                    <div className="w-full h-full bg-red-900/50 border-2 border-red-500/50 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(239,68,68,0.3)]">
+                      <Shield size={48} className="text-red-400 animate-pulse" />
+                    </div>
+                  ) : (
+                    <CardComponent player={opponentPlayedCard} />
+                  )
                 ) : (
-                  <CardComponent player={opponentPlayedCard} />
-                )
-              ) : (
-                <div className="text-red-400/50 font-bold tracking-widest uppercase flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500 animate-ping"></div> Chờ đối thủ</div>
-              )}
+                  <div className="w-full h-full flex flex-col items-center justify-center text-red-400/50 border-2 border-dashed border-red-900/30 rounded-xl">
+                     <div className="w-2 h-2 rounded-full bg-red-500 animate-ping mb-2"></div>
+                     <span className="text-[10px] font-bold uppercase text-center">Chờ Địch</span>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Thông báo giữa sân */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full text-center z-50 pointer-events-none">
-              <div className="inline-block bg-black/80 backdrop-blur-md border border-white/20 px-8 py-3 rounded-full text-xl font-bold uppercase tracking-widest shadow-2xl">
-                {roundResult || (isMyTurn ? <span className="text-green-400">Lượt của bạn</span> : <span className="text-yellow-400">Lượt của đối thủ...</span>)}
+            {/* Vùng thông báo giữa sân */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] text-center z-50 pointer-events-none">
+              <div className="inline-block bg-black/80 backdrop-blur-md border border-white/20 px-4 sm:px-8 py-2 sm:py-3 rounded-full text-sm sm:text-xl font-bold uppercase tracking-widest shadow-2xl">
+                {roundResult || (isMyTurn ? <span className="text-green-400">Lượt của bạn</span> : <span className="text-yellow-400">Lượt đối thủ...</span>)}
               </div>
               {currentChallenge && (
-                <div className="mt-4 text-3xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-400 uppercase drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]">
+                <div className="mt-2 sm:mt-4 text-xl sm:text-3xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-400 uppercase drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]">
                   Chỉ số: {currentChallenge}
                 </div>
               )}
             </div>
 
-            {/* Bài của mình */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 translate-y-1/4 scale-75 origin-bottom">
-              {myPlayedCard ? (
-                <div className="relative">
-                   <CardComponent player={myPlayedCard} />
-                   {/* Nút chọn chỉ số nếu đang tấn công */}
-                   {isMyTurn && !currentChallenge && (
-                     <div className="absolute -top-16 left-1/2 -translate-x-1/2 flex gap-2 z-50">
-                        <button className="bg-red-600 hover:bg-red-500 text-white font-bold px-4 py-2 rounded-xl text-lg border-2 border-red-400 shadow-[0_0_15px_rgba(220,38,38,0.6)]" onClick={() => handleStatSelect('attack')}>ATK: {myPlayedCard.stats.attack}</button>
-                        <button className="bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-2 rounded-xl text-lg border-2 border-green-400 shadow-[0_0_15px_rgba(22,163,74,0.6)]" onClick={() => handleStatSelect('defense')}>DEF: {myPlayedCard.stats.defense}</button>
-                        <button className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2 rounded-xl text-lg border-2 border-blue-400 shadow-[0_0_15px_rgba(37,99,235,0.6)]" onClick={() => handleStatSelect('control')}>CTRL: {myPlayedCard.stats.control}</button>
-                     </div>
-                   )}
-                </div>
-              ) : (
-                <div className="text-blue-400/50 font-bold tracking-widest uppercase flex items-center gap-2">Chọn 1 lá bài dưới đây</div>
-              )}
+            {/* Vùng bài của mình */}
+            <div className="h-[45%] w-full flex items-end justify-center pb-2">
+              <div className="w-28 sm:w-40 aspect-[5/7] transition-all duration-500 transform translate-y-0 relative">
+                {myPlayedCard ? (
+                  <>
+                     <CardComponent player={myPlayedCard} />
+                     {/* Bảng chọn chỉ số tấn công */}
+                     {isMyTurn && !currentChallenge && (
+                       <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex gap-1 sm:gap-2 z-50 bg-black/80 p-1.5 rounded-lg border border-white/20">
+                          <button className="bg-red-600 hover:bg-red-500 text-white font-bold px-2 py-1 sm:px-3 sm:py-1 rounded text-xs sm:text-sm" onClick={() => handleStatSelect('attack')}>ATK {myPlayedCard.stats.attack}</button>
+                          <button className="bg-green-600 hover:bg-green-500 text-white font-bold px-2 py-1 sm:px-3 sm:py-1 rounded text-xs sm:text-sm" onClick={() => handleStatSelect('defense')}>DEF {myPlayedCard.stats.defense}</button>
+                          <button className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-2 py-1 sm:px-3 sm:py-1 rounded text-xs sm:text-sm" onClick={() => handleStatSelect('control')}>CTRL {myPlayedCard.stats.control}</button>
+                       </div>
+                     )}
+                  </>
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-blue-400/50 border-2 border-dashed border-blue-900/30 rounded-xl">
+                     <span className="text-[10px] font-bold uppercase text-center px-2">Chọn Bài</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Hand của mình */}
-          <div className="w-full mt-12 bg-black/30 p-6 rounded-2xl border border-white/10">
-            <h3 className="text-xl font-bold mb-4 uppercase tracking-widest text-gray-400 flex justify-between">
-              <span>Bài Trên Tay</span>
-              <span className="text-blue-400">{myDeck.length} lá</span>
-            </h3>
-            <div className="flex flex-wrap justify-center gap-4">
-              {myDeck.map(player => (
-                <div 
-                  key={player.id} 
-                  className={`scale-75 origin-top transition-all duration-300 ${!isMyTurn || myPlayedCard ? 'opacity-50 grayscale cursor-not-allowed' : 'cursor-pointer hover:scale-[0.8] hover:-translate-y-4 hover:z-50'}`}
-                  onClick={() => handleCardSelect(player)}
-                >
-                  <CardComponent player={player} />
-                </div>
-              ))}
+          {/* Bài Trên Tay (Bottom ~30vh) */}
+          <div className="flex-none h-[25vh] sm:h-[30vh] w-full bg-black/80 border-t border-white/10 pb-4">
+            <div className="px-4 py-1.5 flex justify-between items-center bg-white/5 border-b border-white/5">
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Bài Trên Tay</span>
+              <span className="text-xs font-bold text-blue-400">{myDeck.length} lá</span>
+            </div>
+            
+            {/* Scroll ngang hoặc Flex xếp chồng cho Mobile */}
+            <div className="h-full w-full overflow-x-auto overflow-y-hidden snap-x flex items-center px-4 pt-2 pb-6 hide-scrollbar">
+              <div className="flex flex-row items-center justify-start min-w-max h-full space-x-[-40px] sm:space-x-2">
+                {myDeck.map((player, idx) => (
+                  <div 
+                    key={player.id} 
+                    className={`h-[90%] sm:h-full aspect-[5/7] shrink-0 transition-all duration-300 transform ${
+                      (!isMyTurn || myPlayedCard) 
+                      ? 'opacity-50 grayscale cursor-not-allowed translate-y-4' 
+                      : 'cursor-pointer hover:-translate-y-6 hover:scale-110 z-10 relative shadow-2xl shadow-black'
+                    }`}
+                    style={{ zIndex: myDeck.length - idx }}
+                    onClick={() => handleCardSelect(player)}
+                  >
+                    <CardComponent player={player} />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-
-        </div>
+        </>
       )}
     </div>
   );
