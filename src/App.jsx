@@ -159,7 +159,15 @@ export default function App() {
   const pvpTarget = urlParams.get('pvp');
 
   const [gameState, setGameState] = useState(() => {
-    if (currentUser && pvpTarget) return 'multiplayer';
+    const currentUser = localStorage.getItem('panini_currentUser');
+    if (currentUser && pvpTarget) {
+      const storedSquad = JSON.parse(localStorage.getItem(`panini_squad_${currentUser}`)) || [];
+      if (storedSquad.length === 11) return 'multiplayer';
+      
+      const storedCollection = JSON.parse(localStorage.getItem(`panini_collection_${currentUser}`)) || [];
+      if (storedCollection.length < 11) return 'packOpening';
+      return 'teamBuilder';
+    }
     return 'lobby';
   }); // 'lobby', 'packOpening', 'teamBuilder', 'matchEngine', 'quests', 'multiplayer'
   
@@ -473,6 +481,13 @@ export default function App() {
           <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_transparent_0%,_rgba(0,0,0,0.8)_100%)] z-50 mix-blend-overlay"></div>
           <div className="fixed inset-0 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 z-50"></div>
           
+          {/* Copyright Header */}
+          <div className="absolute top-4 left-4 z-50 hidden sm:flex items-center gap-2 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg animate-fade-in pointer-events-none">
+            <span className="text-xs font-bold text-gray-300 whitespace-nowrap">
+              Tác giả: <span className="text-blue-400">Mai Quang Vinh</span> - Tiểu học Nghĩa Tân - Vibecoding với Antigravity
+            </span>
+          </div>
+
           {/* User Header Profile */}
           <div className="absolute top-4 right-4 z-50 flex items-center gap-4 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
             <div className="text-sm">
@@ -655,12 +670,26 @@ export default function App() {
       )}
 
       {gameState === 'teamBuilder' && (
-        <div className="team-builder">
-          <div className="flex justify-between items-center mb-4">
-            <button className="btn !bg-gray-700" onClick={() => setGameState('lobby')}>← Về Sảnh</button>
-            <h2>Xây Dựng Đội Hình</h2>
-            <div className="flex gap-4 items-center">
-              <span className="text-xl font-bold">{squad.length}/11</span>
+        <div className="team-builder relative z-10 p-4 sm:p-8 pt-20 h-screen flex flex-col">
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 bg-black/50 p-4 rounded-2xl backdrop-blur-md border border-white/10">
+            <div className="flex flex-wrap gap-2 sm:gap-4 items-center">
+              <button className="btn !bg-blue-600 hover:!bg-blue-500 !py-2 !px-4 text-sm whitespace-nowrap" onClick={() => setGameState('lobby')}>← Về Sảnh</button>
+              <button 
+                className={`btn !bg-amber-600 hover:!bg-amber-500 !py-2 !px-4 text-sm whitespace-nowrap ${squad.length < 11 ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                onClick={() => squad.length === 11 && setGameState('matchEngine')}
+              >
+                Đấu AI
+              </button>
+              <button 
+                className={`btn !bg-red-600 hover:!bg-red-500 !py-2 !px-4 text-sm whitespace-nowrap ${squad.length < 11 ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                onClick={() => squad.length === 11 && setGameState('multiplayer')}
+              >
+                PVP Online
+              </button>
+            </div>
+            <h2 className="text-xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-100 to-gray-400 drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)]">Xây Dựng Đội Hình</h2>
+            <div className="flex gap-4 items-center bg-black/60 px-4 py-2 rounded-xl border border-white/10">
+              <span className="text-lg sm:text-xl font-bold text-blue-400">{squad.length}<span className="text-gray-500">/11</span></span>
             </div>
           </div>
           

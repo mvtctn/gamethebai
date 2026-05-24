@@ -16,7 +16,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
   const peerInstance = useRef(null);
   
   // Game State
-  const [myDeck, setMyDeck] = useState([]);
+  const [myDeck, setMyDeck] = useState([...squad]);
   const [opponentDeckCount, setOpponentDeckCount] = useState(11);
   const [myScore, setMyScore] = useState(0);
   const [opponentScore, setOpponentScore] = useState(0);
@@ -28,10 +28,13 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
   const [roundResult, setRoundResult] = useState('');
   const [matchLog, setMatchLog] = useState([]);
 
+  // Ref để tránh lỗi stale closure trong các callback của sự kiện mạng
+  const stateRef = useRef({ myPlayedCard, currentChallenge, myDeck });
   useEffect(() => {
-    // Clone squad
-    setMyDeck([...squad]);
-    
+    stateRef.current = { myPlayedCard, currentChallenge, myDeck };
+  }, [myPlayedCard, currentChallenge, myDeck]);
+
+  useEffect(() => {
     // Tạo Peer ID dựa trên tên người dùng (thêm prefix để tránh trùng lặp trên server public toàn cầu)
     const normalizedUsername = currentUser.toLowerCase().replace(/[^a-z0-9]/g, '');
     const myHostId = `wc26-panini-${normalizedUsername}`;
@@ -70,7 +73,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     };
   }, []);
 
-  const setupConnectionHandlers = (conn, isHost) => {
+  function setupConnectionHandlers(conn, isHost) {
     conn.on('data', (data) => {
       handleNetworkData(data, isHost);
     });
@@ -79,10 +82,11 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       alert("Đối thủ đã thoát trận!");
       onExit();
     });
-  };
+  }
 
-  const connectToPeer = (targetId = remotePeerId) => {
-    if (!targetId || !targetId.trim()) return;
+  const connectToPeer = () => {
+    const targetId = remotePeerId;
+    if (!targetId || typeof targetId !== 'string' || !targetId.trim()) return;
     setStatus('connecting');
     
     const normalizedOpponent = targetId.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -111,7 +115,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       // Đối thủ ra bài đỡ
       setOpponentPlayedCard(data.card);
       setOpponentDeckCount(prev => prev - 1);
-      resolveRound(myPlayedCard, data.card, currentChallenge, true); // Resolve immediately
+      resolveRound(stateRef.current.myPlayedCard, data.card, stateRef.current.currentChallenge, true); // Resolve immediately
     }
     else if (data.type === 'round_result') {
       // Host gửi kết quả round
@@ -203,7 +207,8 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       setRoundResult("HÒA!");
     }
 
-    const isGameOver = myDeck.length <= 1; // Round này kết thúc là deck còn 0
+    const currentDeck = stateRef.current.myDeck;
+    const isGameOver = currentDeck.length <= 1; // Round này kết thúc là deck còn 0
     
     setIsMyTurn(nextTurn === 'host');
     
@@ -229,9 +234,13 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
 
   if (status === 'lobby') {
     return (
-      <div className="w-full max-w-4xl mx-auto flex flex-col items-center mt-12 animate-fade-in relative z-10">
-        <button className="btn !bg-gray-700/50 absolute top-0 left-0" onClick={onExit}><ChevronLeft /> Trở Về</button>
-        <h2 className="text-4xl md:text-5xl font-black italic tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-amber-500 drop-shadow-lg mb-8 uppercase text-center flex items-center gap-4">
+      <div className="w-full max-w-4xl mx-auto flex flex-col mt-4 sm:mt-12 animate-fade-in relative z-10 px-4">
+        <div className="flex justify-start mb-4">
+          <button className="btn !bg-blue-600 hover:!bg-blue-500 !py-2 !px-4 text-sm flex items-center gap-2" onClick={onExit}>
+            <ChevronLeft size={18} /> Về Sảnh
+          </button>
+        </div>
+        <h2 className="text-4xl md:text-5xl font-black italic tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-amber-500 drop-shadow-lg mb-8 uppercase text-center flex justify-center items-center gap-4">
           <Wifi size={48} className="text-red-500" /> PVP ONLINE
         </h2>
 
