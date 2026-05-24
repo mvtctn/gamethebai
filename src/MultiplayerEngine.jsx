@@ -163,6 +163,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
         setMyPlayedCard(null);
         setOpponentPlayedCard(null);
         setCurrentChallenge(null);
+        setRoundResult('');
         if (data.isGameOver) {
            setStatus('gameover');
         }
@@ -233,7 +234,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     }
 
     const currentDeck = stateRef.current.myDeck;
-    const isGameOver = currentDeck.length <= 1; // Round này kết thúc là deck còn 0
+    const isGameOver = currentDeck.length === 0; // Round này kết thúc là deck còn 0
     
     setIsMyTurn(nextTurn === 'host');
     
@@ -246,15 +247,13 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       isGameOver: isGameOver
     });
 
-    if (isGameOver) {
-      setTimeout(() => setStatus('gameover'), 3000);
-    } else {
-      setTimeout(() => {
-        setMyPlayedCard(null);
-        setOpponentPlayedCard(null);
-        setCurrentChallenge(null);
-      }, 3000);
-    }
+    setTimeout(() => {
+      setMyPlayedCard(null);
+      setOpponentPlayedCard(null);
+      setCurrentChallenge(null);
+      setRoundResult('');
+      if (isGameOver) setStatus('gameover');
+    }, 3000);
   };
 
   if (status === 'lobby') {
