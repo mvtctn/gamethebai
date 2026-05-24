@@ -173,7 +173,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
         if (data.isGameOver) {
            setStatus('gameover');
         }
-      }, 3000);
+      }, 2500);
     }
   }
 
@@ -189,24 +189,26 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
   }
 
   function handleStatSelect(stat) {
-    if (!stateRef.current.myPlayedCard || !isMyTurn || stateRef.current.currentChallenge) return;
+    const { myPlayedCard: card, currentChallenge: challenge, myDeck: deck } = stateRef.current;
+    if (!card || !isMyTurn || challenge) return;
     
     // Gửi yêu cầu thách đấu
     connection.send({
       type: 'challenge',
-      card: myPlayedCard,
+      card: card,
       stat: stat
     });
     
-    setMyDeck(myDeck.filter(c => c.id !== myPlayedCard.id));
+    setMyDeck(deck.filter(c => c.id !== card.id));
     setCurrentChallenge(stat);
     setIsMyTurn(false);
     setRoundResult(`Đang chờ đối thủ đỡ đòn ${stat.toUpperCase()}...`);
   }
 
   function playDefense(defenseCard) {
+    const { myDeck: deck } = stateRef.current;
     setMyPlayedCard(defenseCard);
-    setMyDeck(myDeck.filter(c => c.id !== defenseCard.id));
+    setMyDeck(deck.filter(c => c.id !== defenseCard.id));
     
     // Gửi thẻ phòng thủ cho Host
     connection.send({
@@ -259,7 +261,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       setCurrentChallenge(null);
       setRoundResult('');
       if (isGameOver) setStatus('gameover');
-    }, 3000);
+    }, 2500);
   };
 
   if (status === 'lobby') {
