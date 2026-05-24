@@ -426,51 +426,74 @@ export default function App() {
     <>
       {/* Auth Modal overlay over everything if not logged in */}
       {!currentUser && (
-        <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518605368461-1ee7c5320746?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-30 blur-sm"></div>
-          <div className="bg-slate-900/90 backdrop-blur-xl border-2 border-slate-700 p-8 rounded-2xl w-full max-w-md relative z-10 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
-            <h1 className="text-4xl font-black italic text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 drop-shadow-lg">
-              WC 2026 PANINI
-            </h1>
-            <div className="flex gap-4 mb-6">
-              <button 
-                className={`flex-1 pb-2 font-bold text-lg border-b-2 transition-colors ${authMode === 'login' ? 'border-blue-500 text-blue-400' : 'border-slate-700 text-slate-500 hover:text-slate-300'}`}
-                onClick={() => setAuthMode('login')}
-              >
-                Đăng Nhập
-              </button>
-              <button 
-                className={`flex-1 pb-2 font-bold text-lg border-b-2 transition-colors ${authMode === 'register' ? 'border-blue-500 text-blue-400' : 'border-slate-700 text-slate-500 hover:text-slate-300'}`}
-                onClick={() => setAuthMode('register')}
-              >
-                Đăng Ký Mới
-              </button>
+        <div className="landing-wrapper">
+          <div className="landing-background"></div>
+          <div className="landing-overlay-pattern"></div>
+          <div className="landing-content">
+            
+            <div className="landing-title-area">
+              <div className="poster-year">26</div>
+              <h1 className="poster-title">WC PANINI</h1>
+              <div className="poster-subtitle">Thế Hệ Mới - Ultimate Team</div>
             </div>
-            <form onSubmit={handleAuth} className="flex flex-col gap-4">
-              <div>
-                <label className="block text-slate-400 text-sm font-bold mb-2">Tên Đăng Nhập</label>
-                <input 
-                  type="text" 
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  value={authUsername}
-                  onChange={(e) => setAuthUsername(e.target.value)}
-                  placeholder="Nhập username (viết liền không dấu)..."
-                />
+
+            <div className="landing-form-area">
+              <div className="landing-glass-panel">
+                <div className="landing-tabs">
+                  <button 
+                    className={`landing-tab-btn ${authMode === 'login' ? 'active' : 'inactive'}`}
+                    onClick={() => setAuthMode('login')}
+                  >
+                    Đăng Nhập
+                  </button>
+                  <button 
+                    className={`landing-tab-btn ${authMode === 'register' ? 'active' : 'inactive'}`}
+                    onClick={() => setAuthMode('register')}
+                  >
+                    Đăng Ký
+                  </button>
+                  <button 
+                    className={`landing-tab-btn ${authMode === 'guest' ? 'active' : 'inactive'}`}
+                    onClick={() => setAuthMode('guest')}
+                  >
+                    Chơi Nhanh
+                  </button>
+                </div>
+                
+                <form onSubmit={handleAuth}>
+                  <div className="landing-form-group">
+                    <label className="landing-label">
+                      {authMode === 'guest' ? 'Tên Hiển Thị' : 'Tên Đăng Nhập'}
+                    </label>
+                    <input 
+                      type="text" 
+                      className="landing-input"
+                      value={authUsername}
+                      onChange={(e) => setAuthUsername(e.target.value)}
+                      placeholder={authMode === 'guest' ? "Nhập tên của bạn..." : "Nhập username..."}
+                    />
+                  </div>
+                  
+                  {authMode !== 'guest' && (
+                    <div className="landing-form-group">
+                      <label className="landing-label">Mật Khẩu</label>
+                      <input 
+                        type="password" 
+                        className="landing-input"
+                        value={authPassword}
+                        onChange={(e) => setAuthPassword(e.target.value)}
+                        placeholder="Nhập password..."
+                      />
+                    </div>
+                  )}
+                  
+                  <button type="submit" className="landing-btn-submit">
+                    {authMode === 'login' ? 'Vào Game' : authMode === 'register' ? 'Đăng Ký' : 'Chơi Ngay'}
+                  </button>
+                </form>
               </div>
-              <div>
-                <label className="block text-slate-400 text-sm font-bold mb-2">Mật Khẩu</label>
-                <input 
-                  type="password" 
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  value={authPassword}
-                  onChange={(e) => setAuthPassword(e.target.value)}
-                  placeholder="Nhập password..."
-                />
-              </div>
-              <button type="submit" className="btn !bg-blue-600 hover:!bg-blue-500 !py-4 mt-4 w-full text-xl font-bold uppercase tracking-wider">
-                {authMode === 'login' ? 'Vào Game 🎮' : 'Đăng Ký Ngay 🚀'}
-              </button>
-            </form>
+            </div>
+
           </div>
         </div>
       )}

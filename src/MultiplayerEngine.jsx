@@ -51,18 +51,24 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     let peer = null;
 
     const initPeer = (attempt = 0) => {
-      const normalizedUsername = currentUser.toLowerCase().replace(/[^a-z0-9]/g, '');
+      // Tạo mã phòng 6 số ngẫu nhiên
+      const generatedCode = attempt === 0 && !sessionStorage.getItem('panini_room_code') 
+        ? Math.floor(100000 + Math.random() * 900000).toString() 
+        : sessionStorage.getItem('panini_room_code') || Math.floor(100000 + Math.random() * 900000).toString();
+      
+      sessionStorage.setItem('panini_room_code', generatedCode);
+
       const myHostId = attempt === 0 
-        ? `wc26-panini-${normalizedUsername}` 
-        : `wc26-panini-${normalizedUsername}-${Math.floor(Math.random() * 10000)}`;
+        ? `wc26-panini-${generatedCode}` 
+        : `wc26-panini-${generatedCode}-${Math.floor(Math.random() * 10000)}`;
       
       peer = new Peer(myHostId);
       
       peer.on('open', (id) => {
-        setPeerId(attempt === 0 ? currentUser : `${currentUser} (Tạm)`);
+        setPeerId(attempt === 0 ? generatedCode : `${generatedCode} (Tạm)`);
         
         // Tự động kết nối nếu vào từ link
-        if (initialJoinId && initialJoinId !== currentUser) {
+        if (initialJoinId && initialJoinId !== generatedCode) {
           const normalizedOpponent = initialJoinId.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
           const targetHostId = `wc26-panini-${normalizedOpponent}`;
           setStatus('connecting');
@@ -272,12 +278,12 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
           {/* TẠO PHÒNG */}
           <div className="glass-panel p-8 rounded-3xl flex-1 flex flex-col items-center text-center">
             <h3 className="text-2xl font-bold mb-4 uppercase text-amber-400">Đợi Thách Đấu (Host)</h3>
-            <p className="text-gray-400 mb-6">Hãy bảo bạn bè nhập tên của bạn vào máy của họ để bắt đầu.</p>
+            <p className="text-gray-400 mb-6">Hãy gửi mã phòng 6 số cho bạn bè để bắt đầu.</p>
             
             {peerId ? (
               <div className="bg-black/50 p-4 rounded-xl border border-white/20 flex items-center gap-4 w-full justify-center">
-                <span className="text-gray-400">Tên của bạn:</span>
-                <span className="font-black text-3xl tracking-wider text-amber-400 uppercase">{peerId}</span>
+                <span className="text-gray-400">Mã phòng:</span>
+                <span className="font-black text-4xl tracking-[0.2em] text-amber-400 uppercase">{peerId}</span>
               </div>
             ) : (
               <div className="animate-pulse text-gray-500">Đang thiết lập mạng lưới...</div>
@@ -317,12 +323,12 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
           {/* VÀO PHÒNG */}
           <div className="glass-panel p-8 rounded-3xl flex-1 flex flex-col items-center text-center">
             <h3 className="text-2xl font-bold mb-4 uppercase text-blue-400">Gửi Thách Đấu (Join)</h3>
-            <p className="text-gray-400 mb-6">Nhập tên đăng nhập của đối thủ để kết nối thẳng vào máy của họ.</p>
+            <p className="text-gray-400 mb-6">Nhập mã phòng 6 số của đối thủ để kết nối thẳng vào máy của họ.</p>
             
             <input 
               type="text" 
-              placeholder="Nhập tên đối thủ..." 
-              className="w-full bg-black/50 border border-white/20 rounded-xl p-4 text-center font-black text-2xl text-white focus:outline-none focus:border-blue-500 uppercase"
+              placeholder="MÃ PHÒNG (6 SỐ)" 
+              className="w-full bg-black/50 border border-white/20 rounded-xl p-4 text-center font-black text-3xl tracking-[0.2em] text-white focus:outline-none focus:border-blue-500 uppercase"
               value={remotePeerId}
               onChange={(e) => setRemotePeerId(e.target.value)}
             />
