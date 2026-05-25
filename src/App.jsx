@@ -48,6 +48,65 @@ const LEVEL_MILESTONES = [
   { level: 30, coins: 5000, packs: 5, desc: 'Thần thoại Cao Thủ tối thượng!' },
 ];
 
+// --- Card Type Bonus for duel comparisons ---
+const CARD_TYPE_BONUS = {
+  'Base': 0,
+  // Standard positional types
+  'Top Keeper': 0,
+  'Defensive Rock': 0,
+  'Midfield Maestro': 0,
+  'Goal Machine': 0,
+  // Fan favourites / commons
+  'Fan Favourite': 1,
+  // Special activity-reward rarities (awarded via milestones)
+  'Bronze Edition': 1,
+  'Silver Edition': 2,
+  'Golden Baller': 4,
+  'Gold Edition': 4,
+  'Platinum Edition': 6,
+  'Super Limited': 8,
+  'Icon': 8,
+};
+
+export const getCardTypeBonus = (type = '') => {
+  if (!type) return 0;
+  // Exact match first
+  if (CARD_TYPE_BONUS[type] !== undefined) return CARD_TYPE_BONUS[type];
+  // Prefix match fallback (e.g. "Attacker ARG" etc.)
+  if (type.startsWith('Attacker') || type.startsWith('Midfielder') || type.startsWith('Defender')) return 0;
+  return 0;
+};
+
+// --- Activity Milestones for auto-gifting special edition cards ---
+const ACTIVITY_MILESTONES = [
+  { id: 'played_5',    type: 'played', value: 5,   rarity: 'Bronze Edition',   bonus: 3,  desc: 'Đã chơi 5 trận đầu tiên',         icon: '🥉' },
+  { id: 'played_20',   type: 'played', value: 20,  rarity: 'Silver Edition',   bonus: 5,  desc: 'Đã chơi 20 trận',                  icon: '🥈' },
+  { id: 'played_50',   type: 'played', value: 50,  rarity: 'Gold Edition',     bonus: 8,  desc: 'Chiến binh 50 trận',               icon: '🥇' },
+  { id: 'played_100',  type: 'played', value: 100, rarity: 'Platinum Edition', bonus: 10, desc: 'Huyền thoại 100 trận',             icon: '💎' },
+  { id: 'played_200',  type: 'played', value: 200, rarity: 'Super Limited',    bonus: 12, desc: 'ICON: 200 Trận Không Nghỉ',         icon: '👑' },
+  { id: 'wins_3',      type: 'wins',   value: 3,   rarity: 'Bronze Edition',   bonus: 3,  desc: 'Đã thắng 3 trận đầu tiên',        icon: '🥉' },
+  { id: 'wins_10',     type: 'wins',   value: 10,  rarity: 'Silver Edition',   bonus: 5,  desc: 'Đã thắng 10 trận',                icon: '🥈' },
+  { id: 'wins_30',     type: 'wins',   value: 30,  rarity: 'Gold Edition',     bonus: 8,  desc: 'Thắng 30 trận - Chiến Thần',      icon: '🥇' },
+  { id: 'wins_60',     type: 'wins',   value: 60,  rarity: 'Platinum Edition', bonus: 10, desc: 'Bạch Kim: 60 Chiến Thắng',        icon: '💎' },
+  { id: 'wins_100',    type: 'wins',   value: 100, rarity: 'Super Limited',    bonus: 12, desc: 'ICON: 100 Chiến Thắng Siêu Cấp',  icon: '👑' },
+  { id: 'quests_1',    type: 'quests', value: 1,   rarity: 'Bronze Edition',   bonus: 3,  desc: 'Hoàn thành nhiệm vụ đầu tiên',   icon: '🥉' },
+  { id: 'quests_5',    type: 'quests', value: 5,   rarity: 'Silver Edition',   bonus: 5,  desc: 'Hoàn thành 5 nhiệm vụ',           icon: '🥈' },
+  { id: 'quests_15',   type: 'quests', value: 15,  rarity: 'Gold Edition',     bonus: 8,  desc: 'Hoàn thành 15 nhiệm vụ - Xạ Thủ', icon: '🥇' },
+];
+
+const RARITY_LABEL = {
+  'Bronze Edition':   { label: 'THẺ ĐỒNG',    color: 'text-amber-600',    bg: 'bg-amber-950/40  border-amber-600/40' },
+  'Silver Edition':   { label: 'THẺ BẠC',     color: 'text-slate-300',    bg: 'bg-slate-800/40  border-slate-400/30' },
+  'Gold Edition':     { label: 'THẺ VÀNG',    color: 'text-yellow-400',   bg: 'bg-yellow-950/40 border-yellow-400/40' },
+  'Golden Baller':    { label: 'THẺ VÀNG',    color: 'text-yellow-400',   bg: 'bg-yellow-950/40 border-yellow-400/40' },
+  'Platinum Edition': { label: 'BẠCH KIM',    color: 'text-cyan-400',     bg: 'bg-cyan-950/40   border-cyan-400/40' },
+  'Super Limited':    { label: 'SIÊU CẤP ✨', color: 'text-rose-400',     bg: 'bg-rose-950/40   border-rose-400/40' },
+  'Icon':             { label: 'SIÊU CẤP ✨', color: 'text-rose-400',     bg: 'bg-rose-950/40   border-rose-400/40' },
+};
+
+const _LEVEL_MILESTONES_TAIL = [
+];
+
 const playFx = (type) => {
   try {
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -176,27 +235,27 @@ export const Card = ({ player, onClick, isSelectable, isSelected, hideStats }) =
 export default function App() {
   const currentUser = localStorage.getItem('panini_currentUser');
 
-  // Load state directly based on currentUser prefix with fallback to starter deck for new users
+  // Load state directly based on currentUser prefix — new users start EMPTY (must open packs to progress)
   const [collection, setCollection] = useState(() => {
     if (!currentUser) return [];
     const saved = localStorage.getItem(`panini_${currentUser}_collection`);
     if (saved) return JSON.parse(saved);
-    // Starter pack for new users: 11 Base players
-    return playersData.filter(p => p.type === 'Base').slice(0, 11);
+    // Brand-new user: no cards yet — must open starter packs
+    return [];
   });
 
   const [squad, setSquad] = useState(() => {
     if (!currentUser) return [];
     const saved = localStorage.getItem(`panini_${currentUser}_squad`);
     if (saved) return JSON.parse(saved);
-    // Starter squad for new users: 11 Base players
-    return playersData.filter(p => p.type === 'Base').slice(0, 11);
+    // Brand-new user: no squad yet — must build from opened packs
+    return [];
   });
 
   const [coins, setCoins] = useState(() => {
-    if (!currentUser) return 200;
+    if (!currentUser) return 0;
     const saved = localStorage.getItem(`panini_${currentUser}_coins`);
-    return saved !== null ? parseInt(saved) : 200; // Starting coins
+    return saved !== null ? parseInt(saved) : 0; // New users start with 0 coins; earn through quests/levels
   });
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -221,10 +280,14 @@ export default function App() {
   const [showPvpJoinModal, setShowPvpJoinModal] = useState(false);
   const [pvpJoinInput, setPvpJoinInput] = useState('');
 
-  // Auth State
-  const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
+  // Auth State — unified PIN system (no email/complex password)
+  const [authMode, setAuthMode] = useState('play'); // 'play' only (unified)
   const [authUsername, setAuthUsername] = useState("");
-  const [authPassword, setAuthPassword] = useState("");
+  const [authPassword, setAuthPassword] = useState(""); // kept for compat
+  const [authPin, setAuthPin] = useState(""); // 4-digit PIN (optional)
+  const [authStep, setAuthStep] = useState('enter_name'); // 'enter_name' | 'enter_pin' | 'set_pin'
+  const [authCheckingUser, setAuthCheckingUser] = useState(false);
+  const [authFoundUser, setAuthFoundUser] = useState(null); // null | firebase user data
   
   const [isPackOpeningAnim, setIsPackOpeningAnim] = useState(false);
   const [openedCards, setOpenedCards] = useState([]);
@@ -308,6 +371,13 @@ export default function App() {
   const [privateChatInput, setPrivateChatInput] = useState('');
   const [unreadPartners, setUnreadPartners] = useState({});
 
+  // Rewarded Activity Milestones (for auto-gifting special edition cards)
+  const [rewardedMilestones, setRewardedMilestones] = useState(() => {
+    if (!currentUser) return [];
+    const saved = localStorage.getItem(`panini_${currentUser}_rewardedMilestones`);
+    return saved ? JSON.parse(saved) : [];
+  });
+
   // Leaderboard & Levels States
   const [claimedLevelRewards, setClaimedLevelRewards] = useState(() => {
     if (!currentUser) return [];
@@ -321,9 +391,29 @@ export default function App() {
     return saved ? parseInt(saved) : 0;
   });
 
+  // Gacha pity counter — guarantees superstar every 10 packs max
+  const [pityCounter, setPityCounter] = useState(() => {
+    if (!currentUser) return 0;
+    const saved = localStorage.getItem(`panini_${currentUser}_pity`);
+    return saved ? parseInt(saved) : 0;
+  });
+  const [revealingCards, setRevealingCards] = useState([]); // cards being revealed one by one
+  const [revealIndex, setRevealIndex] = useState(0);        // which card is currently revealed
+  const [packType, setPackType] = useState('standard');     // 'starter'|'standard'|'premium'|'ultimate'
+
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
   const [leaderboardTab, setLeaderboardTab] = useState('leaderboard'); // 'leaderboard', 'tiers', 'milestones'
+
+  // Sync rewardedMilestones to localStorage and Firebase
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(`panini_${currentUser}_rewardedMilestones`, JSON.stringify(rewardedMilestones));
+      if (isConnectedToFirebase) {
+        set(ref(database, `/users/${currentUser}/rewardedMilestones`), rewardedMilestones);
+      }
+    }
+  }, [rewardedMilestones, currentUser]);
 
   useEffect(() => {
     if (currentUser) {
@@ -483,22 +573,25 @@ export default function App() {
         if (data.email !== undefined) setEmail(data.email);
         if (data.freePacks !== undefined) setFreePacks(data.freePacks);
         if (data.claimedLevelRewards) setClaimedLevelRewards(data.claimedLevelRewards);
+        if (data.rewardedMilestones) setRewardedMilestones(data.rewardedMilestones);
       } else {
-        // Initialize new user on Firebase Realtime Database
-        const starterCollection = playersData.filter(p => p.type === 'Base').slice(0, 11);
+        // Initialize brand-new guest user — fresh start with 3 starter packs
         const initialData = {
           username: currentUser,
           password: "",
           email: "",
-          coins: 200,
-          collection: starterCollection,
-          squad: starterCollection,
+          coins: 0,
+          collection: [],
+          squad: [],
           level: 1,
           xp: 0,
-          freePacks: 0,
+          freePacks: 3,
           claimedLevelRewards: [],
+          rewardedMilestones: [],
           stats: { played: 0, wins: 0, draws: 0, losses: 0 },
           quests: [
+            { id: 'open_pack1', title: 'Mở gói thẻ đầu tiên', target: 1, progress: 0, reward: 100, isCompleted: false, isClaimed: false },
+            { id: 'build_squad', title: 'Xây dựng đội hình 11 cầu thủ', target: 11, progress: 0, reward: 200, isCompleted: false, isClaimed: false },
             { id: 'play1', title: 'Đá 1 trận với AI', target: 1, progress: 0, reward: 50, isCompleted: false, isClaimed: false },
             { id: 'win1', title: 'Thắng 1 trận với AI', target: 1, progress: 0, reward: 100, isCompleted: false, isClaimed: false },
             { id: 'collect20', title: 'Sưu tầm 20 thẻ khác nhau', target: 20, progress: 0, reward: 150, isCompleted: false, isClaimed: false }
@@ -546,6 +639,66 @@ export default function App() {
       
       return newXp;
     });
+  };
+
+  // --- Auto-Gift Activity Milestone Cards ---
+  const checkActivityMilestones = (newStats, newQuests) => {
+    if (!currentUser) return;
+
+    const claimedQuests = (newQuests || quests).filter(q => q.isClaimed).length;
+    const currentValues = {
+      played: newStats?.played ?? stats?.played ?? 0,
+      wins:   newStats?.wins   ?? stats?.wins   ?? 0,
+      quests: claimedQuests,
+    };
+
+    const toReward = ACTIVITY_MILESTONES.filter(m => {
+      if (rewardedMilestones.includes(m.id)) return false;
+      return currentValues[m.type] >= m.value;
+    });
+
+    if (toReward.length === 0) return;
+
+    const pool = playersData.filter(p => p.stats &&
+      Math.max(p.stats.attack, p.stats.defense, p.stats.control) >= 80
+    );
+
+    const newCards = [];
+    const newMilestoneIds = [];
+
+    toReward.forEach(m => {
+      const base = pool[Math.floor(Math.random() * pool.length)];
+      if (!base) return;
+      const upgraded = JSON.parse(JSON.stringify(base));
+      upgraded.id   = `${base.id}_${m.id}`;
+      upgraded.name = `${base.name} [${m.rarity}]`;
+      upgraded.type = m.rarity;
+      upgraded.stats = {
+        attack:  Math.min(99, base.stats.attack  + m.bonus),
+        defense: Math.min(99, base.stats.defense + m.bonus),
+        control: Math.min(99, base.stats.control + m.bonus),
+      };
+      newCards.push(upgraded);
+      newMilestoneIds.push(m.id);
+    });
+
+    if (newCards.length === 0) return;
+
+    setCollection(prev => [...prev, ...newCards]);
+    setRewardedMilestones(prev => [...prev, ...newMilestoneIds]);
+
+    // Confetti celebration
+    setTimeout(() => {
+      confetti({ particleCount: 200, spread: 90, origin: { y: 0.5 },
+        colors: ['#f59e0b','#fbbf24','#3b82f6','#ec4899','#10b981'] });
+    }, 300);
+
+    const rarityLabels = toReward.map(m => m.rarity).join(', ');
+    showAlert(
+      '🎁 Quà Hoạt Động Đặc Biệt!',
+      `Chúc mừng! Bạn đã đạt mốc thành tích và nhận được ${newCards.length} thẻ đặc biệt: ${rarityLabels}. Kiểm tra bộ sưu tập ngay!`
+    );
+    playFx('winGame');
   };
 
   const claimMilestone = (m) => {
@@ -870,94 +1023,134 @@ export default function App() {
   const [roundResultMsg, setRoundResultMsg] = useState("");
   const [playedCardIds, setPlayedCardIds] = useState([]);
 
-  const handleAuth = async (e) => {
+  // ─── Unified Smart Auth Handler ─────────────────────────────────────────────
+  // Step 1: User enters name → check Firebase
+  const handleCheckUsername = async (e) => {
     e.preventDefault();
-    if (!authUsername.trim()) return;
-    const cleanUsername = authUsername.trim();
+    const name = authUsername.trim();
+    if (!name || name.length < 2) {
+      showAlert('Tên Quá Ngắn ⚠️', 'Tên HLV phải có ít nhất 2 ký tự!');
+      return;
+    }
+    // Validate: only letters, numbers, underscores, Vietnamese chars, spaces
+    if (!/^[\w\s\u00C0-\u024F\u1E00-\u1EFF]+$/.test(name)) {
+      showAlert('Tên Không Hợp Lệ ⚠️', 'Tên HLV chỉ được dùng chữ cái, số, dấu cách. Không dùng ký tự đặc biệt!');
+      return;
+    }
 
     if (!isConnectedToFirebase) {
-      // offline fallback
-      localStorage.setItem('panini_currentUser', cleanUsername);
+      // Offline: just log in directly
+      localStorage.setItem('panini_currentUser', name);
       window.location.reload();
       return;
     }
 
-    setLoadingInspectedUser(true);
-    const userRef = ref(database, `/users/${cleanUsername}`);
-    
+    setAuthCheckingUser(true);
     try {
-      const snapshot = await get(userRef);
+      const snapshot = await get(ref(database, `/users/${name}`));
       const val = snapshot.val();
+      setAuthCheckingUser(false);
 
-      if (authMode === 'login') {
-        if (!val) {
-          showAlert("Không Tồn Tại ❌", "HLV này chưa được đăng ký! Vui lòng chọn tab Đăng Ký để tạo tài khoản mới.");
-          setLoadingInspectedUser(false);
-          return;
+      if (!val) {
+        // NEW user → go to optional PIN setting step
+        setAuthFoundUser(null);
+        setAuthStep('set_pin');
+      } else {
+        // EXISTING user
+        setAuthFoundUser(val);
+        const hasPin = val.pin && val.pin.length === 4;
+        if (hasPin) {
+          // Has PIN → ask for PIN
+          setAuthStep('enter_pin');
+        } else {
+          // No PIN → login directly (open account)
+          localStorage.setItem('panini_currentUser', name);
+          window.location.reload();
         }
-        
-        const storedPassword = val.password || "";
-        if (storedPassword && storedPassword !== authPassword) {
-          showAlert("Mật Khẩu Sai 🔑", "Mật khẩu nhập vào không chính xác! Vui lòng nhập lại.");
-          setLoadingInspectedUser(false);
-          return;
-        }
-        
-        // Success
-        localStorage.setItem('panini_currentUser', cleanUsername);
-        window.location.reload();
-      } 
-      else if (authMode === 'register') {
-        if (val) {
-          showAlert("Đã Tồn Tại 👤", "Tên HLV này đã được sử dụng! Vui lòng đăng nhập hoặc lựa chọn một tên HLV khác.");
-          setLoadingInspectedUser(false);
-          return;
-        }
-        if (!authPassword) {
-          showAlert("Thiếu Thông Tin 🔒", "Vui lòng nhập mật khẩu để bảo vệ tài khoản HLV của bạn!");
-          setLoadingInspectedUser(false);
-          return;
-        }
-
-        // Create new account on Firebase
-        const starterCollection = playersData.filter(p => p.type === 'Base').slice(0, 11);
-        const initialData = {
-          username: cleanUsername,
-          password: authPassword,
-          email: "",
-          coins: 200,
-          collection: starterCollection,
-          squad: starterCollection,
-          level: 1,
-          xp: 0,
-          stats: { played: 0, wins: 0, draws: 0, losses: 0 },
-          quests: [
-            { id: 'play1', title: 'Đá 1 trận với AI', target: 1, progress: 0, reward: 50, isCompleted: false, isClaimed: false },
-            { id: 'win1', title: 'Thắng 1 trận với AI', target: 1, progress: 0, reward: 100, isCompleted: false, isClaimed: false },
-            { id: 'collect20', title: 'Sưu tầm 20 thẻ khác nhau', target: 20, progress: 0, reward: 150, isCompleted: false, isClaimed: false }
-          ]
-        };
-        await set(userRef, initialData);
-        localStorage.setItem('panini_currentUser', cleanUsername);
-        window.location.reload();
-      }
-      else if (authMode === 'guest') {
-        if (val) {
-          showAlert("Tên Đã Đăng Ký 🔒", "Tên HLV này đã có tài khoản bảo mật! Bạn không thể chơi nhanh bằng tên này. Vui lòng đăng nhập bằng Mật Khẩu hoặc chọn tên hiển thị khác.");
-          setLoadingInspectedUser(false);
-          return;
-        }
-
-        // Just log in as guest, first mount will initialize on Firebase
-        localStorage.setItem('panini_currentUser', cleanUsername);
-        window.location.reload();
       }
     } catch (err) {
+      setAuthCheckingUser(false);
       console.error(err);
-      showAlert("Lỗi Máy Chủ ❌", "Không thể xác minh tài khoản. Vui lòng thử lại sau.");
-      setLoadingInspectedUser(false);
+      // Offline fallback
+      localStorage.setItem('panini_currentUser', name);
+      window.location.reload();
     }
   };
+
+  // Step 2a: Existing user with PIN → verify
+  const handleVerifyPin = async (e) => {
+    e.preventDefault();
+    const name = authUsername.trim();
+    const pin = authPin.trim();
+    if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+      showAlert('PIN Không Đúng ⚠️', 'Vui lòng nhập đúng 4 chữ số!');
+      return;
+    }
+    setAuthCheckingUser(true);
+    try {
+      const snapshot = await get(ref(database, `/users/${name}/pin`));
+      const storedPin = snapshot.val();
+      setAuthCheckingUser(false);
+      if (storedPin && storedPin === pin) {
+        localStorage.setItem('panini_currentUser', name);
+        window.location.reload();
+      } else {
+        showAlert('Sai PIN 🔑', 'Mã PIN không đúng! Hãy thử lại hoặc liên hệ admin.');
+      }
+    } catch {
+      setAuthCheckingUser(false);
+      showAlert('Lỗi Kết Nối ❌', 'Không thể xác minh PIN. Thử lại sau.');
+    }
+  };
+
+  // Step 2b: New user → optionally set PIN, then create account
+  const handleCreateAccount = async (e) => {
+    e.preventDefault();
+    const name = authUsername.trim();
+    const pin = authPin.trim();
+
+    if (pin && (pin.length !== 4 || !/^\d{4}$/.test(pin))) {
+      showAlert('PIN Không Hợp Lệ ⚠️', 'Mã PIN phải đúng 4 chữ số (hoặc để trống để bỏ qua)!');
+      return;
+    }
+
+    const initialData = {
+      username: name,
+      pin: pin || '', // optional 4-digit PIN
+      email: '',
+      coins: 0,
+      collection: [],
+      squad: [],
+      level: 1,
+      xp: 0,
+      freePacks: 3,
+      claimedLevelRewards: [],
+      rewardedMilestones: [],
+      stats: { played: 0, wins: 0, draws: 0, losses: 0 },
+      quests: [
+        { id: 'open_pack1', title: 'Mở gói thẻ đầu tiên', target: 1, progress: 0, reward: 100, isCompleted: false, isClaimed: false },
+        { id: 'build_squad', title: 'Xây dựng đội hình 11 cầu thủ', target: 11, progress: 0, reward: 200, isCompleted: false, isClaimed: false },
+        { id: 'play1', title: 'Đá 1 trận với AI', target: 1, progress: 0, reward: 50, isCompleted: false, isClaimed: false },
+        { id: 'win1', title: 'Thắng 1 trận với AI', target: 1, progress: 0, reward: 100, isCompleted: false, isClaimed: false },
+        { id: 'collect20', title: 'Sưu tầm 20 thẻ khác nhau', target: 20, progress: 0, reward: 150, isCompleted: false, isClaimed: false }
+      ]
+    };
+
+    setAuthCheckingUser(true);
+    try {
+      await set(ref(database, `/users/${name}`), initialData);
+      localStorage.setItem('panini_currentUser', name);
+      window.location.reload();
+    } catch {
+      setAuthCheckingUser(false);
+      // Create locally even if Firebase fails
+      localStorage.setItem('panini_currentUser', name);
+      window.location.reload();
+    }
+  };
+
+
+  // Legacy compat stubs (auth flow now uses handleCheckUsername/handleVerifyPin/handleCreateAccount)
 
   // Forgot password verify email handler
   const handleForgotPassword = async (e) => {
@@ -1066,62 +1259,147 @@ export default function App() {
     window.location.reload();
   };
 
-  // --- Logic ---
-  const openPack = () => {
-    const isFree = freePacks > 0;
-    if (!isFree && coins < 100) {
-      alert("Bạn không đủ Xu để mua gói thẻ. Hãy làm nhiệm vụ để kiếm thêm Xu hoặc cày cấp nhận Gói Thẻ Miễn Phí nhé!");
-      return;
+  // ─── RARITY TIER DEFINITIONS ──────────────────────────────────────────────────
+  const RARITY_TIERS = {
+    common:    { types: ['Base'],                                            label: 'THƯỜNG',    color: '#9ca3af', glow: 'rgba(156,163,175,0.4)',  star: '★',     prob: 0 },
+    rare:      { types: ['Fan Favourite', 'Top Keeper'],                     label: 'HIẾM',      color: '#60a5fa', glow: 'rgba(96,165,250,0.5)',  star: '★★',    prob: 0 },
+    epic:      { types: ['Defensive Rock', 'Midfield Maestro', 'Goal Machine'], label: 'SỪU HIẾM', color: '#a78bfa', glow: 'rgba(167,139,250,0.5)', star: '★★★',  prob: 0 },
+    legendary: { types: ['Icon'],                                            label: 'HUYỀN THOẠI', color: '#f59e0b', glow: 'rgba(245,158,11,0.6)', star: '★★★★', prob: 0 },
+    mythic:    { types: ['Golden Baller'],                                   label: 'SIÊU SAO',   color: '#f43f5e', glow: 'rgba(244,63,94,0.7)',  star: '★★★★★', prob: 0 },
+  };
+
+  const getCardRarity = (card) => {
+    for (const [key, tier] of Object.entries(RARITY_TIERS)) {
+      if (tier.types.includes(card.type)) return key;
     }
-    
+    return 'common';
+  };
+
+  // Pack configs: each pack costs X coins and has different pull probabilities
+  const PACK_CONFIGS = {
+    starter:  { name: 'Gói Khởi Đầu', emoji: '🎁', cost: 0,   isFree: true,  cards: 5,  common: 0.70, rare: 0.22, epic: 0.06, legendary: 0.015, mythic: 0.005, guaranteedRare: 1 },
+    standard: { name: 'Gói Tiêu Chuẩn', emoji: '📦', cost: 100, isFree: false, cards: 8,  common: 0.60, rare: 0.25, epic: 0.10, legendary: 0.03,  mythic: 0.02,  guaranteedRare: 1 },
+    premium:  { name: 'Gói Cao Cấp',    emoji: '💫', cost: 300, isFree: false, cards: 12, common: 0.45, rare: 0.30, epic: 0.15, legendary: 0.06,  mythic: 0.04,  guaranteedRare: 2 },
+    ultimate: { name: 'Gói Tuyển Chọn', emoji: '👑', cost: 600, isFree: false, cards: 16, common: 0.30, rare: 0.30, epic: 0.20, legendary: 0.12,  mythic: 0.08,  guaranteedRare: 3 },
+  };
+
+  // ─── ENHANCED GACHA ALGORITHM with Pity System ───────────────────────────────
+  const openPack = (type = packType) => {
+    const cfg = PACK_CONFIGS[type];
+    const isFree = freePacks > 0 && type === 'starter';
+
     if (isFree) {
       setFreePacks(f => f - 1);
-    } else {
-      setCoins(c => c - 100);
+    } else if (!isFree) {
+      if (coins < cfg.cost) {
+        showAlert('Đủ Xu ⚠️', `Bạn cần ${cfg.cost} Xu để mở ${cfg.name}! Hãy làm nhiệm vụ để kiếm thêm Xu nhé.`);
+        return;
+      }
+      setCoins(c => c - cfg.cost);
     }
-    gainXp(5); // Gaining 5 XP for card pack openings!
-    setIsPackOpeningAnim(true);
-    setTimeout(() => {
-      const weakCards = playersData.filter(p => p.type === 'Base');
-      const strongCards = playersData.filter(p => !['Base', 'Icon', 'Golden Baller'].includes(p.type));
-      const eliteCards = playersData.filter(p => ['Icon', 'Golden Baller'].includes(p.type));
 
-      const packCards = [];
-      // Mở 16 thẻ
-      for (let i = 0; i < 16; i++) {
-        const rand = Math.random();
-        let pool;
-        if (rand < 0.75) {
-          pool = weakCards; // 75% ra thẻ Base (yếu)
-        } else if (rand < 0.95) {
-          pool = strongCards; // 20% ra thẻ hiếm thường
+    gainXp(type === 'ultimate' ? 30 : type === 'premium' ? 20 : type === 'standard' ? 10 : 5);
+    setIsPackOpeningAnim(true);
+    setOpenedCards([]);
+    setRevealingCards([]);
+    setRevealIndex(0);
+
+    setTimeout(() => {
+      const pools = {
+        common:    playersData.filter(p => RARITY_TIERS.common.types.includes(p.type)),
+        rare:      playersData.filter(p => RARITY_TIERS.rare.types.includes(p.type)),
+        epic:      playersData.filter(p => RARITY_TIERS.epic.types.includes(p.type)),
+        legendary: playersData.filter(p => RARITY_TIERS.legendary.types.includes(p.type)),
+        mythic:    playersData.filter(p => RARITY_TIERS.mythic.types.includes(p.type)),
+      };
+
+      const allPulled = [];
+      let currentPity = pityCounter;
+      let guaranteedLeft = cfg.guaranteedRare;
+
+      const pullCard = (forcedRarity = null) => {
+        let rarity = forcedRarity;
+        if (!rarity) {
+          const r = Math.random();
+          // Pity: if pity >= 9, force legendary or mythic
+          if (currentPity >= 9) {
+            rarity = Math.random() < 0.4 ? 'mythic' : 'legendary';
+            currentPity = 0;
+          } else if (r < cfg.mythic) {
+            rarity = 'mythic'; currentPity = 0;
+          } else if (r < cfg.mythic + cfg.legendary) {
+            rarity = 'legendary'; currentPity = 0;
+          } else if (r < cfg.mythic + cfg.legendary + cfg.epic) {
+            rarity = 'epic';
+          } else if (r < cfg.mythic + cfg.legendary + cfg.epic + cfg.rare) {
+            rarity = 'rare';
+          } else {
+            rarity = 'common';
+            currentPity++;
+          }
         } else {
-          pool = eliteCards; // 5% ra thẻ cực hiếm (Icon, Golden Baller)
+          if (rarity === 'mythic' || rarity === 'legendary') currentPity = 0;
         }
-        
-        // Random 1 thẻ trong pool
-        const randomCard = pool[Math.floor(Math.random() * pool.length)];
-        
-        // Tránh trùng lặp 1 thẻ y hệt trong cùng 1 pack
-        if (!packCards.find(c => c.id === randomCard.id)) {
-          packCards.push(randomCard);
+
+        const pool = pools[rarity];
+        if (!pool || pool.length === 0) return pullCard('common');
+
+        // Avoid exact duplicates in same pack
+        let card = pool[Math.floor(Math.random() * pool.length)];
+        let attempts = 0;
+        while (allPulled.find(c => c.id === card.id) && attempts < 20) {
+          card = pool[Math.floor(Math.random() * pool.length)];
+          attempts++;
+        }
+        return { ...card, _rarity: rarity };
+      };
+
+      for (let i = 0; i < cfg.cards; i++) {
+        // Last N slots: guarantee rare+ if not yet met
+        const remaining = cfg.cards - i;
+        const needGuarantee = guaranteedLeft > 0 && remaining <= guaranteedLeft;
+        if (needGuarantee) {
+          const forcedRarity = Math.random() < 0.3 ? 'mythic' : Math.random() < 0.4 ? 'legendary' : 'epic';
+          allPulled.push(pullCard(forcedRarity));
+          guaranteedLeft--;
         } else {
-          i--; // Thử lại nếu trùng
+          const card = pullCard();
+          if (['rare','epic','legendary','mythic'].includes(card._rarity)) {
+            guaranteedLeft = Math.max(0, guaranteedLeft - 1);
+          }
+          allPulled.push(card);
         }
       }
 
-      setOpenedCards(packCards);
+      // Sort: rarest last for dramatic reveal
+      const rarityOrder = { common: 0, rare: 1, epic: 2, legendary: 3, mythic: 4 };
+      allPulled.sort((a, b) => rarityOrder[a._rarity] - rarityOrder[b._rarity]);
+
+      // Update pity
+      setPityCounter(currentPity);
+      localStorage.setItem(`panini_${currentUser}_pity`, currentPity.toString());
+
+      // Add to collection
       setCollection(prev => {
         const newCollection = [...prev];
-        packCards.forEach(c => {
-          if (!newCollection.find(p => p.id === c.id)) {
-            newCollection.push(c);
-          }
+        allPulled.forEach(c => {
+          if (!newCollection.find(p => p.id === c.id)) newCollection.push(c);
         });
         return newCollection;
       });
+
+      // Update quest: open_pack1
+      setQuests(prev => prev.map(q => {
+        if (q.id === 'open_pack1' && !q.isCompleted) {
+          return { ...q, progress: Math.min(1, q.progress + 1), isCompleted: true };
+        }
+        return q;
+      }));
+
+      setRevealingCards(allPulled);
+      setOpenedCards(allPulled);
       setIsPackOpeningAnim(false);
-    }, 1500);
+    }, 1200);
   };
 
   const toggleSquad = (player) => {
@@ -1246,20 +1524,28 @@ export default function App() {
     // If player picks Attack, compare with AI's Defense
     // If player picks Defense, compare with AI's Attack
     // If player picks Control, compare with AI's Control
-    let v1 = selectedPlayerCard.stats[stat];
-    let v2 = 0;
+    let baseV1 = selectedPlayerCard.stats[stat];
+    let baseV2 = 0;
     let stat2Name = '';
-    
+
     if (stat === 'attack') {
-      v2 = aiCard.stats.defense;
+      baseV2 = aiCard.stats.defense;
       stat2Name = 'defense';
     } else if (stat === 'defense') {
-      v2 = aiCard.stats.attack;
+      baseV2 = aiCard.stats.attack;
       stat2Name = 'attack';
     } else {
-      v2 = aiCard.stats.control;
+      baseV2 = aiCard.stats.control;
       stat2Name = 'control';
     }
+
+    // Apply card rarity priority bonus
+    const bonus1 = getCardTypeBonus(selectedPlayerCard.type);
+    const bonus2 = getCardTypeBonus(aiCard.type);
+    const v1 = baseV1 + bonus1;
+    const v2 = baseV2 + bonus2;
+
+    const bonusPart = (b) => b > 0 ? `+${b}` : '';
 
     let pScore = matchScore.player;
     let aScore = matchScore.ai;
@@ -1267,17 +1553,17 @@ export default function App() {
 
     if (v1 > v2) {
       pScore++;
-      msg = `THẮNG! ${v1} > ${v2}`;
+      msg = `THẮNG! ${baseV1}${bonusPart(bonus1)} > ${baseV2}${bonusPart(bonus2)}`;
     } else if (v2 > v1) {
       aScore++;
-      msg = `THUA! ${v1} < ${v2}`;
+      msg = `THUA! ${baseV1}${bonusPart(bonus1)} < ${baseV2}${bonusPart(bonus2)}`;
     } else {
-      msg = `HÒA! ${v1} = ${v2}`;
+      msg = `HÒA! ${baseV1}${bonusPart(bonus1)} = ${baseV2}${bonusPart(bonus2)}`;
     }
 
     setMatchScore({ player: pScore, ai: aScore });
     setRoundResultMsg(msg);
-    setMatchLogs([...matchLogs, `Lượt ${playedCardIds.length + 1}: ${selectedPlayerCard.name} (${stat.toUpperCase()}) vs ${aiCard.name} (${stat2Name.toUpperCase()}) -> ${msg}`]);
+    setMatchLogs([...matchLogs, `Lượt ${playedCardIds.length + 1}: ${selectedPlayerCard.name} (${stat.toUpperCase()}${bonusPart(bonus1)}) vs ${aiCard.name} (${stat2Name.toUpperCase()}${bonusPart(bonus2)}) -> ${msg}`]);
     setMatchPhase('roundResult');
 
     // Remove cards from hands
@@ -1414,158 +1700,154 @@ export default function App() {
               ULTIMATE CARD CHAMPIONS
             </h2>
 
-            <div className="landing-glass-panel">
-              {(authMode === 'login' || authMode === 'register' || authMode === 'guest') && (
-                <div className="animate-scale-in">
-                  <div className="landing-tabs">
-                    <button 
-                      className={`landing-tab-btn ${authMode === 'login' ? 'active' : 'inactive'}`}
-                      onClick={() => setAuthMode('login')}
-                    >
-                      Đăng Nhập
-                    </button>
-                    <button 
-                      className={`landing-tab-btn ${authMode === 'register' ? 'active' : 'inactive'}`}
-                      onClick={() => setAuthMode('register')}
-                    >
-                      Đăng Ký
-                    </button>
-                    <button 
-                      className={`landing-tab-btn ${authMode === 'guest' ? 'active' : 'inactive'}`}
-                      onClick={() => setAuthMode('guest')}
-                    >
-                      Chơi Nhanh
-                    </button>
+          {/* ── AUTH PANEL ─────────────────────────────── */}
+          <div className="landing-glass-panel">
+
+            {/* STEP 1: Enter name */}
+            {authStep === 'enter_name' && (
+              <div className="animate-scale-in">
+                <div className="text-center mb-6">
+                  <div className="text-4xl mb-2">⚽</div>
+                  <h3 className="text-lg font-black text-white uppercase tracking-widest">Vào Sân Ngay!</h3>
+                  <p className="text-[11px] text-gray-400 mt-1 font-semibold">Nhập tên HLV của bạn để bắt đầu hành trình</p>
+                </div>
+
+                <form onSubmit={handleCheckUsername} className="flex flex-col gap-4">
+                  <div className="landing-form-group">
+                    <label className="landing-label">🏟️ Tên HLV Của Bạn</label>
+                    <input
+                      type="text"
+                      className="landing-input text-center text-lg font-black tracking-widest"
+                      value={authUsername}
+                      onChange={(e) => setAuthUsername(e.target.value)}
+                      placeholder="VD: TieuHoang_99..."
+                      maxLength={20}
+                      autoFocus
+                    />
+                    <p className="text-[10px] text-gray-500 mt-1 text-center">Tên hiển thị với tất cả mọi người · Tối đa 20 ký tự</p>
                   </div>
-                  
-                  <form onSubmit={handleAuth}>
-                    <div className="landing-form-group">
-                      <label className="landing-label">
-                        {authMode === 'guest' ? 'Tên Hiển Thị' : 'Tên Đăng Nhập'}
-                      </label>
-                      <input 
-                        type="text" 
-                        className="landing-input"
-                        value={authUsername}
-                        onChange={(e) => setAuthUsername(e.target.value)}
-                        placeholder={authMode === 'guest' ? "Nhập tên của bạn..." : "Nhập username..."}
-                      />
+
+                  <button
+                    type="submit"
+                    className="landing-btn-submit flex items-center justify-center gap-2"
+                    disabled={authCheckingUser}
+                  >
+                    {authCheckingUser ? (
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    ) : '⚡'}
+                    {authCheckingUser ? 'Đang kiểm tra...' : 'TIẾP THEO'}
+                  </button>
+                </form>
+
+                {/* Auto-login hint if localStorage has a user */}
+                {(() => {
+                  const saved = localStorage.getItem('panini_currentUser');
+                  if (!saved) return null;
+                  return (
+                    <div className="mt-4 p-3 bg-green-950/40 border border-green-500/30 rounded-xl text-center">
+                      <p className="text-[11px] text-green-400 font-bold">💾 Thiết bị này đã lưu HLV:</p>
+                      <button
+                        className="text-sm font-black text-white mt-1 hover:text-green-300 transition-colors cursor-pointer"
+                        onClick={() => { localStorage.setItem('panini_currentUser', saved); window.location.reload(); }}
+                      >
+                        👤 {saved} — Vào ngay!
+                      </button>
                     </div>
-                    
-                    {authMode !== 'guest' && (
-                      <div className="landing-form-group">
-                        <label className="landing-label">Mật Khẩu</label>
-                        <input 
-                          type="password" 
-                          className="landing-input"
-                          value={authPassword}
-                          onChange={(e) => setAuthPassword(e.target.value)}
-                          placeholder="Nhập password..."
-                        />
-                        {authMode === 'login' && (
-                          <div className="text-right mt-1.5">
-                            <button 
-                              type="button"
-                              onClick={() => { playFx('click'); setAuthMode('forgot_password'); }}
-                              className="text-[10px] text-cyan-400 hover:text-cyan-300 font-bold hover:underline cursor-pointer bg-transparent border-0 font-sans"
-                            >
-                              Quên mật khẩu?
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    
-                    <button type="submit" className="landing-btn-submit flex items-center justify-center gap-2" disabled={loadingInspectedUser}>
-                      {loadingInspectedUser ? (
-                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                      ) : null}
-                      {authMode === 'login' ? 'Vào Game' : authMode === 'register' ? 'Đăng Ký' : 'Chơi Ngay'}
-                    </button>
-                  </form>
+                  );
+                })()}
+              </div>
+            )}
+
+            {/* STEP 2A: Existing user with PIN → verify */}
+            {authStep === 'enter_pin' && (
+              <div className="animate-scale-in">
+                <div className="text-center mb-6">
+                  <div className="text-4xl mb-2">🔐</div>
+                  <h3 className="text-lg font-black text-white uppercase tracking-widest">Chào Lại, {authUsername}!</h3>
+                  <p className="text-[11px] text-gray-400 mt-1 font-semibold">Nhập mã PIN 4 số để vào tài khoản</p>
                 </div>
-              )}
 
-              {authMode === 'forgot_password' && (
-                <div className="p-4 flex flex-col gap-4 animate-scale-in">
-                  <h3 className="text-lg font-black text-cyan-400 uppercase tracking-widest text-center border-b border-white/5 pb-2.5">
-                    Khôi Phục Mật Khẩu
-                  </h3>
-                  
-                  <form onSubmit={handleForgotPassword} className="flex flex-col gap-4">
-                    <div className="landing-form-group">
-                      <label className="landing-label">Tên Đăng Nhập (Username)</label>
-                      <input 
-                        type="text" 
-                        className="landing-input"
-                        value={authUsername}
-                        onChange={(e) => setAuthUsername(e.target.value)}
-                        placeholder="Nhập tên đăng nhập cần khôi phục..."
-                      />
-                    </div>
-                    
-                    <div className="landing-form-group">
-                      <label className="landing-label">Email Khôi Phục</label>
-                      <input 
-                        type="email" 
-                        className="landing-input"
-                        value={forgotEmail}
-                        onChange={(e) => setForgotEmail(e.target.value)}
-                        placeholder="Nhập email khôi phục đã đăng ký..."
-                      />
-                    </div>
+                <form onSubmit={handleVerifyPin} className="flex flex-col gap-4">
+                  <div className="landing-form-group">
+                    <label className="landing-label">🔑 Mã PIN 4 Số</label>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={4}
+                      className="landing-input text-center text-2xl font-black tracking-[0.5em]"
+                      value={authPin}
+                      onChange={(e) => { if (e.target.value.length <= 4) setAuthPin(e.target.value); }}
+                      placeholder="••••"
+                      autoFocus
+                    />
+                  </div>
 
-                    <button type="submit" className="landing-btn-submit !bg-cyan-600 hover:!bg-cyan-500 cursor-pointer">
-                      Xác Nhận Đặt Lại
-                    </button>
-                    
-                    <button 
-                      type="button" 
-                      onClick={() => { playFx('click'); setAuthMode('login'); }}
-                      className="text-[10px] text-gray-400 hover:text-white font-bold text-center uppercase tracking-wider mt-2 cursor-pointer bg-transparent border-0 w-full"
-                    >
-                      ← Quay Lại Đăng Nhập
-                    </button>
-                  </form>
+                  <button type="submit" className="landing-btn-submit flex items-center justify-center gap-2" disabled={authCheckingUser}>
+                    {authCheckingUser ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : '🚪'}
+                    {authCheckingUser ? 'Đang xác minh...' : 'VÀO GAME'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => { setAuthStep('enter_name'); setAuthPin(''); setAuthFoundUser(null); }}
+                    className="text-[11px] text-gray-500 hover:text-white text-center font-bold uppercase tracking-wider mt-1 cursor-pointer bg-transparent border-0 w-full transition-colors"
+                  >
+                    ← Nhập tên khác
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* STEP 2B: New user → set optional PIN */}
+            {authStep === 'set_pin' && (
+              <div className="animate-scale-in">
+                <div className="text-center mb-5">
+                  <div className="text-4xl mb-2">🎉</div>
+                  <h3 className="text-lg font-black text-cyan-400 uppercase tracking-widest">Chào mừng, {authUsername}!</h3>
+                  <p className="text-[11px] text-gray-400 mt-1 font-semibold">Tài khoản mới · 3 gói thẻ miễn phí đang chờ bạn!</p>
                 </div>
-              )}
 
-              {authMode === 'reset_password_phase' && (
-                <div className="p-4 flex flex-col gap-4 animate-scale-in">
-                  <h3 className="text-lg font-black text-purple-400 uppercase tracking-widest text-center border-b border-white/5 pb-2.5">
-                    Đặt Lại Mật Khẩu Mới
-                  </h3>
-                  
-                  <form onSubmit={handleResetPasswordSubmit} className="flex flex-col gap-4">
-                    <div className="landing-form-group">
-                      <label className="landing-label">Mật Khẩu Mới</label>
-                      <input 
-                        type="password" 
-                        className="landing-input"
-                        value={newPasswordReset}
-                        onChange={(e) => setNewPasswordReset(e.target.value)}
-                        placeholder="Nhập mật khẩu mới..."
-                      />
-                    </div>
-                    
-                    <div className="landing-form-group">
-                      <label className="landing-label">Xác Nhận Mật Khẩu Mới</label>
-                      <input 
-                        type="password" 
-                        className="landing-input"
-                        value={confirmPasswordReset}
-                        onChange={(e) => setConfirmPasswordReset(e.target.value)}
-                        placeholder="Xác nhận lại mật khẩu mới..."
-                      />
-                    </div>
+                <form onSubmit={handleCreateAccount} className="flex flex-col gap-4">
+                  <div className="p-3 bg-amber-950/40 border border-amber-500/30 rounded-xl">
+                    <p className="text-[11px] text-amber-300 font-bold text-center leading-relaxed">
+                      💡 <strong>Đặt Mã PIN 4 Số</strong> để bảo vệ tài khoản và đăng nhập lại trên mọi thiết bị.<br/>
+                      <span className="text-gray-400">Để trống nếu chỉ chơi trên thiết bị này.</span>
+                    </p>
+                  </div>
 
-                    <button type="submit" className="landing-btn-submit !bg-purple-600 hover:!bg-purple-500 cursor-pointer">
-                      Đổi Mật Khẩu
-                    </button>
-                  </form>
-                </div>
-              )}
-            </div>
+                  <div className="landing-form-group">
+                    <label className="landing-label">🔑 Mã PIN 4 Số (Tuỳ chọn)</label>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={4}
+                      className="landing-input text-center text-2xl font-black tracking-[0.5em]"
+                      value={authPin}
+                      onChange={(e) => { if (e.target.value.length <= 4) setAuthPin(e.target.value); }}
+                      placeholder="Ví dụ: 1234"
+                    />
+                    <p className="text-[10px] text-gray-500 mt-1 text-center">Chọn số dễ nhớ như ngày sinh · Không cần email</p>
+                  </div>
+
+                  <button type="submit" className="landing-btn-submit !bg-gradient-to-r !from-green-500 !to-emerald-600 flex items-center justify-center gap-2" disabled={authCheckingUser}>
+                    {authCheckingUser ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : '🚀'}
+                    {authCheckingUser ? 'Đang tạo tài khoản...' : 'BẮT ĐẦU HÀNH TRÌNH!'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => { setAuthStep('enter_name'); setAuthPin(''); }}
+                    className="text-[11px] text-gray-500 hover:text-white text-center font-bold uppercase tracking-wider mt-1 cursor-pointer bg-transparent border-0 w-full transition-colors"
+                  >
+                    ← Quay lại
+                  </button>
+                </form>
+              </div>
+            )}
+
+          </div>
           </div>
         </div>
       )}
@@ -2435,6 +2717,91 @@ export default function App() {
               ))}
             </div>
           </div>
+
+          {/* HLV Achievement Milestones Tracker */}
+          <div className="w-full mt-8 glass-panel rounded-[2rem] p-6 border border-white/10 shadow-2xl bg-gradient-to-br from-slate-900/60 via-indigo-950/20 to-slate-900/60 animate-fade-in">
+            <div className="flex justify-between items-center mb-2 border-b border-white/5 pb-3">
+              <div>
+                <h4 className="text-xs font-bold text-gray-300 uppercase tracking-widest">🏆 Mốc Thành Tích HLV — Thẻ Đặc Biệt</h4>
+                <p className="text-[10px] text-gray-500 mt-1">Chơi nhiều, thắng nhiều, hoàn thành nhiệm vụ để nhận thẻ ưu tiên hiếm!</p>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] font-black text-fuchsia-400">{rewardedMilestones.length} / {ACTIVITY_MILESTONES.length} đã nhận</div>
+                <div className="w-28 h-1.5 bg-black/60 rounded-full overflow-hidden mt-1">
+                  <div className="h-full bg-gradient-to-r from-fuchsia-500 to-indigo-500 transition-all duration-700"
+                    style={{ width: `${Math.round((rewardedMilestones.length / ACTIVITY_MILESTONES.length) * 100)}%` }}></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bonus explanation */}
+            <div className="flex flex-wrap gap-2 mb-6 mt-4">
+              {[
+                { rarity: 'Bronze Edition',   bonus: '+1',  icon: '🥉', color: 'border-amber-600/40 text-amber-500' },
+                { rarity: 'Silver Edition',    bonus: '+2',  icon: '🥈', color: 'border-slate-400/40 text-slate-300' },
+                { rarity: 'Gold Edition',      bonus: '+4',  icon: '🥇', color: 'border-yellow-400/40 text-yellow-400' },
+                { rarity: 'Platinum Edition',  bonus: '+6',  icon: '💎', color: 'border-cyan-400/40 text-cyan-400' },
+                { rarity: 'Super Limited',     bonus: '+8',  icon: '👑', color: 'border-rose-400/40 text-rose-400 animate-pulse' },
+              ].map(item => (
+                <div key={item.rarity} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border bg-black/30 ${item.color} text-[10px] font-black`}>
+                  <span>{item.icon}</span>
+                  <span>{item.rarity}</span>
+                  <span className="ml-1 bg-white/10 px-1.5 py-0.5 rounded-full">{item.bonus} điểm ưu tiên</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Milestones Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {ACTIVITY_MILESTONES.map(m => {
+                const isDone = rewardedMilestones.includes(m.id);
+                const currentVal = m.type === 'played' ? (stats?.played || 0)
+                  : m.type === 'wins' ? (stats?.wins || 0)
+                  : quests.filter(q => q.isClaimed).length;
+                const progress = Math.min(currentVal, m.value);
+                const pct = Math.round((progress / m.value) * 100);
+                const rarityInfo = RARITY_LABEL[m.rarity] || { label: m.rarity, color: 'text-gray-400', bg: 'bg-gray-900/40 border-gray-500/30' };
+                const cardBonus = getCardTypeBonus(m.rarity);
+
+                return (
+                  <div key={m.id} className={`relative rounded-2xl p-4 border transition-all duration-300 overflow-hidden ${
+                    isDone
+                      ? 'bg-gradient-to-br from-emerald-950/40 to-green-900/20 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
+                      : 'bg-black/40 border-white/5 hover:border-white/10'
+                  }`}>
+                    {isDone && (
+                      <div className="absolute top-2 right-2 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center text-white text-[10px] font-black">✓</div>
+                    )}
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">{m.icon}</span>
+                      <div>
+                        <div className={`text-[9px] font-black uppercase tracking-wider ${rarityInfo.color}`}>{rarityInfo.label}</div>
+                        <div className="text-[8px] text-gray-500 font-semibold">+{cardBonus} điểm đấu</div>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-white/80 font-semibold mb-2 leading-tight">{m.desc}</p>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[9px] text-gray-500">{m.type === 'played' ? 'Trận đã đá' : m.type === 'wins' ? 'Trận thắng' : 'Nhiệm vụ'}</span>
+                      <span className={`text-[9px] font-black ${isDone ? 'text-emerald-400' : 'text-white/60'}`}>{progress} / {m.value}</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-black/60 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-700 ${
+                          isDone ? 'bg-gradient-to-r from-emerald-400 to-green-500'
+                            : m.rarity === 'Super Limited' ? 'bg-gradient-to-r from-rose-500 to-fuchsia-500'
+                            : m.rarity === 'Platinum Edition' ? 'bg-gradient-to-r from-cyan-400 to-sky-500'
+                            : m.rarity === 'Gold Edition' || m.rarity === 'Golden Baller' ? 'bg-gradient-to-r from-yellow-400 to-amber-500'
+                            : m.rarity === 'Silver Edition' ? 'bg-gradient-to-r from-slate-300 to-slate-400'
+                            : 'bg-gradient-to-r from-amber-600 to-amber-700'
+                        }`}
+                        style={{ width: `${pct}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
 
@@ -2776,26 +3143,220 @@ export default function App() {
       )}
 
       {gameState === 'packOpening' && (
-        <div className="pack-opener">
-          <h2>Nhận Đội Hình Đầu Tiên Của Bạn</h2>
-          {openedCards.length === 0 ? (
-            <div 
-              className={`pack-visual ${isPackOpeningAnim ? 'opening' : ''}`}
-              onClick={!isPackOpeningAnim ? openPack : undefined}
-            >
-            </div>
-          ) : (
-            <>
-              <div className="cards-grid">
-                {openedCards.map((card, i) => (
-                  <Card key={i} player={card} />
-                ))}
-              </div>
-              <button className="btn mt-12 w-full max-w-sm" onClick={() => setGameState('lobby')}>
-                ← Trở Về Sảnh Chính
+        <div className="min-h-screen bg-gradient-to-b from-slate-950 via-purple-950/20 to-slate-950 p-4 sm:p-8 pt-20 overflow-y-auto">
+          <div className="max-w-4xl mx-auto">
+
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <button
+                className="text-gray-400 hover:text-white bg-black/40 hover:bg-black/80 px-3 py-1.5 rounded-full text-xs font-bold border border-white/10 transition-all"
+                onClick={() => { setOpenedCards([]); setRevealingCards([]); setGameState('lobby'); }}
+              >
+                ← Về Sảnh
               </button>
-            </>
-          )}
+              <h2 className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-cyan-400 uppercase tracking-widest">Mở Gói Thẻ</h2>
+              <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-yellow-500/20">
+                <span className="text-yellow-400 text-sm">💰</span>
+                <span className="text-white font-black text-sm">{coins} Xu</span>
+              </div>
+            </div>
+
+            {/* Pity bar */}
+            <div className="mb-6 p-3 bg-black/40 rounded-2xl border border-fuchsia-500/20">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] font-bold text-fuchsia-300 uppercase tracking-wider">✎ Bảo đảm Siêu Sao</span>
+                <span className="text-[10px] font-black text-white">{pityCounter}/10</span>
+              </div>
+              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${(pityCounter / 10) * 100}%`,
+                    background: pityCounter >= 8 ? 'linear-gradient(90deg,#f43f5e,#fbbf24)' : 'linear-gradient(90deg,#a855f7,#6366f1)'
+                  }}
+                />
+              </div>
+              <p className="text-[9px] text-gray-500 mt-1">
+                {pityCounter >= 9 ? '🔥 Gói tiếp theo BẢO ĐẢM ra Siêu Sao!' : `Còn ${10 - pityCounter} gói nữa để bảo đảm Siêu Sao`}
+              </p>
+            </div>
+
+            {/* Pack type selector */}
+            {openedCards.length === 0 && !isPackOpeningAnim && (
+              <div className="mb-6">
+                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">📦 Chọn Loại Gói</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {Object.entries(PACK_CONFIGS).map(([key, cfg]) => {
+                    const isSelected = packType === key;
+                    const canAfford = key === 'starter' ? freePacks > 0 : coins >= cfg.cost;
+                    return (
+                      <button
+                        key={key}
+                        className={`p-3 rounded-2xl border flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-fuchsia-900/40 border-fuchsia-500/60 shadow-[0_0_20px_rgba(217,70,239,0.2)]'
+                            : canAfford ? 'bg-black/40 border-white/10 hover:border-white/30' : 'bg-black/20 border-white/5 opacity-40'
+                        }`}
+                        onClick={() => canAfford && setPackType(key)}
+                        disabled={!canAfford}
+                      >
+                        <span className="text-2xl">{cfg.emoji}</span>
+                        <span className="text-[11px] font-black text-white">{cfg.name}</span>
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                          key === 'starter' ? 'bg-green-900/50 text-green-400 border border-green-500/30' :
+                          key === 'ultimate' ? 'bg-rose-900/50 text-rose-400 border border-rose-500/30' :
+                          'bg-yellow-900/50 text-yellow-400 border border-yellow-500/30'
+                        }`}>
+                          {key === 'starter' ? (freePacks > 0 ? `${freePacks} miễn phí` : 'Hết gói') : `${cfg.cost} Xu`}
+                        </span>
+                        <span className="text-[8px] text-gray-500">{cfg.cards} thẻ · đảm {cfg.guaranteedRare} hiếm+</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Rarity legend */}
+            {openedCards.length === 0 && !isPackOpeningAnim && (
+              <div className="mb-6 p-3 bg-black/30 rounded-2xl border border-white/5">
+                <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-2">Phân Hạng Thẻ</p>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(RARITY_TIERS).map(([key, tier]) => (
+                    <span key={key} className="text-[9px] font-bold px-2 py-1 rounded-full border" style={{ color: tier.color, borderColor: tier.color + '40', background: tier.color + '15' }}>
+                      {tier.star} {tier.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Pack visual / open button */}
+            {openedCards.length === 0 && (
+              <div className="flex flex-col items-center gap-4 mb-8">
+                {isPackOpeningAnim ? (
+                  <div className="flex flex-col items-center gap-4 py-12">
+                    <div className="w-24 h-24 border-4 border-fuchsia-500 border-t-transparent rounded-full animate-spin" />
+                    <p className="text-white font-black text-lg animate-pulse">Khủ đang xổ thẻ...</p>
+                    <div className="flex gap-1">
+                      {['🌟','✨','💫','🌟','✨'].map((s,i) => (
+                        <span key={i} className="text-xl animate-bounce" style={{ animationDelay: `${i*150}ms` }}>{s}</span>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    className="relative cursor-pointer group"
+                    onClick={() => openPack(packType)}
+                  >
+                    <div className="absolute inset-0 bg-fuchsia-500/20 rounded-3xl blur-2xl group-hover:bg-fuchsia-500/40 transition-all duration-500" />
+                    <div className="relative w-48 h-64 bg-gradient-to-b from-fuchsia-900/60 to-purple-950/80 rounded-3xl border-2 border-fuchsia-500/50 group-hover:border-fuchsia-400 shadow-[0_0_60px_rgba(217,70,239,0.3)] group-hover:shadow-[0_0_80px_rgba(217,70,239,0.5)] transition-all duration-300 group-hover:scale-105 flex flex-col items-center justify-center gap-3">
+                      <span className="text-6xl group-hover:scale-110 transition-transform duration-300">{PACK_CONFIGS[packType].emoji}</span>
+                      <span className="text-sm font-black text-white uppercase tracking-widest">{PACK_CONFIGS[packType].name}</span>
+                      <span className="text-xs text-fuchsia-300 font-bold">👆 Nhấn để mở</span>
+                      {pityCounter >= 8 && (
+                        <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full animate-bounce">🔥 GẦN!</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Cards reveal grid */}
+            {openedCards.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-black text-white">Kết quả ({openedCards.length} thẻ)</h3>
+                  <div className="flex gap-2">
+                    {['mythic','legendary','epic','rare'].map(r => {
+                      const count = openedCards.filter(c => c._rarity === r).length;
+                      if (count === 0) return null;
+                      const tier = RARITY_TIERS[r];
+                      return (
+                        <span key={r} className="text-[9px] font-black px-2 py-1 rounded-full border" style={{ color: tier.color, borderColor: tier.color + '40', background: tier.color + '15' }}>
+                          {tier.star} ×{count}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-8">
+                  {openedCards.map((card, i) => {
+                    const rarity = card._rarity || 'common';
+                    const tier = RARITY_TIERS[rarity];
+                    const isSuperstar = rarity === 'mythic' || rarity === 'legendary';
+                    return (
+                      <div
+                        key={i}
+                        className="relative animate-scale-in"
+                        style={{ animationDelay: `${i * 80}ms` }}
+                      >
+                        {/* Rarity glow */}
+                        {isSuperstar && (
+                          <div
+                            className="absolute -inset-2 rounded-3xl blur-lg opacity-70 animate-pulse"
+                            style={{ background: tier.glow }}
+                          />
+                        )}
+                        <div
+                          className="relative rounded-2xl overflow-hidden"
+                          style={isSuperstar ? { boxShadow: `0 0 30px ${tier.glow}, 0 0 60px ${tier.glow}` } : {}}
+                        >
+                          <Card player={card} />
+                        </div>
+                        {/* Rarity badge */}
+                        <div
+                          className="absolute top-1.5 right-1.5 text-[8px] font-black px-1.5 py-0.5 rounded-full border backdrop-blur-sm z-30"
+                          style={{ color: tier.color, borderColor: tier.color + '60', background: 'rgba(0,0,0,0.7)' }}
+                        >
+                          {tier.star} {tier.label}
+                        </div>
+                        {isSuperstar && (
+                          <div className="absolute inset-0 pointer-events-none z-20 rounded-2xl overflow-hidden">
+                            <div
+                              className="absolute inset-0 opacity-30 animate-pulse"
+                              style={{ background: `linear-gradient(135deg, transparent 30%, ${tier.color}60 50%, transparent 70%)`, backgroundSize: '200% 200%' }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Superstar highlight */}
+                {openedCards.some(c => ['mythic','legendary'].includes(c._rarity)) && (
+                  <div className="mb-6 p-4 bg-gradient-to-r from-rose-950/60 to-amber-950/60 border border-yellow-500/30 rounded-2xl text-center">
+                    <p className="text-yellow-400 font-black text-sm mb-1">🌟🌟🌟 CHÚC MỮNG! Bạn nhận được SIÊU SAO! 🌟🌟🌟</p>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {openedCards.filter(c => ['mythic','legendary'].includes(c._rarity)).map((c, i) => (
+                        <span key={i} className="text-white font-bold text-xs px-3 py-1 bg-yellow-500/20 border border-yellow-500/30 rounded-full">
+                          ✨ {c.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-fuchsia-700 to-purple-700 hover:from-fuchsia-600 hover:to-purple-600 text-white font-black text-sm uppercase tracking-widest transition-all cursor-pointer"
+                    onClick={() => { setOpenedCards([]); setRevealingCards([]); }}
+                  >
+                    🌀 Mở Tiếp
+                  </button>
+                  <button
+                    className="flex-1 py-3.5 rounded-2xl bg-black/60 border border-white/20 hover:border-white/40 text-white font-black text-sm uppercase tracking-widest transition-all cursor-pointer"
+                    onClick={() => { setOpenedCards([]); setRevealingCards([]); setGameState('lobby'); }}
+                  >
+                    ← Về Sảnh
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

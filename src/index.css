@@ -363,6 +363,10 @@ h2 {
 .card[data-rarity="Midfield Maestro"] { border-color: var(--color-midfield); }
 .card[data-rarity="Goal Machine"] { border-color: var(--color-striker); }
 .card[data-rarity^="Attacker ARG"], .card[data-rarity^="Midfielder ARG"], .card[data-rarity^="Defender ARG"] { border-color: var(--color-arg22); box-shadow: 0 0 20px rgba(56, 189, 248, 0.5); }
+.card[data-rarity="Bronze Edition"] { border-color: #b45309; box-shadow: 0 0 15px rgba(180, 83, 9, 0.4); background: linear-gradient(135deg, rgba(180,83,9,0.1), rgba(0,0,0,0.4)); }
+.card[data-rarity="Silver Edition"] { border-color: #cbd5e1; box-shadow: 0 0 20px rgba(203, 213, 225, 0.5); background: linear-gradient(135deg, rgba(203,213,225,0.15), rgba(0,0,0,0.5)); }
+.card[data-rarity="Platinum Edition"] { border-color: #38bdf8; box-shadow: 0 0 25px rgba(56, 189, 248, 0.6); background: linear-gradient(135deg, rgba(56,189,248,0.2), rgba(30,58,138,0.4)); }
+.card[data-rarity="Super Limited"] { border-color: #f43f5e; box-shadow: 0 0 30px rgba(244, 63, 94, 0.8); background: linear-gradient(135deg, rgba(244,63,94,0.3), rgba(88,28,135,0.5)); }
 
 /* Holo effect for non-base cards */
 .card:not([data-rarity="Base"])::after {
