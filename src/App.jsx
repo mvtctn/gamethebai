@@ -668,6 +668,21 @@ export default function App() {
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
   const [leaderboardTab, setLeaderboardTab] = useState('leaderboard'); // 'leaderboard', 'tiers', 'milestones'
 
+  // Global Escape Key Handler for Modals
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (selectedUpgradeCard) setSelectedUpgradeCard(null);
+        if (inspectingUser) {
+          setInspectingUser(null);
+          setInspectedUserData(null);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedUpgradeCard, inspectingUser]);
+
   // Sync rewardedMilestones to localStorage and Firebase
   useEffect(() => {
     if (currentUser) {
@@ -4273,8 +4288,14 @@ export default function App() {
             const upgradeCost = lvl * 150;
             const isMaxLvl = lvl >= 10;
             return (
-              <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in">
-                <div className="glass-panel p-6 sm:p-8 rounded-[2.5rem] max-w-lg w-full flex flex-col md:flex-row items-center gap-6 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950/80 shadow-[0_0_80px_rgba(30,58,138,0.5)] relative border border-white/10">
+              <div 
+                className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in"
+                onClick={() => setSelectedUpgradeCard(null)}
+              >
+                <div 
+                  className="glass-panel p-6 sm:p-8 rounded-[2.5rem] max-w-lg w-full flex flex-col md:flex-row items-center gap-6 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950/80 shadow-[0_0_80px_rgba(30,58,138,0.5)] relative border border-white/10"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <button 
                     className="absolute top-4 right-4 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full w-8 h-8 flex items-center justify-center transition-colors border border-white/10 z-50 cursor-pointer"
                     onClick={() => setSelectedUpgradeCard(null)}
@@ -4722,8 +4743,14 @@ export default function App() {
 
       {/* 1. INSPECT PROFILE MODAL */}
       {inspectingUser && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
-          <div className="glass-panel w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-[2.5rem] border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col relative bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/80 p-8 gap-6 hide-scrollbar">
+        <div 
+          className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in"
+          onClick={() => { playFx('click'); setInspectingUser(null); setInspectedUserData(null); }}
+        >
+          <div 
+            className="glass-panel w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-[2.5rem] border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col relative bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/80 p-8 gap-6 hide-scrollbar"
+            onClick={(e) => e.stopPropagation()}
+          >
             
             <button 
               className="absolute top-4 right-4 text-gray-400 hover:text-white bg-black/40 hover:bg-black/80 p-2 rounded-full w-8 h-8 flex items-center justify-center transition-colors z-[160] cursor-pointer"
