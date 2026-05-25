@@ -4,7 +4,7 @@ import confetti from 'canvas-confetti';
 import playersData from './players.json';
 import MultiplayerEngine from './MultiplayerEngine';
 import { database, isConnectedToFirebase } from './firebase';
-import { ref, set, push, onValue, onDisconnect, serverTimestamp } from 'firebase/database';
+import { ref, set, push, onValue, onDisconnect, serverTimestamp, get } from 'firebase/database';
 
 const PITCH_POSITIONS = [
   { top: '80%', left: '50%' }, // GK
@@ -247,6 +247,24 @@ export default function App() {
     return saved ? JSON.parse(saved) : { played: 0, wins: 0, draws: 0, losses: 0 };
   });
 
+  // Email recovery state
+  const [email, setEmail] = useState(() => {
+    if (!currentUser) return "";
+    const saved = localStorage.getItem(`panini_${currentUser}_email`);
+    return saved || "";
+  });
+
+  // Forgot password inputs
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [newPasswordReset, setNewPasswordReset] = useState("");
+  const [confirmPasswordReset, setConfirmPasswordReset] = useState("");
+
+  // Profile Change Password states
+  const [profileOldPassword, setProfileOldPassword] = useState("");
+  const [profileNewPassword, setProfileNewPassword] = useState("");
+  const [profileConfirmPassword, setProfileConfirmPassword] = useState("");
+  const [profileEmailInput, setProfileEmailInput] = useState("");
+
   // Level Up Modal State
   const [showLevelUpModal, setShowLevelUpModal] = useState(null);
 
@@ -326,6 +344,15 @@ export default function App() {
     }
   }, [stats, currentUser]);
 
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(`panini_${currentUser}_email`, email);
+      if (isConnectedToFirebase) {
+        set(ref(database, `/users/${currentUser}/email`), email);
+      }
+    }
+  }, [email, currentUser]);
+
   // Sync from Firebase on login/mount
   useEffect(() => {
     if (!currentUser || !isConnectedToFirebase) return;
@@ -341,11 +368,14 @@ export default function App() {
         if (data.level !== undefined) setLevel(data.level);
         if (data.xp !== undefined) setXp(data.xp);
         if (data.stats) setStats(data.stats);
+        if (data.email !== undefined) setEmail(data.email);
       } else {
         // Initialize new user on Firebase Realtime Database
         const starterCollection = playersData.filter(p => p.type === 'Base').slice(0, 11);
         const initialData = {
           username: currentUser,
+          password: "",
+          email: "",
           coins: 200,
           collection: starterCollection,
           squad: starterCollection,
@@ -700,11 +730,195 @@ export default function App() {
   const [roundResultMsg, setRoundResultMsg] = useState("");
   const [playedCardIds, setPlayedCardIds] = useState([]);
 
-  const handleAuth = (e) => {
+  const handleAuth = async (e) => {
     e.preventDefault();
     if (!authUsername.trim()) return;
-    localStorage.setItem('panini_currentUser', authUsername);
-    window.location.reload();
+    const cleanUsername = authUsername.trim();
+
+    if (!isConnectedToFirebase) {
+      // offline fallback
+      localStorage.setItem('panini_currentUser', cleanUsername);
+      window.location.reload();
+      return;
+    }
+
+    setLoadingInspectedUser(true);
+    const userRef = ref(database, `/users/${cleanUsername}`);
+    
+    try {
+      const snapshot = await get(userRef);
+      const val = snapshot.val();
+
+      if (authMode === 'login') {
+        if (!val) {
+          showAlert("Không Tồn Tại ❌", "HLV này chưa được đăng ký! Vui lòng chọn tab Đăng Ký để tạo tài khoản mới.");
+          setLoadingInspectedUser(false);
+          return;
+        }
+        
+        const storedPassword = val.password || "";
+        if (storedPassword && storedPassword !== authPassword) {
+          showAlert("Mật Khẩu Sai 🔑", "Mật khẩu nhập vào không chính xác! Vui lòng nhập lại.");
+          setLoadingInspectedUser(false);
+          return;
+        }
+        
+        // Success
+        localStorage.setItem('panini_currentUser', cleanUsername);
+        window.location.reload();
+      } 
+      else if (authMode === 'register') {
+        if (val) {
+          showAlert("Đã Tồn Tại 👤", "Tên HLV này đã được sử dụng! Vui lòng đăng nhập hoặc lựa chọn một tên HLV khác.");
+          setLoadingInspectedUser(false);
+          return;
+        }
+        if (!authPassword) {
+          showAlert("Thiếu Thông Tin 🔒", "Vui lòng nhập mật khẩu để bảo vệ tài khoản HLV của bạn!");
+          setLoadingInspectedUser(false);
+          return;
+        }
+
+        // Create new account on Firebase
+        const starterCollection = playersData.filter(p => p.type === 'Base').slice(0, 11);
+        const initialData = {
+          username: cleanUsername,
+          password: authPassword,
+          email: "",
+          coins: 200,
+          collection: starterCollection,
+          squad: starterCollection,
+          level: 1,
+          xp: 0,
+          stats: { played: 0, wins: 0, draws: 0, losses: 0 },
+          quests: [
+            { id: 'play1', title: 'Đá 1 trận với AI', target: 1, progress: 0, reward: 50, isCompleted: false, isClaimed: false },
+            { id: 'win1', title: 'Thắng 1 trận với AI', target: 1, progress: 0, reward: 100, isCompleted: false, isClaimed: false },
+            { id: 'collect20', title: 'Sưu tầm 20 thẻ khác nhau', target: 20, progress: 0, reward: 150, isCompleted: false, isClaimed: false }
+          ]
+        };
+        await set(userRef, initialData);
+        localStorage.setItem('panini_currentUser', cleanUsername);
+        window.location.reload();
+      }
+      else if (authMode === 'guest') {
+        if (val) {
+          showAlert("Tên Đã Đăng Ký 🔒", "Tên HLV này đã có tài khoản bảo mật! Bạn không thể chơi nhanh bằng tên này. Vui lòng đăng nhập bằng Mật Khẩu hoặc chọn tên hiển thị khác.");
+          setLoadingInspectedUser(false);
+          return;
+        }
+
+        // Just log in as guest, first mount will initialize on Firebase
+        localStorage.setItem('panini_currentUser', cleanUsername);
+        window.location.reload();
+      }
+    } catch (err) {
+      console.error(err);
+      showAlert("Lỗi Máy Chủ ❌", "Không thể xác minh tài khoản. Vui lòng thử lại sau.");
+      setLoadingInspectedUser(false);
+    }
+  };
+
+  // Forgot password verify email handler
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    if (!authUsername.trim() || !forgotEmail.trim()) {
+      showAlert("Thiếu Thông Tin 📋", "Vui lòng nhập đầy đủ Tên Đăng Nhập và Email khôi phục!");
+      return;
+    }
+    const cleanUsername = authUsername.trim();
+
+    try {
+      const snapshot = await get(ref(database, `/users/${cleanUsername}`));
+      const val = snapshot.val();
+      if (!val) {
+        showAlert("Không Tồn Tại ❌", "HLV này chưa được đăng ký!");
+        return;
+      }
+
+      const storedEmail = val.email || "";
+      if (!storedEmail) {
+        showAlert("Chưa Thiết Lập 🔒", "HLV này chưa thiết lập Email khôi phục trong Hồ Sơ! Vui lòng liên hệ Admin để đặt lại mật khẩu.");
+        return;
+      }
+
+      if (storedEmail.trim().toLowerCase() !== forgotEmail.trim().toLowerCase()) {
+        showAlert("Không Khớp ❌", "Email khôi phục không trùng khớp với thông tin đã đăng ký!");
+        return;
+      }
+
+      // Success, advance to reset phase
+      setAuthMode('reset_password_phase');
+      showAlert("Xác Minh Thành Công ✅", "Xác minh Email khôi phục thành công! Vui lòng nhập mật khẩu mới của bạn.");
+    } catch (err) {
+      showAlert("Lỗi Máy Chủ ❌", "Đã xảy ra lỗi khi kiểm tra email khôi phục.");
+    }
+  };
+
+  const handleResetPasswordSubmit = async (e) => {
+    e.preventDefault();
+    if (!newPasswordReset || !confirmPasswordReset) {
+      showAlert("Thiếu Thông Tin 🔒", "Vui lòng nhập đầy đủ mật khẩu mới và xác nhận mật khẩu mới!");
+      return;
+    }
+    if (newPasswordReset !== confirmPasswordReset) {
+      showAlert("Không Trùng Khớp ❌", "Mật khẩu mới và mật khẩu xác nhận không giống nhau!");
+      return;
+    }
+
+    try {
+      const cleanUsername = authUsername.trim();
+      await set(ref(database, `/users/${cleanUsername}/password`), newPasswordReset);
+      showAlert("Thành Công 🎉", "Đặt lại mật khẩu thành công! Bây giờ bạn có thể đăng nhập bằng mật khẩu mới.");
+      setAuthMode('login');
+      setAuthPassword("");
+      setNewPasswordReset("");
+      setConfirmPasswordReset("");
+      setForgotEmail("");
+    } catch (err) {
+      showAlert("Lỗi Máy Chủ ❌", "Không thể ghi đè mật khẩu mới. Vui lòng thử lại sau.");
+    }
+  };
+
+  // Profile Page Change Email and Password handlers
+  const handleUpdateEmail = async (e) => {
+    e.preventDefault();
+    if (!profileEmailInput.trim()) {
+      showAlert("Lỗi 📧", "Email không được để trống!");
+      return;
+    }
+    setEmail(profileEmailInput.trim());
+    showAlert("Thành Công 🎉", "Đã cập nhật Email khôi phục tài khoản thành công!");
+  };
+
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault();
+    if (!profileOldPassword || !profileNewPassword || !profileConfirmPassword) {
+      showAlert("Lỗi 🔒", "Vui lòng nhập đầy đủ mật khẩu cũ, mật khẩu mới và xác nhận mật khẩu!");
+      return;
+    }
+    if (profileNewPassword !== profileConfirmPassword) {
+      showAlert("Lỗi ❌", "Mật khẩu mới và xác nhận mật khẩu không giống nhau!");
+      return;
+    }
+
+    try {
+      const snapshot = await get(ref(database, `/users/${currentUser}/password`));
+      const storedPassword = snapshot.val() || "";
+      
+      if (storedPassword && storedPassword !== profileOldPassword) {
+        showAlert("Sai Mật Khẩu 🔑", "Mật khẩu cũ không chính xác!");
+        return;
+      }
+
+      await set(ref(database, `/users/${currentUser}/password`), profileNewPassword);
+      showAlert("Thành Công 🎉", "Đã đổi mật khẩu tài khoản thành công!");
+      setProfileOldPassword("");
+      setProfileNewPassword("");
+      setProfileConfirmPassword("");
+    } catch (err) {
+      showAlert("Lỗi Máy Chủ ❌", "Không thể cập nhật mật khẩu mới.");
+    }
   };
 
   const handleLogout = () => {
@@ -1012,6 +1226,7 @@ export default function App() {
 
   const handlePvpEnd = (result) => {
     if (result === 'win') {
+      setCoins(c => c + 100);
       gainXp(100);
       setStats(s => ({ ...s, played: s.played + 1, wins: s.wins + 1 }));
       showAlert("Chiến Thắng! 🏆", "Chúc mừng! Bạn giành chiến thắng PvP và nhận được 100 Xu + 100 XP.");
@@ -1020,88 +1235,178 @@ export default function App() {
       gainXp(40);
       setStats(s => ({ ...s, played: s.played + 1, draws: s.draws + 1 }));
       showAlert("Hòa Trận! 🤝", "Tỉ số cân bằng! Bạn nhận được 30 Xu và 40 XP.");
-    } else if (result === 'lose') {
-      setCoins(c => c + 10);
-      gainXp(20);
+    } else {
       setStats(s => ({ ...s, played: s.played + 1, losses: s.losses + 1 }));
-      showAlert("Thất Bại! 😤", "Đừng nản lòng! Bạn vẫn nhận được 10 Xu và 20 XP giữ tinh thần thi đấu.");
+      showAlert("Thất Bại! 😢", "Bạn đã thất bại trong trận đấu PvP. Chúc bạn may mắn lần sau!");
     }
-    setGameState('lobby');
-    setActivePvpTarget(null);
+    returnToLobby();
   };
 
   return (
     <>
       {/* Auth Modal overlay over everything if not logged in */}
       {!currentUser && (
-        <div className="landing-wrapper">
-          <div className="landing-background"></div>
-          <div className="landing-overlay-pattern"></div>
-          <div className="landing-content">
-            
-            <div className="landing-title-area">
-              <div className="poster-year">26</div>
-              <h1 className="poster-title">WC PANINI</h1>
-              <div className="poster-subtitle">Thế Hệ Mới - Ultimate Team</div>
-            </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-fade-in">
+          <div className="flex flex-col items-center max-w-4xl w-full">
+            <h1 className="text-4xl sm:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 italic tracking-widest text-center mb-1 drop-shadow-[0_5px_15px_rgba(251,191,36,0.3)] animate-pulse-slow uppercase select-none leading-none pr-4">
+              WORLD CUP 2026
+            </h1>
+            <h2 className="text-xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-400 italic tracking-wider text-center mb-8 drop-shadow-[0_3px_10px_rgba(34,211,238,0.3)] uppercase select-none leading-none pr-2">
+              ULTIMATE CARD CHAMPIONS
+            </h2>
 
-            <div className="landing-form-area">
-              <div className="landing-glass-panel">
-                <div className="landing-tabs">
-                  <button 
-                    className={`landing-tab-btn ${authMode === 'login' ? 'active' : 'inactive'}`}
-                    onClick={() => setAuthMode('login')}
-                  >
-                    Đăng Nhập
-                  </button>
-                  <button 
-                    className={`landing-tab-btn ${authMode === 'register' ? 'active' : 'inactive'}`}
-                    onClick={() => setAuthMode('register')}
-                  >
-                    Đăng Ký
-                  </button>
-                  <button 
-                    className={`landing-tab-btn ${authMode === 'guest' ? 'active' : 'inactive'}`}
-                    onClick={() => setAuthMode('guest')}
-                  >
-                    Chơi Nhanh
-                  </button>
-                </div>
-                
-                <form onSubmit={handleAuth}>
-                  <div className="landing-form-group">
-                    <label className="landing-label">
-                      {authMode === 'guest' ? 'Tên Hiển Thị' : 'Tên Đăng Nhập'}
-                    </label>
-                    <input 
-                      type="text" 
-                      className="landing-input"
-                      value={authUsername}
-                      onChange={(e) => setAuthUsername(e.target.value)}
-                      placeholder={authMode === 'guest' ? "Nhập tên của bạn..." : "Nhập username..."}
-                    />
+            <div className="landing-glass-panel">
+              {(authMode === 'login' || authMode === 'register' || authMode === 'guest') && (
+                <div className="animate-scale-in">
+                  <div className="landing-tabs">
+                    <button 
+                      className={`landing-tab-btn ${authMode === 'login' ? 'active' : 'inactive'}`}
+                      onClick={() => setAuthMode('login')}
+                    >
+                      Đăng Nhập
+                    </button>
+                    <button 
+                      className={`landing-tab-btn ${authMode === 'register' ? 'active' : 'inactive'}`}
+                      onClick={() => setAuthMode('register')}
+                    >
+                      Đăng Ký
+                    </button>
+                    <button 
+                      className={`landing-tab-btn ${authMode === 'guest' ? 'active' : 'inactive'}`}
+                      onClick={() => setAuthMode('guest')}
+                    >
+                      Chơi Nhanh
+                    </button>
                   </div>
                   
-                  {authMode !== 'guest' && (
+                  <form onSubmit={handleAuth}>
                     <div className="landing-form-group">
-                      <label className="landing-label">Mật Khẩu</label>
+                      <label className="landing-label">
+                        {authMode === 'guest' ? 'Tên Hiển Thị' : 'Tên Đăng Nhập'}
+                      </label>
+                      <input 
+                        type="text" 
+                        className="landing-input"
+                        value={authUsername}
+                        onChange={(e) => setAuthUsername(e.target.value)}
+                        placeholder={authMode === 'guest' ? "Nhập tên của bạn..." : "Nhập username..."}
+                      />
+                    </div>
+                    
+                    {authMode !== 'guest' && (
+                      <div className="landing-form-group">
+                        <label className="landing-label">Mật Khẩu</label>
+                        <input 
+                          type="password" 
+                          className="landing-input"
+                          value={authPassword}
+                          onChange={(e) => setAuthPassword(e.target.value)}
+                          placeholder="Nhập password..."
+                        />
+                        {authMode === 'login' && (
+                          <div className="text-right mt-1.5">
+                            <button 
+                              type="button"
+                              onClick={() => { playFx('click'); setAuthMode('forgot_password'); }}
+                              className="text-[10px] text-cyan-400 hover:text-cyan-300 font-bold hover:underline cursor-pointer bg-transparent border-0 font-sans"
+                            >
+                              Quên mật khẩu?
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    <button type="submit" className="landing-btn-submit flex items-center justify-center gap-2" disabled={loadingInspectedUser}>
+                      {loadingInspectedUser ? (
+                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                      ) : null}
+                      {authMode === 'login' ? 'Vào Game' : authMode === 'register' ? 'Đăng Ký' : 'Chơi Ngay'}
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {authMode === 'forgot_password' && (
+                <div className="p-4 flex flex-col gap-4 animate-scale-in">
+                  <h3 className="text-lg font-black text-cyan-400 uppercase tracking-widest text-center border-b border-white/5 pb-2.5">
+                    Khôi Phục Mật Khẩu
+                  </h3>
+                  
+                  <form onSubmit={handleForgotPassword} className="flex flex-col gap-4">
+                    <div className="landing-form-group">
+                      <label className="landing-label">Tên Đăng Nhập (Username)</label>
+                      <input 
+                        type="text" 
+                        className="landing-input"
+                        value={authUsername}
+                        onChange={(e) => setAuthUsername(e.target.value)}
+                        placeholder="Nhập tên đăng nhập cần khôi phục..."
+                      />
+                    </div>
+                    
+                    <div className="landing-form-group">
+                      <label className="landing-label">Email Khôi Phục</label>
+                      <input 
+                        type="email" 
+                        className="landing-input"
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        placeholder="Nhập email khôi phục đã đăng ký..."
+                      />
+                    </div>
+
+                    <button type="submit" className="landing-btn-submit !bg-cyan-600 hover:!bg-cyan-500 cursor-pointer">
+                      Xác Nhận Đặt Lại
+                    </button>
+                    
+                    <button 
+                      type="button" 
+                      onClick={() => { playFx('click'); setAuthMode('login'); }}
+                      className="text-[10px] text-gray-400 hover:text-white font-bold text-center uppercase tracking-wider mt-2 cursor-pointer bg-transparent border-0 w-full"
+                    >
+                      ← Quay Lại Đăng Nhập
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {authMode === 'reset_password_phase' && (
+                <div className="p-4 flex flex-col gap-4 animate-scale-in">
+                  <h3 className="text-lg font-black text-purple-400 uppercase tracking-widest text-center border-b border-white/5 pb-2.5">
+                    Đặt Lại Mật Khẩu Mới
+                  </h3>
+                  
+                  <form onSubmit={handleResetPasswordSubmit} className="flex flex-col gap-4">
+                    <div className="landing-form-group">
+                      <label className="landing-label">Mật Khẩu Mới</label>
                       <input 
                         type="password" 
                         className="landing-input"
-                        value={authPassword}
-                        onChange={(e) => setAuthPassword(e.target.value)}
-                        placeholder="Nhập password..."
+                        value={newPasswordReset}
+                        onChange={(e) => setNewPasswordReset(e.target.value)}
+                        placeholder="Nhập mật khẩu mới..."
                       />
                     </div>
-                  )}
-                  
-                  <button type="submit" className="landing-btn-submit">
-                    {authMode === 'login' ? 'Vào Game' : authMode === 'register' ? 'Đăng Ký' : 'Chơi Ngay'}
-                  </button>
-                </form>
-              </div>
-            </div>
+                    
+                    <div className="landing-form-group">
+                      <label className="landing-label">Xác Nhận Mật Khẩu Mới</label>
+                      <input 
+                        type="password" 
+                        className="landing-input"
+                        value={confirmPasswordReset}
+                        onChange={(e) => setConfirmPasswordReset(e.target.value)}
+                        placeholder="Xác nhận lại mật khẩu mới..."
+                      />
+                    </div>
 
+                    <button type="submit" className="landing-btn-submit !bg-purple-600 hover:!bg-purple-500 cursor-pointer">
+                      Đổi Mật Khẩu
+                    </button>
+                  </form>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -1122,18 +1427,18 @@ export default function App() {
                   HLV <span className="text-amber-400 font-extrabold">{activeInvite.host}</span> (Đội hình: <span className="text-cyan-400 font-black">{activeInvite.hostRating} OVR</span>) muốn thách đấu PVP với bạn! Bạn có dám chấp nhận?
                 </p>
                 
-                <div className="flex gap-4 w-full">
+                <div className="flex gap-4 w-full mt-2">
                   <button 
-                    className="flex-1 btn !bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-black tracking-wider uppercase py-4 rounded-xl shadow-lg shadow-green-900/50 active:scale-95 transition-all cursor-pointer"
+                    className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-full border border-emerald-500/40 bg-emerald-950/20 text-emerald-300 hover:text-white hover:bg-gradient-to-r hover:from-emerald-600 hover:to-green-500 hover:border-transparent hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] active:scale-95 transition-all duration-300 font-extrabold uppercase text-xs tracking-widest cursor-pointer backdrop-blur-sm"
                     onClick={() => acceptChallenge(activeInvite)}
                   >
-                    ĐỒNG Ý 🤝
+                    🤝 Đồng Ý
                   </button>
                   <button 
-                    className="flex-1 btn !bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-bold tracking-wider uppercase py-4 rounded-xl shadow-lg shadow-red-900/50 active:scale-95 transition-all cursor-pointer"
+                    className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-full border border-red-500/40 bg-red-950/20 text-red-300 hover:text-white hover:bg-gradient-to-r hover:from-red-600 hover:to-rose-500 hover:border-transparent hover:shadow-[0_0_25px_rgba(239,68,68,0.5)] active:scale-95 transition-all duration-300 font-extrabold uppercase text-xs tracking-widest cursor-pointer backdrop-blur-sm"
                     onClick={declineChallenge}
                   >
-                    TỪ CHỐI ✕
+                    ✕ Từ Chối
                   </button>
                 </div>
               </div>
@@ -2055,10 +2360,15 @@ export default function App() {
               ✕
             </button>
 
-            {loadingInspectedUser || !inspectedUserData ? (
+            {loadingInspectedUser ? (
               <div className="flex-1 flex flex-col items-center justify-center py-24 gap-4 w-full">
                 <div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
                 <div className="text-cyan-400 font-extrabold tracking-widest text-xs uppercase animate-pulse">Đang tải hồ sơ HLV...</div>
+              </div>
+            ) : !inspectedUserData ? (
+              <div className="flex-1 flex flex-col items-center justify-center py-24 gap-4 w-full text-center">
+                <div className="text-red-400 text-lg font-black uppercase mb-2">Không tìm thấy thông tin HLV ❌</div>
+                <p className="text-gray-400 text-sm max-w-sm">Dữ liệu HLV chưa sẵn sàng hoặc HLV đang chơi ở chế độ ngoại tuyến.</p>
               </div>
             ) : (
               <>
