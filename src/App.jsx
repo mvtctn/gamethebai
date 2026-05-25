@@ -1738,10 +1738,10 @@ export default function App() {
           {/* Main: Banner left + Login right */}
           <div className="landing-main">
 
-            {/* ── LEFT: Banner + Hero Text ── */}
+            {/* ── LEFT: Banner full bleed ── */}
             <div className="landing-banner-col">
-              <div className="landing-banner-img" style={{maxHeight:'70vh'}}>
-                <img src="/wc2026_banner.png" alt="World Cup 2026 Banner" />
+              <div className="landing-banner-img">
+                <img src="/wc2026_kids_banner.png" alt="World Cup 2026 Banner" />
               </div>
 
               {/* Hero text overlay */}
