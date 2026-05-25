@@ -1209,6 +1209,19 @@ export default function App() {
     }
   }, [matchPhase, roundResultMsg, matchScore.player, matchScore.ai]);
 
+  // Auto-hide round result overlay after 3 seconds in AI Match
+  useEffect(() => {
+    if (gameState === 'matchEngine' && matchPhase === 'roundResult' && playedCardIds.length < 11) {
+      const timer = setTimeout(() => {
+        setMatchPhase('playing');
+        setSelectedPlayerCard(null);
+        setSelectedStat(null);
+        setCurrentAiCard(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [gameState, matchPhase, playedCardIds.length]);
+
   const returnToLobby = () => {
     setGameState('lobby');
     setMatchPhase('setup');
@@ -1461,7 +1474,7 @@ export default function App() {
             <button onClick={handleLogout} className="text-xs text-red-400 hover:text-red-300 font-bold uppercase tracking-wider">Thoát</button>
           </div>
 
-          <div className="app-container relative z-10">
+          <div className={`app-container relative z-10 ${gameState === 'lobby' ? 'lg:max-w-none lg:w-full lg:mx-0 lg:pr-0 lg:pl-8' : ''}`}>
             {gameState !== 'lobby' && (
               <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-gray-100 to-gray-400 drop-shadow-[0_5px_15px_rgba(0,0,0,0.8)] text-center mb-8 uppercase cursor-pointer" onClick={() => setGameState('lobby')}>
                 WC 2026 PANINI
@@ -1474,10 +1487,10 @@ export default function App() {
               const completionPercent = Math.round((uniqueCards / totalCards) * 100) || 0;
 
               return (
-                <div className="flex flex-col lg:flex-row items-stretch justify-center min-h-[80vh] w-full max-w-7xl mx-auto gap-6 px-4 pt-12 animate-fade-in relative z-10">
+                <div className="flex flex-col lg:flex-row items-stretch justify-between min-h-[80vh] w-full max-w-full gap-8 px-4 lg:pl-0 lg:pr-0 pt-12 animate-fade-in relative z-10">
                   
                   {/* LEFT COLUMN: Main Game Lobby */}
-                  <div className="flex-1 flex flex-col items-center justify-center">
+                  <div className="flex-1 flex flex-col items-center justify-center max-w-5xl mx-auto w-full">
                     
                     {/* Hero Section */}
                     <div className="relative flex flex-col items-center mb-12 sm:mb-16">
@@ -1556,7 +1569,7 @@ export default function App() {
                   {/* RIGHT COLUMN: Real-time Global Chat & Online Panel */}
                   <div className="w-full lg:w-96 flex flex-col z-20 shrink-0">
                     {/* Inline LobbyChatPanel rendering */}
-                    <div className="glass-panel w-full h-[450px] lg:h-[580px] rounded-3xl flex flex-col overflow-hidden border border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.4)] backdrop-blur-md bg-slate-950/40 relative">
+                    <div className="glass-panel w-full h-[450px] lg:h-[580px] rounded-3xl lg:rounded-r-none flex flex-col overflow-hidden border border-white/10 lg:border-r-0 shadow-[0_4px_30px_rgba(0,0,0,0.4)] backdrop-blur-md bg-slate-950/40 relative">
                       {/* Header Tabs */}
                       <div className="flex border-b border-white/10 bg-black/40">
                         <button 
