@@ -3652,7 +3652,7 @@ export default function App() {
       )}
 
       {gameState === 'teamBuilder' && (
-        <div className="team-builder relative z-10 p-4 sm:p-8 pt-20 h-screen flex flex-col">
+        <div className="team-builder relative z-10 p-4 sm:p-8 pt-20 min-h-screen flex flex-col">
           <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 bg-black/50 p-4 rounded-2xl backdrop-blur-md border border-white/10">
             <div className="flex flex-wrap gap-2 sm:gap-4 items-center">
               <button className="btn !bg-blue-600 hover:!bg-blue-500 !py-2 !px-4 text-sm whitespace-nowrap" onClick={() => setGameState('lobby')}>← Về Sảnh</button>

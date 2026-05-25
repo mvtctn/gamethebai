@@ -1670,3 +1670,103 @@ h2 {
   animation: animate-scale-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+/* ═══════════════════════════════════════════
+   MOBILE RESPONSIVE PORTRAIT STACKED CARDS
+   ═══════════════════════════════════════════ */
+@media (max-width: 1023px) {
+  /* Allow natural scrolling on mobile */
+  .landing-page-wrapper {
+    position: relative;
+    inset: auto;
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 1rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  
+  /* Semi-transparent responsive header card */
+  .landing-nav {
+    position: relative;
+    padding: 1rem;
+    margin-bottom: 0;
+    background: rgba(2, 8, 16, 0.4);
+    backdrop-filter: blur(16px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .landing-main {
+    flex-direction: column;
+    overflow: visible;
+    gap: 1.25rem;
+  }
+
+  /* Make Left Column (Banner Card) a gorgeous distinct card block */
+  .landing-banner-col {
+    padding: 1.75rem 1.25rem;
+    background: rgba(2, 8, 16, 0.4) !important;
+    backdrop-filter: blur(16px);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: visible;
+    min-height: auto;
+  }
+
+  /* Beautiful responsive square banner */
+  .landing-banner-card {
+    max-width: 320px; /* smaller for phone screens */
+    margin-bottom: 1.25rem;
+  }
+
+  /* Make Right Column (Login Panel) a matching gorgeous distinct card block */
+  .landing-login-col {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 1.75rem 1.25rem !important;
+    background: rgba(2, 8, 16, 0.4) !important;
+    backdrop-filter: blur(16px);
+    border-radius: 24px !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  /* Transparent inner panel on mobile to avoid double margins */
+  .landing-glass-panel {
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Badges layout wrapped beautifully */
+  .landing-banner-info .landing-badges {
+    justify-content: center;
+    gap: 0.35rem;
+    margin-top: 0.75rem;
+  }
+
+  .landing-badge {
+    font-size: 0.55rem;
+    padding: 0.25rem 0.65rem;
+  }
+
+  .landing-hero-subtitle {
+    font-size: 0.9rem !important;
+    letter-spacing: 2px !important;
+  }
+}
+
