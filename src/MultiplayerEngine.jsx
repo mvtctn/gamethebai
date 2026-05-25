@@ -162,18 +162,52 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       console.warn('[PVP] sendData: connection not ready');
     }
   }, []);
-
   const calculateRoundResult = useCallback((myCard, opCard, currentStat) => {
     if (phaseRef.current === 'result') return;
+
+    const getPlayerAttr = (player) => {
+      if (!player || !player.stats) return { key: 'speed', name: 'Tốc Độ', emoji: '⚡' };
+      const stats = player.stats;
+      if (stats.control >= stats.attack && stats.control >= stats.defense) {
+        return { key: 'tech', name: 'Kỹ Thuật', emoji: '🌀' };
+      }
+      if (stats.attack >= stats.defense) {
+        return { key: 'power', name: 'Sức Mạnh', emoji: '💪' };
+      }
+      return { key: 'speed', name: 'Tốc Độ', emoji: '⚡' };
+    };
+
+    const checkAttrAdvantage = (attrKey1, attrKey2) => {
+      if (attrKey1 === 'speed' && attrKey2 === 'tech') return true;
+      if (attrKey1 === 'tech' && attrKey2 === 'power') return true;
+      if (attrKey1 === 'power' && attrKey2 === 'speed') return true;
+      return false;
+    };
+
+    const attr1 = getPlayerAttr(myCard);
+    const attr2 = getPlayerAttr(opCard);
+
+    let myBonus = 0;
+    let opBonus = 0;
+
+    if (checkAttrAdvantage(attr1.key, attr2.key)) {
+      myBonus = 5;
+    } else if (checkAttrAdvantage(attr2.key, attr1.key)) {
+      opBonus = 5;
+    }
 
     let winner;
     const myVal = myCard.stats[currentStat];
     const opVal = opCard.stats[currentStat];
+    const myFinal = myVal + myBonus;
+    const opFinal = opVal + opBonus;
 
-    if (myVal > opVal) {
+    const bonusPart = (b, emoji) => b > 0 ? ` +5 Khắc chế ${emoji}` : '';
+
+    if (myFinal > opFinal) {
       winner = 'me';
       setMyScore(s => s + 1);
-      setRoundResultMsg(`BẠN THẮNG VÒNG NÀY! 🎉 (${myVal} > ${opVal})`);
+      setRoundResultMsg(`BẠN THẮNG VÒNG NÀY! 🎉 (${myVal}${bonusPart(myBonus, attr1.emoji)} > ${opVal}${bonusPart(opBonus, attr2.emoji)})`);
       playFx('winPoint');
       confetti({
         particleCount: 150,
@@ -181,14 +215,14 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
         origin: { y: 0.6 },
         colors: ['#22c55e', '#3b82f6', '#fbbf24']
       });
-    } else if (opVal > myVal) {
+    } else if (opFinal > myFinal) {
       winner = 'opponent';
       setOpponentScore(s => s + 1);
-      setRoundResultMsg(`BẠN THUA VÒNG NÀY! 😤 (${myVal} < ${opVal})`);
+      setRoundResultMsg(`BẠN THUA VÒNG NÀY! 😤 (${myVal}${bonusPart(myBonus, attr1.emoji)} < ${opVal}${bonusPart(opBonus, attr2.emoji)})`);
       playFx('losePoint');
     } else {
       winner = 'draw';
-      setRoundResultMsg(`HÒA! ⚖️ (${myVal} = ${opVal})`);
+      setRoundResultMsg(`HÒA! ⚖️ (${myVal}${bonusPart(myBonus, attr1.emoji)} = ${opVal}${bonusPart(opBonus, attr2.emoji)})`);
       playFx('drawPoint');
     }
 

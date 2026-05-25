@@ -160,11 +160,37 @@ const playFx = (type) => {
   }
 };
 
+        
+// --- Attribute System Helpers ---
+export const getPlayerAttr = (player) => {
+  if (!player || !player.stats) return { key: 'speed', name: 'Tốc Độ', emoji: '⚡', color: 'text-yellow-400', bg: 'bg-yellow-500/20 border-yellow-500/40' };
+  const stats = player.stats;
+  // If control is highest
+  if (stats.control >= stats.attack && stats.control >= stats.defense) {
+    return { key: 'tech', name: 'Kỹ Thuật', emoji: '🌀', color: 'text-cyan-400', bg: 'bg-cyan-500/20 border-cyan-500/40' };
+  }
+  // If attack is highest
+  if (stats.attack >= stats.defense) {
+    return { key: 'power', name: 'Sức Mạnh', emoji: '💪', color: 'text-red-400', bg: 'bg-red-500/20 border-red-500/40' };
+  }
+  // Default is speed
+  return { key: 'speed', name: 'Tốc Độ', emoji: '⚡', color: 'text-yellow-400', bg: 'bg-yellow-500/20 border-yellow-500/40' };
+};
+
+export const checkAttrAdvantage = (attrKey1, attrKey2) => {
+  if (attrKey1 === 'speed' && attrKey2 === 'tech') return true;
+  if (attrKey1 === 'tech' && attrKey2 === 'power') return true;
+  if (attrKey1 === 'power' && attrKey2 === 'speed') return true;
+  return false;
+};
+
 // --- Card Component ---
 export const Card = ({ player, onClick, isSelectable, isSelected, hideStats }) => {
   if (!player) return null;
   const maxStat = Math.max(player.stats.attack, player.stats.defense, player.stats.control);
-  
+  const isSuper = ['Icon', 'Golden Baller'].includes(player.type);
+  const attr = getPlayerAttr(player);
+
   return (
     <div 
       className={`card-container group relative w-full aspect-[5/7] ${isSelectable ? 'cursor-pointer' : ''} ${isSelected ? 'scale-105 z-50' : ''}`}
@@ -176,6 +202,9 @@ export const Card = ({ player, onClick, isSelectable, isSelected, hideStats }) =
         {/* Background texture */}
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
         <div className="card-glow absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+
+        {/* Dynamic Holographic Rainbow effect for Superstar/rare cards */}
+        {isSuper && <div className="card-holo absolute inset-0 rounded-2xl pointer-events-none z-30 opacity-40 mix-blend-color-dodge transition-opacity duration-300"></div>}
 
         {/* Top left info: Overall Rating, Type */}
         <div className="absolute top-2 left-2 flex flex-col items-center z-20 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
@@ -189,8 +218,12 @@ export const Card = ({ player, onClick, isSelectable, isSelected, hideStats }) =
             <img src={`https://flagcdn.com/w20/${player.nation}.png`} alt={player.nation} className="w-5 h-auto rounded-sm drop-shadow-md border border-white/30" title={player.nation.toUpperCase()} />
           )}
         </div>
-        
-        {/* Player Image */}
+
+        {/* Top right info: Attribute style badge */}
+        <div className={`absolute top-2 right-2 px-1.5 py-0.5 rounded-full border backdrop-blur-md z-20 flex items-center gap-1 ${attr.bg} shadow-md`}>
+          <span className="text-[9px] sm:text-[10px]">{attr.emoji}</span>
+          <span className={`text-[7px] sm:text-[8px] font-black uppercase tracking-wider ${attr.color}`}>{attr.name}</span>
+        </div>
         <div className="absolute top-0 left-0 w-full h-[65%] z-10 flex items-end justify-center overflow-hidden rounded-t-lg">
           <img 
             src={player.image} 
@@ -1570,10 +1603,28 @@ export default function App() {
     // Apply card rarity priority bonus
     const bonus1 = getCardTypeBonus(selectedPlayerCard.type);
     const bonus2 = getCardTypeBonus(aiCard.type);
-    const v1 = baseV1 + bonus1;
-    const v2 = baseV2 + bonus2;
 
-    const bonusPart = (b) => b > 0 ? `+${b}` : '';
+    // Apply attribute system element advantage (Speed ⚡, Tech 🌀, Power 💪)
+    const attr1 = getPlayerAttr(selectedPlayerCard);
+    const attr2 = getPlayerAttr(aiCard);
+    let attrBonus1 = 0;
+    let attrBonus2 = 0;
+
+    if (checkAttrAdvantage(attr1.key, attr2.key)) {
+      attrBonus1 = 5;
+    } else if (checkAttrAdvantage(attr2.key, attr1.key)) {
+      attrBonus2 = 5;
+    }
+
+    const v1 = baseV1 + bonus1 + attrBonus1;
+    const v2 = baseV2 + bonus2 + attrBonus2;
+
+    const bonusPart = (b, ab, emoji) => {
+      let parts = [];
+      if (b > 0) parts.push(`+${b} Rarity`);
+      if (ab > 0) parts.push(`+${ab} Khắc chế ${emoji}`);
+      return parts.length > 0 ? ` [${parts.join(' & ')}]` : '';
+    };
 
     let pScore = matchScore.player;
     let aScore = matchScore.ai;
@@ -1581,14 +1632,13 @@ export default function App() {
 
     if (v1 > v2) {
       pScore++;
-      msg = `THẮNG! ${baseV1}${bonusPart(bonus1)} > ${baseV2}${bonusPart(bonus2)}`;
+      msg = `THẮNG! ${baseV1}${bonusPart(bonus1, attrBonus1, attr1.emoji)} > ${baseV2}${bonusPart(bonus2, attrBonus2, attr2.emoji)}`;
     } else if (v2 > v1) {
       aScore++;
-      msg = `THUA! ${baseV1}${bonusPart(bonus1)} < ${baseV2}${bonusPart(bonus2)}`;
+      msg = `THUA! ${baseV1}${bonusPart(bonus1, attrBonus1, attr1.emoji)} < ${baseV2}${bonusPart(bonus2, attrBonus2, attr2.emoji)}`;
     } else {
-      msg = `HÒA! ${baseV1}${bonusPart(bonus1)} = ${baseV2}${bonusPart(bonus2)}`;
+      msg = `HÒA! ${baseV1}${bonusPart(bonus1, attrBonus1, attr1.emoji)} = ${baseV2}${bonusPart(bonus2, attrBonus2, attr2.emoji)}`;
     }
-
     setMatchScore({ player: pScore, ai: aScore });
     setRoundResultMsg(msg);
     setMatchLogs([...matchLogs, `Lượt ${playedCardIds.length + 1}: ${selectedPlayerCard.name} (${stat.toUpperCase()}${bonusPart(bonus1)}) vs ${aiCard.name} (${stat2Name.toUpperCase()}${bonusPart(bonus2)}) -> ${msg}`]);
