@@ -580,7 +580,7 @@ export default function App() {
           username: currentUser,
           password: "",
           email: "",
-          coins: 0,
+          coins: 200, // Thành viên mới được 200 Xu để bắt đầu mở thẻ
           collection: [],
           squad: [],
           level: 1,
@@ -1118,7 +1118,7 @@ export default function App() {
       username: name,
       pin: pin || '', // optional 4-digit PIN
       email: '',
-      coins: 0,
+      coins: 200, // Thành viên mới được 200 Xu để bắt đầu mở thẻ
       collection: [],
       squad: [],
       level: 1,
@@ -1578,16 +1578,17 @@ export default function App() {
       const isWin = matchScore.player > matchScore.ai;
       const isDraw = matchScore.player === matchScore.ai;
 
+      // Tính phần thưởng theo độ khó — thua cũng có thưởng để khuyến khích tích lũy
       if (difficulty === 'Easy' || difficulty === 'Amateur') {
-        reward = isWin ? 30 : isDraw ? 15 : 8;
+        reward = isWin ? 40 : isDraw ? 20 : 12;
       } else if (difficulty === 'Medium' || difficulty === 'Professional') {
-        reward = isWin ? 50 : isDraw ? 20 : 10;
+        reward = isWin ? 60 : isDraw ? 25 : 15;
       } else if (difficulty === 'Hard' || difficulty === 'World Class') {
-        reward = isWin ? 80 : isDraw ? 30 : 15;
+        reward = isWin ? 100 : isDraw ? 35 : 20;
       } else if (difficulty === 'Legendary') {
-        reward = isWin ? 120 : isDraw ? 45 : 20;
+        reward = isWin ? 150 : isDraw ? 55 : 30;
       } else if (difficulty === 'Ultimate') {
-        reward = isWin ? 180 : isDraw ? 60 : 30;
+        reward = isWin ? 220 : isDraw ? 75 : 40;
       }
       
       setCoins(c => c + reward);
@@ -1600,16 +1601,29 @@ export default function App() {
          return q;
       }));
 
-      // Update XP & Stats!
+      // Update XP & Stats — thua vẫn nhận XP để khuyến khích chơi
+      let xpEarned = 0;
       if (isWin) {
-        gainXp(50);
+        xpEarned = 60;
+        gainXp(xpEarned);
         setStats(s => ({ ...s, played: s.played + 1, wins: s.wins + 1 }));
       } else if (isDraw) {
-        gainXp(25);
+        xpEarned = 30;
+        gainXp(xpEarned);
         setStats(s => ({ ...s, played: s.played + 1, draws: s.draws + 1 }));
       } else {
-        gainXp(10);
+        xpEarned = 15;
+        gainXp(xpEarned);
         setStats(s => ({ ...s, played: s.played + 1, losses: s.losses + 1 }));
+      }
+
+      // Hiển thị alert kết quả với thưởng rõ ràng
+      if (isWin) {
+        showAlert('🏆 Chiến Thắng!', `Xuất sắc! Bạn thắng ${matchScore.player}-${matchScore.ai}. Nhận: +${reward} Xu & +${xpEarned} XP.`);
+      } else if (isDraw) {
+        showAlert('🤝 Hòa Trận!', `Tỉ số cân bằng ${matchScore.player}-${matchScore.ai}. Nhận: +${reward} Xu & +${xpEarned} XP.`);
+      } else {
+        showAlert('😤 Thất Bại — Nhưng Bạn Vẫn Nhận Thưởng!', `Kết quả ${matchScore.player}-${matchScore.ai}. Nhận: +${reward} Xu & +${xpEarned} XP. Tiếp tục cố lên!`);
       }
 
       setMatchPhase('gameOver');
@@ -1671,18 +1685,20 @@ export default function App() {
 
   const handlePvpEnd = (result) => {
     if (result === 'win') {
-      setCoins(c => c + 100);
-      gainXp(100);
+      setCoins(c => c + 120);
+      gainXp(120);
       setStats(s => ({ ...s, played: s.played + 1, wins: s.wins + 1 }));
-      showAlert("Chiến Thắng! 🏆", "Chúc mừng! Bạn giành chiến thắng PvP và nhận được 100 Xu + 100 XP.");
+      showAlert("🏆 Chiến Thắng PvP!", "Xuất sắc! Bạn đánh bại đối thủ thật sự. Nhận: +120 Xu & +120 XP.");
     } else if (result === 'draw') {
-      setCoins(c => c + 30);
-      gainXp(40);
+      setCoins(c => c + 40);
+      gainXp(50);
       setStats(s => ({ ...s, played: s.played + 1, draws: s.draws + 1 }));
-      showAlert("Hòa Trận! 🤝", "Tỉ số cân bằng! Bạn nhận được 30 Xu và 40 XP.");
+      showAlert("🤝 Hòa Trận PvP!", "Cuộc chiến ngang tài ngang sức! Nhận: +40 Xu & +50 XP.");
     } else {
+      setCoins(c => c + 25);
+      gainXp(30);
       setStats(s => ({ ...s, played: s.played + 1, losses: s.losses + 1 }));
-      showAlert("Thất Bại! 😢", "Bạn đã thất bại trong trận đấu PvP. Chúc bạn may mắn lần sau!");
+      showAlert("😤 Thất Bại PvP — Vẫn Có Thưởng!", "Bạn thua trận này nhưng đã cố gắng! Nhận: +25 Xu & +30 XP. Tập luyện thêm và thử lại!");
     }
     returnToLobby();
   };
