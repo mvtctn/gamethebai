@@ -343,6 +343,12 @@ export default function App() {
     }
   }, [freePacks, currentUser]);
 
+  useEffect(() => {
+    if (gameState === 'profile') {
+      setProfileEmailInput(email);
+    }
+  }, [gameState, email]);
+
   // Fetch Global Leaderboard
   useEffect(() => {
     if (gameState === 'leaderboard') {
@@ -1606,7 +1612,7 @@ export default function App() {
 
           {/* User Header Profile */}
           <div className="absolute top-4 right-4 z-50 flex items-center gap-4 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
-            <div className="text-sm flex items-center gap-2">
+            <div className="text-sm flex items-center gap-2 cursor-pointer hover:text-cyan-400 hover:scale-105 transition-all duration-300 select-none" onClick={() => { playFx('click'); setGameState('profile'); }} title="Xem hồ sơ và cài đặt HLV">
               <span className="text-gray-400">HLV: </span>
               <span className="font-bold text-fuchsia-400">{currentUser}</span>
               <span className="text-[10px] bg-white/10 text-gray-300 px-2 py-0.5 rounded-full border border-white/10 font-bold">Lv.{level}</span>
@@ -2157,6 +2163,277 @@ export default function App() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {gameState === 'profile' && (
+        <div className="w-full max-w-6xl mx-auto flex flex-col items-center mt-8 animate-fade-in px-4">
+          {/* Header */}
+          <div className="flex justify-between items-center w-full mb-8">
+            <button className="btn !bg-gray-700 hover:!bg-gray-600 transition-colors flex items-center gap-2" onClick={() => setGameState('lobby')}>
+              ← Về Sảnh
+            </button>
+            <h2 className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 uppercase tracking-widest text-center">
+              Hồ Sơ HLV & Cài Đặt ⚙️
+            </h2>
+            <div className="flex items-center gap-2 bg-black/40 px-4 py-2 rounded-full border border-yellow-500/30">
+              <Coins className="text-yellow-400" size={16} />
+              <span className="font-bold text-yellow-400 text-sm">{coins} Xu</span>
+            </div>
+          </div>
+
+          {/* Three-Column Dashboard */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full items-stretch">
+            
+            {/* COLUMN 1 (4/12): HLV Info & Stats */}
+            <div className="lg:col-span-4 flex flex-col gap-6">
+              {/* Profile Card */}
+              <div className="glass-panel rounded-3xl p-6 border border-white/10 flex flex-col items-center text-center shadow-2xl relative overflow-hidden bg-gradient-to-b from-indigo-950/20 to-slate-900/60">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 rounded-full blur-[30px] pointer-events-none"></div>
+                
+                {/* Level Circle */}
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-400 via-indigo-500 to-purple-600 flex items-center justify-center border-2 border-white/20 shadow-lg mb-3 animate-pulse-subtle">
+                  <span className="text-2xl font-black text-white">Lv.{level}</span>
+                </div>
+                
+                <h3 className="text-2xl font-black text-white uppercase mb-1">{currentUser}</h3>
+                
+                <div className="flex items-center gap-2 mb-4">
+                  {(() => {
+                    const tier = getPlayerTier(level);
+                    return (
+                      <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full border ${tier.color} ${tier.glow}`}>
+                        {tier.icon} {tier.name}
+                      </span>
+                    );
+                  })()}
+                  <span className="text-xs px-2.5 py-0.5 bg-cyan-900/30 text-cyan-400 border border-cyan-500/20 font-black rounded-full uppercase tracking-wider">
+                    {squad ? Math.round(squad.reduce((acc, card) => acc + Math.max(card.stats.attack, card.stats.defense, card.stats.control), 0) / 11) : 0} OVR
+                  </span>
+                </div>
+
+                {/* XP Bar */}
+                <div className="w-full bg-black/60 rounded-full h-3 border border-white/5 overflow-hidden mb-1 relative">
+                  <div 
+                    className="bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-500 h-full rounded-full transition-all duration-1000"
+                    style={{ width: `${Math.min(100, (xp / (level * 100)) * 100)}%` }}
+                  ></div>
+                </div>
+                <div className="text-[10px] text-gray-500 font-semibold mb-6">{xp} / {level * 100} XP</div>
+
+                {/* Free packs & coins quick info */}
+                <div className="w-full grid grid-cols-2 gap-3 border-t border-white/10 pt-4 mt-2">
+                  <div className="bg-black/30 p-2.5 rounded-xl border border-white/5">
+                    <div className="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Tiền sở hữu</div>
+                    <div className="text-sm font-black text-yellow-400 flex items-center justify-center gap-1">
+                      <Coins size={12} /> {coins} Xu
+                    </div>
+                  </div>
+                  <div className="bg-black/30 p-2.5 rounded-xl border border-white/5">
+                    <div className="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Gói quà tích lũy</div>
+                    <div className="text-sm font-black text-fuchsia-400">
+                      🎁 {freePacks} Gói
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Battle Stats */}
+              <div className="glass-panel rounded-3xl p-6 border border-white/10 shadow-2xl bg-gradient-to-b from-indigo-950/10 to-slate-900/40">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 border-b border-white/5 pb-2 text-center">Thống Kê Chiến Đấu</h4>
+                <div className="grid grid-cols-2 gap-3 text-center">
+                  <div className="bg-slate-900/60 border border-white/5 p-3 rounded-xl">
+                    <div className="text-[9px] text-gray-400 font-semibold uppercase mb-1">Tổng Số Trận</div>
+                    <div className="text-2xl font-black text-white">{stats?.played || 0}</div>
+                  </div>
+                  <div className="bg-green-950/20 border border-green-500/10 p-3 rounded-xl">
+                    <div className="text-[9px] text-green-400 font-semibold uppercase mb-1">Chiến Thắng</div>
+                    <div className="text-2xl font-black text-green-400">{stats?.wins || 0}</div>
+                  </div>
+                  <div className="bg-yellow-950/20 border border-yellow-500/10 p-3 rounded-xl">
+                    <div className="text-[9px] text-yellow-400 font-semibold uppercase mb-1">Hòa Trận</div>
+                    <div className="text-2xl font-black text-yellow-400">{stats?.draws || 0}</div>
+                  </div>
+                  <div className="bg-red-950/20 border border-red-500/10 p-3 rounded-xl">
+                    <div className="text-[9px] text-red-400 font-semibold uppercase mb-1">Thất Bại</div>
+                    <div className="text-2xl font-black text-red-400">{stats?.losses || 0}</div>
+                  </div>
+                </div>
+                
+                {/* Win rate indicator */}
+                <div className="mt-4 bg-black/40 border border-white/5 rounded-xl p-3 flex justify-between items-center text-xs">
+                  <span className="text-gray-400 font-semibold">Tỉ lệ thắng:</span>
+                  <span className="font-black text-emerald-400">
+                    {stats?.played > 0 ? Math.round((stats.wins / stats.played) * 100) : 0}%
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* COLUMN 2 (4/12): 3D Pitch Lineup View */}
+            <div className="lg:col-span-4 flex flex-col gap-6">
+              <div className="glass-panel rounded-3xl p-6 border border-white/10 shadow-2xl flex flex-col items-center justify-between h-full bg-gradient-to-b from-slate-950/50 via-slate-900/40 to-slate-950/50">
+                <div className="text-center w-full mb-3">
+                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-white/5 pb-2">Đội Hình HLV 3D</h4>
+                  <div className="text-[10px] text-cyan-400 font-black uppercase mt-1">Sân thi đấu 11 cầu thủ hiện tại</div>
+                </div>
+                
+                {/* Miniature Pitch container */}
+                <div className="w-full flex-1 min-h-[360px] flex items-center justify-center relative py-4">
+                  <div className="pitch-3d-mini w-full max-w-[280px] aspect-[2/3] bg-gradient-to-b from-green-950/30 to-emerald-900/30 border border-emerald-500/30 rounded-2xl relative shadow-[inset_0_0_30px_rgba(16,185,129,0.2)] overflow-hidden">
+                    {/* Pitch line markings */}
+                    <div className="absolute top-1/2 left-0 w-full h-[1px] bg-emerald-500/20"></div>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full border border-emerald-500/20"></div>
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-10 border border-t-0 border-emerald-500/20"></div>
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-10 border border-b-0 border-emerald-500/20"></div>
+                    
+                    {/* Render active squad players */}
+                    {squad.map((player, idx) => {
+                      const pos = PITCH_POSITIONS[idx] || { top: '50%', left: '50%' };
+                      return (
+                        <div 
+                          key={player.id} 
+                          className="absolute w-8 h-8 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group/mini"
+                          style={{ top: pos.top, left: pos.left, zIndex: 10 }}
+                        >
+                          {/* Mini Card Dot */}
+                          <div 
+                            className={`w-3.5 h-3.5 rounded-full border border-white/80 shadow-md flex items-center justify-center text-[6px] font-black text-slate-900 ${
+                              player.type === 'Golden Baller' 
+                                ? 'bg-gradient-to-br from-yellow-400 to-amber-500' 
+                                : player.type === 'Icon' 
+                                ? 'bg-gradient-to-br from-fuchsia-400 to-purple-600' 
+                                : 'bg-gradient-to-br from-blue-400 to-cyan-500'
+                            }`}
+                            title={player.name}
+                          >
+                            ⭐
+                          </div>
+                          
+                          {/* Floating name tag */}
+                          <div className="absolute top-4 bg-black/80 px-1 py-0.2 rounded text-[6px] font-bold text-white whitespace-nowrap opacity-0 group-hover/mini:opacity-100 transition-opacity border border-white/10 pointer-events-none">
+                            {player.name.split(' ').pop()} ({Math.max(player.stats.attack, player.stats.defense, player.stats.control)})
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <button className="w-full btn !bg-indigo-600 hover:!bg-indigo-500 !py-2.5 text-xs font-black tracking-widest uppercase rounded-xl transition-all cursor-pointer shadow-lg shadow-indigo-950/30" onClick={() => setGameState('teamBuilder')}>
+                  Chỉnh Sửa Đội Hình 🛠️
+                </button>
+              </div>
+            </div>
+
+            {/* COLUMN 3 (4/12): Account & Settings */}
+            <div className="lg:col-span-4 flex flex-col gap-6">
+              {/* Recovery Email Card */}
+              <div className="glass-panel rounded-3xl p-6 border border-white/10 shadow-2xl bg-gradient-to-b from-indigo-950/10 to-slate-900/40">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 border-b border-white/5 pb-2 text-center">Cài Đặt Bảo Mật HLV</h4>
+                
+                <form onSubmit={handleUpdateEmail} className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Email Khôi Phục Tài Khoản</label>
+                    <input 
+                      type="email" 
+                      className="bg-black/50 border border-white/15 px-4 py-2.5 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors w-full font-medium"
+                      placeholder="Nhập email của bạn..."
+                      value={profileEmailInput}
+                      onChange={(e) => setProfileEmailInput(e.target.value)}
+                    />
+                  </div>
+                  <button 
+                    type="submit" 
+                    className="btn !bg-cyan-600 hover:!bg-cyan-500 !py-2 text-xs font-black tracking-widest uppercase rounded-xl transition-all cursor-pointer shadow-md shadow-cyan-900/20"
+                  >
+                    Lưu Email 📧
+                  </button>
+                </form>
+              </div>
+
+              {/* Change Password Card */}
+              <div className="glass-panel rounded-3xl p-6 border border-white/10 shadow-2xl bg-gradient-to-b from-indigo-950/10 to-slate-900/40 flex-1">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 border-b border-white/5 pb-2 text-center">Đổi Mật Khẩu HLV</h4>
+                
+                <form onSubmit={handleUpdatePassword} className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Mật Khẩu Hiện Tại</label>
+                    <input 
+                      type="password" 
+                      className="bg-black/50 border border-white/15 px-4 py-2.5 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500 transition-colors w-full"
+                      value={profileOldPassword}
+                      onChange={(e) => setProfileOldPassword(e.target.value)}
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Mật Khẩu Mới</label>
+                    <input 
+                      type="password" 
+                      className="bg-black/50 border border-white/15 px-4 py-2.5 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500 transition-colors w-full"
+                      value={profileNewPassword}
+                      onChange={(e) => setProfileNewPassword(e.target.value)}
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Xác Nhận Mật Khẩu Mới</label>
+                    <input 
+                      type="password" 
+                      className="bg-black/50 border border-white/15 px-4 py-2.5 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500 transition-colors w-full"
+                      value={profileConfirmPassword}
+                      onChange={(e) => setProfileConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  
+                  <button 
+                    type="submit" 
+                    className="btn !bg-purple-600 hover:!bg-purple-500 !py-2.5 text-xs font-black tracking-widest uppercase rounded-xl transition-all cursor-pointer shadow-md shadow-purple-900/20 mt-2"
+                  >
+                    Đổi Mật Khẩu 🔒
+                  </button>
+                </form>
+              </div>
+            </div>
+            
+          </div>
+
+          {/* Active Quests Showcase (Bottom full-width row) */}
+          <div className="w-full mt-8 glass-panel rounded-[2rem] p-6 border border-white/10 shadow-2xl bg-gradient-to-r from-slate-900/50 to-indigo-950/10 animate-fade-in">
+            <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-3">
+              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Tiến Độ Nhiệm Vụ Hoạt Động</h4>
+              <button className="text-[10px] text-cyan-400 hover:underline uppercase font-bold tracking-widest cursor-pointer" onClick={() => setGameState('quests')}>
+                Tất cả Nhiệm Vụ ➔
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {quests.map(q => (
+                <div key={q.id} className="p-4 bg-black/40 rounded-2xl border border-white/5 flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <h5 className="font-extrabold text-xs text-white truncate mb-1">{q.title}</h5>
+                    <div className="text-[9px] text-gray-500 font-semibold mb-2">Tiến độ: {q.progress} / {q.target}</div>
+                    <div className="w-32 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                      <div className="h-full bg-cyan-500" style={{ width: `${Math.min(100, (q.progress/q.target)*100)}%` }}></div>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-yellow-400 text-[10px] font-black mb-1">+{q.reward} Xu</div>
+                    {q.isClaimed ? (
+                      <span className="text-[9px] text-gray-500 font-extrabold uppercase">Đã Nhận ✓</span>
+                    ) : q.isCompleted ? (
+                      <span className="text-[9px] text-green-400 font-black uppercase animate-pulse">Xong 🎁</span>
+                    ) : (
+                      <span className="text-[9px] text-gray-500 font-bold uppercase">Đang đá</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
