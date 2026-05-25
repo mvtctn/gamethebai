@@ -1715,168 +1715,218 @@ export default function App() {
 
   return (
     <>
-      {/* Auth Modal overlay over everything if not logged in */}
+      {/* ═══ NEW LANDING PAGE — 2-column split ═══ */}
       {!currentUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-fade-in">
-          <div className="flex flex-col items-center max-w-4xl w-full">
-            <h1 className="text-4xl sm:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 italic tracking-widest text-center mb-1 drop-shadow-[0_5px_15px_rgba(251,191,36,0.3)] animate-pulse-slow uppercase select-none leading-none pr-4">
-              WORLD CUP 2026
-            </h1>
-            <h2 className="text-xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-400 italic tracking-wider text-center mb-8 drop-shadow-[0_3px_10px_rgba(34,211,238,0.3)] uppercase select-none leading-none pr-2">
-              ULTIMATE CARD CHAMPIONS
-            </h2>
+        <div className="landing-page-wrapper">
+          {/* Background */}
+          <div className="landing-bg" />
 
-          {/* ── AUTH PANEL ─────────────────────────────── */}
-          <div className="landing-glass-panel">
+          {/* Top Nav */}
+          <nav className="landing-nav">
+            <div className="landing-nav-logo">
+              <div className="landing-nav-logo-badge">⚽</div>
+              <div>
+                <span className="landing-nav-logo-text">Ultimate Card</span>
+                <span className="landing-nav-logo-sub">World Cup 2026</span>
+              </div>
+            </div>
+            <div className="landing-nav-links">
+              <button className="landing-nav-btn" onClick={() => setGameState('howToPlay')}>📖 Hướng Dẫn</button>
+            </div>
+          </nav>
 
-            {/* STEP 1: Enter name */}
-            {authStep === 'enter_name' && (
-              <div className="animate-scale-in">
-                <div className="text-center mb-6">
-                  <div className="text-4xl mb-2">⚽</div>
-                  <h3 className="text-lg font-black text-white uppercase tracking-widest">Vào Sân Ngay!</h3>
-                  <p className="text-[11px] text-gray-400 mt-1 font-semibold">Nhập tên HLV của bạn để bắt đầu hành trình</p>
+          {/* Main: Banner left + Login right */}
+          <div className="landing-main">
+
+            {/* ── LEFT: Banner + Hero Text ── */}
+            <div className="landing-banner-col">
+              <div className="landing-banner-img" style={{maxHeight:'70vh'}}>
+                <img src="/wc2026_banner.png" alt="World Cup 2026 Banner" />
+              </div>
+
+              {/* Hero text overlay */}
+              <div className="landing-hero-text">
+                <div className="landing-hero-eyebrow">Chính thức mùa giải</div>
+                <h1 className="landing-hero-title">
+                  <span className="line1">World Cup</span>
+                  <span className="line2">2026</span>
+                </h1>
+                <p className="landing-hero-subtitle">Ultimate Card Champions</p>
+                <div className="landing-badges">
+                  <span className="landing-badge green">⚽ 800+ Cầu Thủ</span>
+                  <span className="landing-badge blue">🌐 PvP Online</span>
+                  <span className="landing-badge pink">🏆 Bảng Xếp Hạng</span>
+                  <span className="landing-badge green">🎁 200 Xu Khởi Đầu</span>
                 </div>
+              </div>
+            </div>
 
-                <form onSubmit={handleCheckUsername} className="flex flex-col gap-4">
-                  <div className="landing-form-group">
-                    <label className="landing-label">🏟️ Tên HLV Của Bạn</label>
-                    <input
-                      type="text"
-                      className="landing-input text-center text-lg font-black tracking-widest"
-                      value={authUsername}
-                      onChange={(e) => setAuthUsername(e.target.value)}
-                      placeholder="VD: TieuHoang_99..."
-                      maxLength={20}
-                      autoFocus
-                    />
-                    <p className="text-[10px] text-gray-500 mt-1 text-center">Tên hiển thị với tất cả mọi người · Tối đa 20 ký tự</p>
-                  </div>
+            {/* ── RIGHT: Auth Panel ── */}
+            <div className="landing-login-col">
+              <div className="landing-login-header">
+                <h2>
+                  {authStep === 'enter_name' ? 'Vào Sân Ngay!' :
+                   authStep === 'enter_pin'  ? `Chào lại, ${authUsername}!` :
+                                               `Chào mừng, ${authUsername}!`}
+                </h2>
+                <p>
+                  {authStep === 'enter_name' ? 'Đăng nhập hoặc tạo tài khoản mới để bắt đầu' :
+                   authStep === 'enter_pin'  ? 'Nhập mã PIN để vào tài khoản của bạn' :
+                                               'Tài khoản mới • 3 gói thẻ + 200 xu miễn phí!'}
+                </p>
+              </div>
 
-                  <button
-                    type="submit"
-                    className="landing-btn-submit flex items-center justify-center gap-2"
-                    disabled={authCheckingUser}
-                  >
-                    {authCheckingUser ? (
-                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                    ) : '⚡'}
-                    {authCheckingUser ? 'Đang kiểm tra...' : 'TIẾP THEO'}
-                  </button>
-                </form>
+              <div className="landing-glass-panel">
 
-                {/* Auto-login hint if localStorage has a user */}
-                {(() => {
-                  const saved = localStorage.getItem('panini_currentUser');
-                  if (!saved) return null;
-                  return (
-                    <div className="mt-4 p-3 bg-green-950/40 border border-green-500/30 rounded-xl text-center">
-                      <p className="text-[11px] text-green-400 font-bold">💾 Thiết bị này đã lưu HLV:</p>
+                {/* STEP 1: Enter name */}
+                {authStep === 'enter_name' && (
+                  <div className="animate-scale-in">
+                    <form onSubmit={handleCheckUsername} className="flex flex-col gap-4">
+                      <div className="landing-form-group">
+                        <label className="landing-label">🏟️ Tên HLV Của Bạn</label>
+                        <input
+                          type="text"
+                          className="landing-input text-center text-lg font-black tracking-widest"
+                          value={authUsername}
+                          onChange={(e) => setAuthUsername(e.target.value)}
+                          placeholder="VD: TieuHoang_99..."
+                          maxLength={20}
+                          autoFocus
+                        />
+                        <p className="text-[10px] text-gray-500 mt-1 text-center">Tên hiển thị với tất cả mọi người · Tối đa 20 ký tự</p>
+                      </div>
+
                       <button
-                        className="text-sm font-black text-white mt-1 hover:text-green-300 transition-colors cursor-pointer"
-                        onClick={() => { localStorage.setItem('panini_currentUser', saved); window.location.reload(); }}
+                        type="submit"
+                        className="landing-btn-submit flex items-center justify-center gap-2"
+                        disabled={authCheckingUser}
                       >
-                        👤 {saved} — Vào ngay!
+                        {authCheckingUser ? (
+                          <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                        ) : '⚡'}
+                        {authCheckingUser ? 'Đang kiểm tra...' : 'TIẾP THEO'}
                       </button>
+                    </form>
+
+                    {/* Auto-login hint */}
+                    {(() => {
+                      const saved = localStorage.getItem('panini_currentUser');
+                      if (!saved) return null;
+                      return (
+                        <div className="mt-4 p-3 bg-green-950/40 border border-green-500/30 rounded-xl text-center">
+                          <p className="text-[11px] text-green-400 font-bold">💾 Thiết bị này đã lưu HLV:</p>
+                          <button
+                            className="text-sm font-black text-white mt-1 hover:text-green-300 transition-colors cursor-pointer"
+                            onClick={() => { localStorage.setItem('panini_currentUser', saved); window.location.reload(); }}
+                          >
+                            👤 {saved} — Vào ngay!
+                          </button>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                {/* STEP 2A: Existing user → enter PIN */}
+                {authStep === 'enter_pin' && (
+                  <div className="animate-scale-in">
+                    <form onSubmit={handleVerifyPin} className="flex flex-col gap-4">
+                      <div className="landing-form-group">
+                        <label className="landing-label">🔑 Mã PIN 4 Số</label>
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          maxLength={4}
+                          className="landing-input text-center text-2xl font-black tracking-[0.5em]"
+                          value={authPin}
+                          onChange={(e) => { if (e.target.value.length <= 4) setAuthPin(e.target.value); }}
+                          placeholder="••••"
+                          autoFocus
+                        />
+                      </div>
+
+                      <button type="submit" className="landing-btn-submit flex items-center justify-center gap-2" disabled={authCheckingUser}>
+                        {authCheckingUser ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : '🚪'}
+                        {authCheckingUser ? 'Đang xác minh...' : 'VÀO GAME'}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => { setAuthStep('enter_name'); setAuthPin(''); setAuthFoundUser(null); }}
+                        className="text-[11px] text-gray-500 hover:text-white text-center font-bold uppercase tracking-wider mt-1 cursor-pointer bg-transparent border-0 w-full transition-colors"
+                      >
+                        ← Nhập tên khác
+                      </button>
+                    </form>
+                  </div>
+                )}
+
+                {/* STEP 2B: New user → set optional PIN */}
+                {authStep === 'set_pin' && (
+                  <div className="animate-scale-in">
+                    <div className="p-3 bg-amber-950/40 border border-amber-500/30 rounded-xl mb-4">
+                      <p className="text-[11px] text-amber-300 font-bold text-center leading-relaxed">
+                        💡 <strong>Đặt Mã PIN 4 Số</strong> để bảo vệ tài khoản và đăng nhập lại trên mọi thiết bị.<br/>
+                        <span className="text-gray-400">Để trống nếu chỉ chơi trên thiết bị này.</span>
+                      </p>
                     </div>
-                  );
-                })()}
-              </div>
-            )}
 
-            {/* STEP 2A: Existing user with PIN → verify */}
-            {authStep === 'enter_pin' && (
-              <div className="animate-scale-in">
-                <div className="text-center mb-6">
-                  <div className="text-4xl mb-2">🔐</div>
-                  <h3 className="text-lg font-black text-white uppercase tracking-widest">Chào Lại, {authUsername}!</h3>
-                  <p className="text-[11px] text-gray-400 mt-1 font-semibold">Nhập mã PIN 4 số để vào tài khoản</p>
+                    <form onSubmit={handleCreateAccount} className="flex flex-col gap-4">
+                      <div className="landing-form-group">
+                        <label className="landing-label">🔑 Mã PIN 4 Số (Tuỳ chọn)</label>
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          maxLength={4}
+                          className="landing-input text-center text-2xl font-black tracking-[0.5em]"
+                          value={authPin}
+                          onChange={(e) => { if (e.target.value.length <= 4) setAuthPin(e.target.value); }}
+                          placeholder="Ví dụ: 1234"
+                        />
+                        <p className="text-[10px] text-gray-500 mt-1 text-center">Chọn số dễ nhớ như ngày sinh · Không cần email</p>
+                      </div>
+
+                      <button type="submit" className="landing-btn-submit flex items-center justify-center gap-2" style={{background:'linear-gradient(135deg,#10b981,#059669)'}} disabled={authCheckingUser}>
+                        {authCheckingUser ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : '🚀'}
+                        {authCheckingUser ? 'Đang tạo tài khoản...' : 'BẮT ĐẦU HÀNH TRÌNH!'}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => { setAuthStep('enter_name'); setAuthPin(''); }}
+                        className="text-[11px] text-gray-500 hover:text-white text-center font-bold uppercase tracking-wider mt-1 cursor-pointer bg-transparent border-0 w-full transition-colors"
+                      >
+                        ← Quay lại
+                      </button>
+                    </form>
+                  </div>
+                )}
+
+              </div>
+
+              {/* Stats strip */}
+              <div className="landing-stats-strip">
+                <div className="landing-stat-item">
+                  <span className="landing-stat-val">800+</span>
+                  <span className="landing-stat-label">Cầu Thủ</span>
                 </div>
-
-                <form onSubmit={handleVerifyPin} className="flex flex-col gap-4">
-                  <div className="landing-form-group">
-                    <label className="landing-label">🔑 Mã PIN 4 Số</label>
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      maxLength={4}
-                      className="landing-input text-center text-2xl font-black tracking-[0.5em]"
-                      value={authPin}
-                      onChange={(e) => { if (e.target.value.length <= 4) setAuthPin(e.target.value); }}
-                      placeholder="••••"
-                      autoFocus
-                    />
-                  </div>
-
-                  <button type="submit" className="landing-btn-submit flex items-center justify-center gap-2" disabled={authCheckingUser}>
-                    {authCheckingUser ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : '🚪'}
-                    {authCheckingUser ? 'Đang xác minh...' : 'VÀO GAME'}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => { setAuthStep('enter_name'); setAuthPin(''); setAuthFoundUser(null); }}
-                    className="text-[11px] text-gray-500 hover:text-white text-center font-bold uppercase tracking-wider mt-1 cursor-pointer bg-transparent border-0 w-full transition-colors"
-                  >
-                    ← Nhập tên khác
-                  </button>
-                </form>
-              </div>
-            )}
-
-            {/* STEP 2B: New user → set optional PIN */}
-            {authStep === 'set_pin' && (
-              <div className="animate-scale-in">
-                <div className="text-center mb-5">
-                  <div className="text-4xl mb-2">🎉</div>
-                  <h3 className="text-lg font-black text-cyan-400 uppercase tracking-widest">Chào mừng, {authUsername}!</h3>
-                  <p className="text-[11px] text-gray-400 mt-1 font-semibold">Tài khoản mới · 3 gói thẻ miễn phí đang chờ bạn!</p>
+                <div className="landing-stat-item">
+                  <span className="landing-stat-val">32</span>
+                  <span className="landing-stat-label">Đội Tuyển</span>
                 </div>
-
-                <form onSubmit={handleCreateAccount} className="flex flex-col gap-4">
-                  <div className="p-3 bg-amber-950/40 border border-amber-500/30 rounded-xl">
-                    <p className="text-[11px] text-amber-300 font-bold text-center leading-relaxed">
-                      💡 <strong>Đặt Mã PIN 4 Số</strong> để bảo vệ tài khoản và đăng nhập lại trên mọi thiết bị.<br/>
-                      <span className="text-gray-400">Để trống nếu chỉ chơi trên thiết bị này.</span>
-                    </p>
-                  </div>
-
-                  <div className="landing-form-group">
-                    <label className="landing-label">🔑 Mã PIN 4 Số (Tuỳ chọn)</label>
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      maxLength={4}
-                      className="landing-input text-center text-2xl font-black tracking-[0.5em]"
-                      value={authPin}
-                      onChange={(e) => { if (e.target.value.length <= 4) setAuthPin(e.target.value); }}
-                      placeholder="Ví dụ: 1234"
-                    />
-                    <p className="text-[10px] text-gray-500 mt-1 text-center">Chọn số dễ nhớ như ngày sinh · Không cần email</p>
-                  </div>
-
-                  <button type="submit" className="landing-btn-submit !bg-gradient-to-r !from-green-500 !to-emerald-600 flex items-center justify-center gap-2" disabled={authCheckingUser}>
-                    {authCheckingUser ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : '🚀'}
-                    {authCheckingUser ? 'Đang tạo tài khoản...' : 'BẮT ĐẦU HÀNH TRÌNH!'}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => { setAuthStep('enter_name'); setAuthPin(''); }}
-                    className="text-[11px] text-gray-500 hover:text-white text-center font-bold uppercase tracking-wider mt-1 cursor-pointer bg-transparent border-0 w-full transition-colors"
-                  >
-                    ← Quay lại
-                  </button>
-                </form>
+                <div className="landing-stat-item">
+                  <span className="landing-stat-val">200⭐</span>
+                  <span className="landing-stat-label">Xu Tặng</span>
+                </div>
               </div>
-            )}
+            </div>
 
-          </div>
           </div>
         </div>
       )}
+
 
       {currentUser && (
         <>
