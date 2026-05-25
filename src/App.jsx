@@ -648,12 +648,18 @@ export default function App() {
     return saved ? parseInt(saved) : 0;
   });
 
-  // Gacha pity counter — guarantees superstar every 10 packs max
   const [pityCounter, setPityCounter] = useState(() => {
     if (!currentUser) return 0;
     const saved = localStorage.getItem(`panini_${currentUser}_pity`);
     return saved ? parseInt(saved) : 0;
   });
+  
+  const [userCreatedAt, setUserCreatedAt] = useState(() => {
+    if (!currentUser) return 0;
+    const saved = localStorage.getItem(`panini_${currentUser}_createdAt`);
+    return saved ? parseInt(saved, 10) : 0;
+  });
+
   const [revealingCards, setRevealingCards] = useState([]); // cards being revealed one by one
   const [revealIndex, setRevealIndex] = useState(0);        // which card is currently revealed
   const [packType, setPackType] = useState('standard');     // 'starter'|'standard'|'premium'|'ultimate'
@@ -689,6 +695,15 @@ export default function App() {
       }
     }
   }, [freePacks, currentUser]);
+
+  useEffect(() => {
+    if (currentUser && userCreatedAt) {
+      localStorage.setItem(`panini_${currentUser}_createdAt`, userCreatedAt.toString());
+      if (isConnectedToFirebase) {
+        set(ref(database, `/users/${currentUser}/createdAt`), userCreatedAt);
+      }
+    }
+  }, [userCreatedAt, currentUser]);
 
   useEffect(() => {
     if (gameState === 'profile') {
@@ -902,22 +917,22 @@ export default function App() {
         if (data.freePacks !== undefined) setFreePacks(data.freePacks);
         if (data.claimedLevelRewards) setClaimedLevelRewards(data.claimedLevelRewards);
         if (data.rewardedMilestones) setRewardedMilestones(data.rewardedMilestones);
+        if (data.createdAt) setUserCreatedAt(data.createdAt);
       } else {
         // Initialize brand-new guest user — fresh start with 3 starter packs + 200 xu
         const initialData = {
           username: currentUser,
           password: "",
           email: "",
-          coins: 200, // Thành viên mới được 200 Xu để bắt đầu mở thẻ
-          startingBonus: true,
+          pin: "",
+          coins: 200, // 200 starting bonus for new users
           collection: [],
           squad: [],
           level: 1,
           xp: 0,
           freePacks: 3,
-          claimedLevelRewards: [],
-          rewardedMilestones: [],
-          stats: { played: 0, wins: 0, draws: 0, losses: 0 },
+          startingBonus: true, // mark as received
+          createdAt: Date.now(),
           quests: [
             { id: 'open_pack1', title: 'Mở gói thẻ đầu tiên', target: 1, progress: 0, reward: 100, isCompleted: false, isClaimed: false },
             { id: 'build_squad', title: 'Xây dựng đội hình 11 cầu thủ', target: 11, progress: 0, reward: 200, isCompleted: false, isClaimed: false },
@@ -1215,10 +1230,14 @@ export default function App() {
     // 3. Listen to chat messages (limit to 50)
     const chatRef = ref(database, '/chat');
     const unsubscribeChat = onValue(chatRef, (snapshot) => {
-      const msgs = [];
+      let msgs = [];
       snapshot.forEach((childSnapshot) => {
         msgs.push({ id: childSnapshot.key, ...childSnapshot.val() });
       });
+      // Hide chats that occurred before the user created their account
+      if (userCreatedAt) {
+        msgs = msgs.filter(m => m.timestamp >= userCreatedAt);
+      }
       setChatMessages(msgs.slice(-50)); // Last 50 messages
     });
 
@@ -1242,7 +1261,7 @@ export default function App() {
       unsubscribeInvites();
       set(userStatusDatabaseRef, null); // Clear presence on unmount
     };
-  }, [currentUser, squad, level]);
+  }, [currentUser, squad, level, userCreatedAt]);
 
   // Scroll chat to bottom when messages update
   useEffect(() => {
@@ -1482,6 +1501,7 @@ export default function App() {
       level: 1,
       xp: 0,
       freePacks: 3,
+      createdAt: Date.now(),
       claimedLevelRewards: [],
       rewardedMilestones: [],
       stats: { played: 0, wins: 0, draws: 0, losses: 0 },
