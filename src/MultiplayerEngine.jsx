@@ -240,11 +240,27 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       }, 300);
     }
     else if (data.type === 'start_round') {
+      // Synchronize round count
+      roundCountRef.current = data.roundIndex;
+      setRoundCount(data.roundIndex);
+
+      // Clear played cards for the new round immediately to avoid race condition!
+      myPlayedCardRef.current = null;
+      opponentPlayedCardRef.current = null;
+      setMyPlayedCard(null);
+      setOpponentPlayedCard(null);
+      setRoundWinner(null);
+      setRoundResultMsg('');
+
       updateActiveStat(data.stat);
       updatePhase('select_card');
-      setRoundResultMsg('');
     }
     else if (data.type === 'play_card') {
+      // Verify round index to avoid race conditions!
+      if (data.roundIndex !== roundCountRef.current) {
+        console.warn(`[PVP] Stale/future play_card received: message index ${data.roundIndex}, current index ${roundCountRef.current}`);
+        return;
+      }
       opponentPlayedCardRef.current = data.card;
       setOpponentPlayedCard(data.card);
       setOpponentDeckCount(prev => prev - 1);
@@ -387,7 +403,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       setMyDeck(newDeck);
 
       // Broadcast play card to opponent
-      sendData({ type: 'play_card', card });
+      sendData({ type: 'play_card', card, roundIndex: roundCountRef.current });
 
       if (opponentPlayedCardRef.current) {
         calculateRoundResult(card, opponentPlayedCardRef.current, activeStatRef.current);
