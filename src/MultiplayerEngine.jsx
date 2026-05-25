@@ -3,6 +3,7 @@ import { Peer } from 'peerjs';
 import { Swords, Shield, Copy, ChevronLeft, Wifi, User } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import confetti from 'canvas-confetti';
+import { ENV_WEATHER, ENV_TIME, FORM_STATES, generateCardForm } from './App';
 
 const playFx = (type) => {
   try {
@@ -126,6 +127,16 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
   const [roundCount, setRoundCount] = useState(0); // Kept in state specifically for render-time safety
   const [copiedCode, setCopiedCode] = useState(false);
   const [pvpAlert, setPvpAlert] = useState(null); // Custom in-game dialog alert: { title, message, onClose }
+  const [matchEnvironment, setMatchEnvironment] = useState({ weather: ENV_WEATHER[4], time: ENV_TIME[1] });
+  const [isReconnecting, setIsReconnecting] = useState(false);
+
+  const myScoreRef = useRef(0);
+  const opponentScoreRef = useRef(0);
+  const opponentDeckCountRef = useRef(squad.length);
+
+  useEffect(() => { myScoreRef.current = myScore; }, [myScore]);
+  useEffect(() => { opponentScoreRef.current = opponentScore; }, [opponentScore]);
+  useEffect(() => { opponentDeckCountRef.current = opponentDeckCount; }, [opponentDeckCount]);
 
   const handleCopyCode = () => {
     if (!peerId) return;
@@ -196,18 +207,37 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       opBonus = 5;
     }
 
-    let winner;
-    const myVal = myCard.stats[currentStat];
-    const opVal = opCard.stats[currentStat];
-    const myFinal = myVal + myBonus;
-    const opFinal = opVal + opBonus;
+    // Generate Form/Condition based on weather, elements, underdog logic
+    const formResult1 = generateCardForm(myCard, opCard, matchEnvironment);
+    const formResult2 = generateCardForm(opCard, myCard, matchEnvironment);
+    const formBonus1 = formResult1.bonus;
+    const formBonus2 = formResult2.bonus;
 
-    const bonusPart = (b, emoji) => b > 0 ? ` +5 Khắc chế ${emoji}` : '';
+    let winner;
+    const myLvlBonus = ((myCard.level || 1) - 1) * 2;
+    const opLvlBonus = ((opCard.level || 1) - 1) * 2;
+    const myVal = myCard.stats[currentStat] + myLvlBonus;
+    const opVal = opCard.stats[currentStat] + opLvlBonus;
+    const myFinal = myVal + myBonus + formBonus1;
+    const opFinal = opVal + opBonus + formBonus2;
+
+    const bonusPart = (b, emoji, lb, fb, fs) => {
+      let parts = [];
+      if (lb > 0) parts.push(`+${lb} Lv`);
+      if (b > 0) parts.push(`+${b} Khắc chế`);
+      if (fb !== 0) {
+        const sign = fb > 0 ? '+' : '';
+        parts.push(`${sign}${fb} Phong độ ${fs.emoji}`);
+      } else {
+        parts.push(`+0 Phong độ ➡️`);
+      }
+      return parts.length > 0 ? ` [${parts.join(' & ')}]` : '';
+    };
 
     if (myFinal > opFinal) {
       winner = 'me';
       setMyScore(s => s + 1);
-      setRoundResultMsg(`BẠN THẮNG VÒNG NÀY! 🎉 (${myVal}${bonusPart(myBonus, attr1.emoji)} > ${opVal}${bonusPart(opBonus, attr2.emoji)})`);
+      setRoundResultMsg(`BẠN THẮNG VÒNG NÀY! 🎉 (${myVal}${bonusPart(myBonus, attr1.emoji, myLvlBonus, formBonus1, formResult1.state)} > ${opVal}${bonusPart(opBonus, attr2.emoji, opLvlBonus, formBonus2, formResult2.state)})`);
       playFx('winPoint');
       confetti({
         particleCount: 150,
@@ -218,11 +248,11 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     } else if (opFinal > myFinal) {
       winner = 'opponent';
       setOpponentScore(s => s + 1);
-      setRoundResultMsg(`BẠN THUA VÒNG NÀY! 😤 (${myVal}${bonusPart(myBonus, attr1.emoji)} < ${opVal}${bonusPart(opBonus, attr2.emoji)})`);
+      setRoundResultMsg(`BẠN THUA VÒNG NÀY! 😤 (${myVal}${bonusPart(myBonus, attr1.emoji, myLvlBonus, formBonus1, formResult1.state)} < ${opVal}${bonusPart(opBonus, attr2.emoji, opLvlBonus, formBonus2, formResult2.state)})`);
       playFx('losePoint');
     } else {
       winner = 'draw';
-      setRoundResultMsg(`HÒA! ⚖️ (${myVal}${bonusPart(myBonus, attr1.emoji)} = ${opVal}${bonusPart(opBonus, attr2.emoji)})`);
+      setRoundResultMsg(`HÒA! ⚖️ (${myVal}${bonusPart(myBonus, attr1.emoji, myLvlBonus, formBonus1, formResult1.state)} = ${opVal}${bonusPart(opBonus, attr2.emoji, opLvlBonus, formBonus2, formResult2.state)})`);
       playFx('drawPoint');
     }
 
@@ -269,13 +299,23 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       console.log('[PVP] Guest connected and ready! Initializing first round...');
       const stats = ['attack', 'control', 'defense'];
       const firstStat = stats[Math.floor(Math.random() * stats.length)];
+      
+      const weatherIdx = Math.floor(Math.random() * ENV_WEATHER.length);
+      const timeIdx = Math.floor(Math.random() * ENV_TIME.length);
+      setMatchEnvironment({ weather: ENV_WEATHER[weatherIdx], time: ENV_TIME[timeIdx] });
+      
       updateActiveStat(firstStat);
       updatePhase('select_card');
       setTimeout(() => {
-        sendData({ type: 'start_round', stat: firstStat, roundIndex: 0 });
+        sendData({ type: 'start_round', stat: firstStat, roundIndex: 0, weatherIdx, timeIdx });
       }, 300);
     }
     else if (data.type === 'start_round') {
+      // Synchronize environment if provided
+      if (data.weatherIdx !== undefined && data.timeIdx !== undefined) {
+        setMatchEnvironment({ weather: ENV_WEATHER[data.weatherIdx], time: ENV_TIME[data.timeIdx] });
+      }
+
       // Synchronize round count
       roundCountRef.current = data.roundIndex;
       setRoundCount(data.roundIndex);
@@ -287,8 +327,6 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       setMyPlayedCard(null);
       setOpponentPlayedCard(null);
       setRoundWinner(null);
-      setRoundResultMsg('');
-
       updateActiveStat(data.stat);
       updatePhase('select_card');
     }
@@ -307,6 +345,25 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
         calculateRoundResult(myPlayedCardRef.current, data.card, data.stat);
       }
     }
+    else if (data.type === 'sync_session') {
+      console.log('[PVP] Re-connected and restoring match session state...');
+      setMyScore(data.opponentScore);
+      setOpponentScore(data.myScore);
+      setRoundCount(data.roundIndex);
+      roundCountRef.current = data.roundIndex;
+      setOpponentDeckCount(data.opponentDeckCount);
+      updateActiveStat(data.activeStat);
+      updatePhase(data.phase);
+      setIsReconnecting(false);
+      setRoundResultMsg('Đã kết nối lại thành công! Tiếp tục trận đấu.');
+      playFx('winPoint');
+    }
+    else if (data.type === 'ping') {
+      sendData({ type: 'pong' });
+    }
+    else if (data.type === 'pong') {
+      window.lastPvpPong = Date.now();
+    }
   }, [calculateRoundResult, sendData]);
 
   const setupConnectionHandlers = useCallback((conn) => {
@@ -314,13 +371,43 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       handleNetworkData(data);
     });
     conn.on('close', () => {
-      setPvpAlert({
-        title: 'Mất Kết Nối ⚠️',
-        message: 'Đối thủ đã thoát trận hoặc bị gián đoạn kết nối!',
-        onClose: () => {
-          onExit();
-        }
+      console.warn('[PVP] Connection closed silently. Starting auto-reconnect grace period...');
+      setIsReconnecting(true);
+      setRoundResultMsg('Mất kết nối! Đang tự động kết nối lại...');
+      
+      if (window.pvpExitTimeout) clearTimeout(window.pvpExitTimeout);
+      window.pvpExitTimeout = setTimeout(() => {
+        setIsReconnecting(false);
+        setPvpAlert({
+          title: 'Mất Kết Nối ⚠️',
+          message: 'Đối thủ đã thoát trận hoặc bị gián đoạn kết nối quá lâu!',
+          onClose: () => {
+            onExit();
+          }
+        });
+      }, 12000); // 12 seconds grace period to recover!
+    });
+    conn.on('error', (err) => {
+      console.error('[PVP] Connection error:', err);
+    });
+    conn.on('open', () => {
+      if (window.pvpExitTimeout) {
+        clearTimeout(window.pvpExitTimeout);
+        window.pvpExitTimeout = null;
+      }
+      setIsReconnecting(false);
+      // Synchronize states
+      conn.send({
+        type: 'sync_session',
+        roundIndex: roundCountRef.current,
+        myScore: myScoreRef.current,
+        opponentScore: opponentScoreRef.current,
+        opponentDeckCount: myDeckRef.current.length,
+        activeStat: activeStatRef.current,
+        phase: phaseRef.current
       });
+      setRoundResultMsg('Đã kết nối lại thành công! Trận đấu tiếp tục.');
+      playFx('winPoint');
     });
   }, [handleNetworkData, onExit]);
 
@@ -400,6 +487,45 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    // Keep alive pings to maintain socket channel
+    const pingInterval = setInterval(() => {
+      if (status === 'playing' && connRef.current && connRef.current.open) {
+        connRef.current.send({ type: 'ping' });
+      }
+    }, 2500);
+
+    // Reconnection check daemon
+    const reconCheckInterval = setInterval(() => {
+      if (status === 'playing' && (!connRef.current || !connRef.current.open) && isReconnecting) {
+        console.log('[PVP] Reconnection daemon: attempting background recovery...');
+        if (!isHostRef.current && remotePeerId && peerInstance.current && !peerInstance.current.destroyed) {
+          const conn = peerInstance.current.connect(`wc26-panini-${remotePeerId.trim().toLowerCase().replace(/[^a-z0-9]/g, '')}`);
+          connRef.current = conn;
+          setupConnectionHandlers(conn);
+        }
+      }
+    }, 3000);
+
+    // Page visibility listener for lock screen or app switch
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('[PVP] App resumed from background. Checking connection health...');
+        if (status === 'playing' && (!connRef.current || !connRef.current.open)) {
+          setIsReconnecting(true);
+          setRoundResultMsg('Mất kết nối nền! Đang tự động kết nối lại...');
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearInterval(pingInterval);
+      clearInterval(reconCheckInterval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [status, isReconnecting, remotePeerId, setupConnectionHandlers]);
 
   useEffect(() => {
     if (status === 'gameover') {
@@ -580,6 +706,36 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
             <User className="text-blue-400 w-5 h-5" />
           </div>
         </div>
+      </div>
+
+      {/* Weather & Environment HUD */}
+      <div className="flex-none flex flex-wrap items-center justify-center gap-2 sm:gap-4 bg-slate-950/80 border-b border-white/5 p-2.5 select-none text-center shadow-md">
+        <div className="flex items-center gap-1 text-[10px] sm:text-xs">
+          <span className="text-gray-400 font-bold uppercase">Sân đấu:</span>
+          <span className="text-amber-400 font-black">Lusail Iconic 🏟️</span>
+        </div>
+        <div className="w-[1px] bg-white/10 h-3 hidden sm:block"></div>
+        <div className="flex items-center gap-1 text-[10px] sm:text-xs" title={matchEnvironment.weather.desc}>
+          <span className="text-gray-400 font-bold uppercase">Thời tiết:</span>
+          <span className="text-white font-extrabold">{matchEnvironment.weather.name}</span>
+        </div>
+        <div className="w-[1px] bg-white/10 h-3 hidden sm:block"></div>
+        <div className="flex items-center gap-1 text-[10px] sm:text-xs" title={matchEnvironment.time.desc}>
+          <span className="text-gray-400 font-bold uppercase">Khung giờ:</span>
+          <span className="text-cyan-400 font-extrabold">{matchEnvironment.time.name}</span>
+        </div>
+      </div>
+
+      {/* Sleek Counter Guide Pill */}
+      <div className="flex-none flex items-center justify-center gap-2 sm:gap-4 bg-slate-950/60 border-b border-white/5 py-1.5 px-4 text-[9px] sm:text-xs font-semibold tracking-wide select-none shadow-md">
+        <span className="text-gray-400 font-bold uppercase text-[8px] sm:text-[10px]">Khắc chế (+5 OVR):</span>
+        <span className="flex items-center gap-1 font-bold text-yellow-400">Tốc độ ⚡</span>
+        <span className="text-gray-500 font-black">➔</span>
+        <span className="flex items-center gap-1 font-bold text-cyan-400">Kỹ thuật 🌀</span>
+        <span className="text-gray-500 font-black">➔</span>
+        <span className="flex items-center gap-1 font-bold text-red-400">Sức mạnh 💪</span>
+        <span className="text-gray-500 font-black">➔</span>
+        <span className="flex items-center gap-1 font-bold text-yellow-400">Tốc độ ⚡</span>
       </div>
 
       {/* GAME OVER */}

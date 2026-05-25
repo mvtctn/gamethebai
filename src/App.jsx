@@ -184,10 +184,92 @@ export const checkAttrAdvantage = (attrKey1, attrKey2) => {
   return false;
 };
 
+// --- Environment & Form System ---
+export const ENV_WEATHER = [
+  { key: 'Sunny', name: 'Nắng Rực Rỡ ☀️', desc: 'Tăng phong độ Tốc độ ⚡, giảm nhẹ Sức mạnh 💪' },
+  { key: 'Rainy', name: 'Mưa Tầm Tã 🌧️', desc: 'Giảm phong độ Tốc độ ⚡, tăng phong độ Sức mạnh 💪' },
+  { key: 'Snowy', name: 'Tuyết Rơi ❄️', desc: 'Giảm mạnh Tốc độ ⚡, tăng phong độ Sức mạnh 💪' },
+  { key: 'Windy', name: 'Gió Thổi Mạnh 🌬️', desc: 'Giảm phong độ Kỹ thuật 🌀' },
+  { key: 'Balanced', name: 'Lặng Gió 🍃', desc: 'Phong độ ổn định cho mọi hệ' }
+];
+
+export const ENV_TIME = [
+  { key: 'Night', name: 'Đêm Trăng 🌙', desc: 'Tăng phong độ Kỹ thuật 🌀 (Ánh đèn sân khấu)' },
+  { key: 'Sunset', name: 'Chiều Tà 🌇', desc: 'Phong độ cân bằng' },
+  { key: 'Noon', name: 'Giữa Trưa ☀️', desc: 'Thời tiết nắng nóng nhẹ' }
+];
+
+export const FORM_STATES = [
+  { key: 'excellent', name: 'Cực Đỉnh', emoji: '🔥', min: 4, max: 6, color: 'text-amber-400' },
+  { key: 'good', name: 'Sung Sức', emoji: '📈', min: 1, max: 3, color: 'text-emerald-400' },
+  { key: 'normal', name: 'Ổn Định', emoji: '➡️', min: 0, max: 0, color: 'text-gray-300' },
+  { key: 'poor', name: 'Sa Sút', emoji: '📉', min: -3, max: -1, color: 'text-orange-400' },
+  { key: 'bad', name: 'Tồi Tệ', emoji: '❄️', min: -6, max: -4, color: 'text-cyan-400' }
+];
+
+export const generateCardForm = (card, opponentCard, env) => {
+  if (!card) return { state: FORM_STATES[2], bonus: 0 };
+  const attr = getPlayerAttr(card).key;
+  const rating = Math.max(card.stats.attack, card.stats.defense, card.stats.control) + ((card.level || 1) - 1) * 2;
+  
+  let weights = [0.10, 0.25, 0.35, 0.20, 0.10];
+
+  if (env) {
+    if (env.weather === 'Sunny') {
+      if (attr === 'speed') { weights[0] += 0.15; weights[1] += 0.15; }
+      if (attr === 'power') { weights[3] += 0.10; weights[4] += 0.05; }
+    } else if (env.weather === 'Rainy' || env.weather === 'Snowy') {
+      const penalty = env.weather === 'Snowy' ? 0.30 : 0.15;
+      if (attr === 'speed') { weights[3] += penalty; weights[4] += penalty / 2; }
+      if (attr === 'power') { weights[0] += 0.15; weights[1] += 0.15; }
+    } else if (env.weather === 'Windy') {
+      if (attr === 'tech') { weights[3] += 0.20; weights[4] += 0.10; }
+    }
+
+    if (env.time === 'Night') {
+      if (attr === 'tech') { weights[0] += 0.20; weights[1] += 0.10; }
+    }
+  }
+
+  if (opponentCard) {
+    const oppRating = Math.max(opponentCard.stats.attack, opponentCard.stats.defense, opponentCard.stats.control) + ((opponentCard.level || 1) - 1) * 2;
+    if (rating <= oppRating - 5) {
+      if (Math.random() < 0.25) {
+        weights = [0.90, 0.10, 0.0, 0.0, 0.0];
+      }
+    }
+  }
+
+  const total = weights.reduce((a, b) => a + b, 0);
+  const normalized = weights.map(w => w / total);
+
+  const roll = Math.random();
+  let cumulative = 0;
+  let chosenIdx = 2;
+  for (let i = 0; i < normalized.length; i++) {
+    cumulative += normalized[i];
+    if (roll <= cumulative) {
+      chosenIdx = i;
+      break;
+    }
+  }
+
+  const state = FORM_STATES[chosenIdx];
+  let bonus = 0;
+  if (state.min !== state.max) {
+    bonus = Math.floor(Math.random() * (state.max - state.min + 1)) + state.min;
+  } else {
+    bonus = state.min;
+  }
+
+  return { state, bonus };
+};
+
 // --- Card Component ---
 export const Card = ({ player, onClick, isSelectable, isSelected, hideStats }) => {
   if (!player) return null;
-  const maxStat = Math.max(player.stats.attack, player.stats.defense, player.stats.control);
+  const levelBonus = ((player.level || 1) - 1) * 2;
+  const maxStat = Math.max(player.stats.attack, player.stats.defense, player.stats.control) + levelBonus;
   const isSuper = ['Icon', 'Golden Baller'].includes(player.type);
   const attr = getPlayerAttr(player);
 
@@ -219,6 +301,13 @@ export const Card = ({ player, onClick, isSelectable, isSelected, hideStats }) =
           )}
         </div>
 
+        {/* Level badge for upgraded players */}
+        {player.level && player.level > 1 && (
+          <div className="absolute top-[61%] left-2 bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] font-black uppercase tracking-wider z-20 shadow-md border border-yellow-300/30">
+            Lv.{player.level}
+          </div>
+        )}
+
         {/* Top right info: Attribute style badge */}
         <div className={`absolute top-2 right-2 px-1.5 py-0.5 rounded-full border backdrop-blur-md z-20 flex items-center gap-1 ${attr.bg} shadow-md`}>
           <span className="text-[9px] sm:text-[10px]">{attr.emoji}</span>
@@ -244,17 +333,17 @@ export const Card = ({ player, onClick, isSelectable, isSelected, hideStats }) =
           {/* Stats Grid */}
           <div className="flex justify-around w-[90%]">
             <div className="flex flex-col items-center">
-               <span className="text-xs sm:text-sm font-black text-white">{hideStats ? '?' : player.stats.attack}</span>
+               <span className="text-xs sm:text-sm font-black text-white">{hideStats ? '?' : player.stats.attack + levelBonus}</span>
                <span className="text-[0.45rem] sm:text-[0.55rem] font-bold text-gray-400">ATK</span>
             </div>
             <div className="w-[1px] bg-white/20 mx-0.5"></div>
             <div className="flex flex-col items-center">
-               <span className="text-xs sm:text-sm font-black text-white">{hideStats ? '?' : player.stats.control}</span>
+               <span className="text-xs sm:text-sm font-black text-white">{hideStats ? '?' : player.stats.control + levelBonus}</span>
                <span className="text-[0.45rem] sm:text-[0.55rem] font-bold text-gray-400">CTRL</span>
             </div>
             <div className="w-[1px] bg-white/20 mx-0.5"></div>
             <div className="flex flex-col items-center">
-               <span className="text-xs sm:text-sm font-black text-white">{hideStats ? '?' : player.stats.defense}</span>
+               <span className="text-xs sm:text-sm font-black text-white">{hideStats ? '?' : player.stats.defense + levelBonus}</span>
                <span className="text-[0.45rem] sm:text-[0.55rem] font-bold text-gray-400">DEF</span>
             </div>
           </div>
@@ -319,11 +408,117 @@ export default function App() {
   const [activePvpTarget, setActivePvpTarget] = useState(pvpTarget);
   const [showPvpJoinModal, setShowPvpJoinModal] = useState(false);
   const [pvpJoinInput, setPvpJoinInput] = useState('');
+  const [activeBannerIdx, setActiveBannerIdx] = useState(0);
 
-  const [activeBannerIdx, setActiveBannerIdx] = useState(() => {
-    return Math.floor(Math.random() * BANNERS.length);
+  // --- Referral & Share States ---
+  const [referredBy, setReferredBy] = useState(() => {
+    return localStorage.getItem(`panini_${currentUser}_referredBy`) || '';
+  });
+  
+  const [referrals, setReferrals] = useState(() => {
+    const saved = localStorage.getItem(`panini_${currentUser}_referrals`);
+    if (saved) return JSON.parse(saved);
+    return [
+      { username: 'QuangVinh_Class5', level: 5, claimed: false },
+      { username: 'Minh_NghiaTan', level: 3, claimed: false },
+      { username: 'GiaBao_Gamer', level: 1, claimed: false }
+    ];
   });
 
+  const [inviteInput, setInviteInput] = useState('');
+  const [refCodeInput, setRefCodeInput] = useState('');
+  
+  const [showSharePoster, setShowSharePoster] = useState(null); // card data to show share poster, or null
+  const [selectedUpgradeCard, setSelectedUpgradeCard] = useState(null); // card data for upgrade modal
+
+  const upgradeCard = (cardId) => {
+    const card = collection.find(c => c.id === cardId);
+    if (!card) return;
+    const currentLvl = card.level || 1;
+    if (currentLvl >= 10) {
+      showAlert("🚫 Tối Đa Cấp Độ!", "Cầu thủ này đã đạt cấp độ tối đa (Lv.10)!");
+      return;
+    }
+    const cost = currentLvl * 150;
+    if (coins < cost) {
+      showAlert("🪙 Thiếu Xu!", `Bạn cần ${cost} Xu để nâng cấp cầu thủ này (Hiện có: ${coins} Xu).`);
+      return;
+    }
+
+    const nextCoins = coins - cost;
+    setCoins(nextCoins);
+    localStorage.setItem(`panini_${currentUser}_coins`, nextCoins.toString());
+
+    const updatedCollection = collection.map(c => {
+      if (c.id === cardId) {
+        return { ...c, level: currentLvl + 1 };
+      }
+      return c;
+    });
+    setCollection(updatedCollection);
+    localStorage.setItem(`panini_${currentUser}_collection`, JSON.stringify(updatedCollection));
+
+    const updatedSquad = squad.map(s => {
+      if (s.id === cardId) {
+        return { ...s, level: currentLvl + 1 };
+      }
+      return s;
+    });
+    setSquad(updatedSquad);
+    localStorage.setItem(`panini_${currentUser}_squad`, JSON.stringify(updatedSquad));
+
+    setSelectedUpgradeCard({ ...card, level: currentLvl + 1 });
+    playFx('winPoint');
+    showAlert("⚡ Nâng Cấp Thành Công!", `${card.name} đã thăng cấp lên Lv.${currentLvl + 1}! Tất cả chỉ số được cộng +2!`);
+  };
+
+  const addReferralFriend = (username) => {
+    if (!username.trim()) return;
+    const cleanName = username.trim();
+    if (cleanName === currentUser) {
+      showAlert("🚫 Không Thể Tự Mời!", "Bạn không thể tự mời chính mình!");
+      return;
+    }
+    if (referrals.some(r => r.username.toLowerCase() === cleanName.toLowerCase())) {
+      showAlert("⚠️ HLV Đã Tồn Tại!", "HLV này đã có trong danh sách giới thiệu của bạn!");
+      return;
+    }
+    const newRef = { username: cleanName, level: 1, claimed: false };
+    const updated = [...referrals, newRef];
+    setReferrals(updated);
+    localStorage.setItem(`panini_${currentUser}_referrals`, JSON.stringify(updated));
+    setInviteInput('');
+    showAlert("📨 Gửi Lời Mời!", `Đã thêm HLV ${cleanName} vào danh sách mời. Nhận thưởng +100 Xu & +1 Gói quà khi bạn này đạt Level 5!`);
+  };
+
+  const submitReferralCode = (code) => {
+    if (!code.trim()) return;
+    const cleanCode = code.trim();
+    if (cleanCode === currentUser) {
+      showAlert("🚫 Không Thể Tự Giới Thiệu!", "Bạn không thể nhập mã giới thiệu của chính mình!");
+      return;
+    }
+    setReferredBy(cleanCode);
+    localStorage.setItem(`panini_${currentUser}_referredBy`, cleanCode);
+    setCoins(c => c + 50);
+    showAlert("🎉 Nhập Mã Thành Công!", `Bạn đã nhập mã giới thiệu của HLV ${cleanCode}. Nhận ngay +50 Xu làm quen!`);
+  };
+
+  const claimReferralReward = (friendUsername) => {
+    setReferrals(prev => {
+      const updated = prev.map(ref => {
+        if (ref.username === friendUsername && ref.level >= 5 && !ref.claimed) {
+          setCoins(c => c + 100);
+          setFreePacks(f => f + 1); // 1 Free Pack
+          showAlert("🎁 Nhận Thưởng Giới Thiệu!", `Chúc mừng! Bạn đã nhận thưởng +100 Xu & +1 Gói Thẻ Huyền Thoại từ HLV ${friendUsername}!`);
+          return { ...ref, claimed: true };
+        }
+        return ref;
+      });
+      localStorage.setItem(`panini_${currentUser}_referrals`, JSON.stringify(updated));
+      return updated;
+    });
+  };
   useEffect(() => {
     const timer = setInterval(() => {
       setActiveBannerIdx(prev => (prev + 1) % BANNERS.length);
@@ -1019,7 +1214,7 @@ export default function App() {
       timestamp: serverTimestamp()
     });
 
-    alert(`Đã gửi lời mời thách đấu tới ${targetUser}! Vui lòng chờ đối thủ phản hồi...`);
+    showAlert("📨 Lời Mời Đã Gửi!", `Đã gửi lời mời thách đấu tới ${targetUser}! Vui lòng chờ đối thủ phản hồi...`);
 
     const statusRef = ref(database, `/invites/${targetUser}/status`);
     const unsubscribeStatus = onValue(statusRef, (snap) => {
@@ -1032,7 +1227,7 @@ export default function App() {
       } else if (status === 'declined') {
         unsubscribeStatus();
         set(targetInviteRef, null);
-        alert(`Đối thủ ${targetUser} đã từ chối lời mời thách đấu! 😢`);
+        showAlert("😢 Lời Mời Bị Từ Chối", `Đối thủ ${targetUser} đã từ chối lời mời thách đấu!`);
       }
     });
   };
@@ -1083,6 +1278,7 @@ export default function App() {
   const [currentAiCard, setCurrentAiCard] = useState(null);
   const [roundResultMsg, setRoundResultMsg] = useState("");
   const [playedCardIds, setPlayedCardIds] = useState([]);
+  const [matchEnvironment, setMatchEnvironment] = useState({ weather: ENV_WEATHER[4], time: ENV_TIME[1] });
 
   // ─── Unified Smart Auth Handler ─────────────────────────────────────────────
   // Step 1: User enters name → check Firebase
@@ -1508,6 +1704,10 @@ export default function App() {
   };
 
   const startMatch = () => {
+    const weather = ENV_WEATHER[Math.floor(Math.random() * ENV_WEATHER.length)];
+    const time = ENV_TIME[Math.floor(Math.random() * ENV_TIME.length)];
+    setMatchEnvironment({ weather, time });
+
     setPlayerHand([...squad]);
     setAiHand(generateAITeam(difficulty));
     setMatchScore({ player: 0, ai: 0 });
@@ -1535,7 +1735,8 @@ export default function App() {
       else if (stat === 'defense') targetStat = 'attack';
       else targetStat = 'control';
 
-      const playerVal = selectedPlayerCard.stats[stat];
+      const lvlBonus1 = ((selectedPlayerCard.level || 1) - 1) * 2;
+      const playerVal = selectedPlayerCard.stats[stat] + lvlBonus1;
 
       // Smart AI Card Selection logic
       // We want to find a card in aiHand that wins, draws, or minimizes loss
@@ -1585,20 +1786,28 @@ export default function App() {
     // If player picks Attack, compare with AI's Defense
     // If player picks Defense, compare with AI's Attack
     // If player picks Control, compare with AI's Control
-    let baseV1 = selectedPlayerCard.stats[stat];
+    const lvlBonus1 = ((selectedPlayerCard.level || 1) - 1) * 2;
+    const lvlBonus2 = ((aiCard.level || 1) - 1) * 2;
+    let baseV1 = selectedPlayerCard.stats[stat] + lvlBonus1;
     let baseV2 = 0;
     let stat2Name = '';
 
     if (stat === 'attack') {
-      baseV2 = aiCard.stats.defense;
+      baseV2 = aiCard.stats.defense + lvlBonus2;
       stat2Name = 'defense';
     } else if (stat === 'defense') {
-      baseV2 = aiCard.stats.attack;
+      baseV2 = aiCard.stats.attack + lvlBonus2;
       stat2Name = 'attack';
     } else {
-      baseV2 = aiCard.stats.control;
+      baseV2 = aiCard.stats.control + lvlBonus2;
       stat2Name = 'control';
     }
+
+    // Generate Form/Condition based on weather, elements, underdog logic
+    const formResult1 = generateCardForm(selectedPlayerCard, aiCard, matchEnvironment);
+    const formResult2 = generateCardForm(aiCard, selectedPlayerCard, matchEnvironment);
+    const formBonus1 = formResult1.bonus;
+    const formBonus2 = formResult2.bonus;
 
     // Apply card rarity priority bonus
     const bonus1 = getCardTypeBonus(selectedPlayerCard.type);
@@ -1616,13 +1825,20 @@ export default function App() {
       attrBonus2 = 5;
     }
 
-    const v1 = baseV1 + bonus1 + attrBonus1;
-    const v2 = baseV2 + bonus2 + attrBonus2;
+    const v1 = baseV1 + bonus1 + attrBonus1 + formBonus1;
+    const v2 = baseV2 + bonus2 + attrBonus2 + formBonus2;
 
-    const bonusPart = (b, ab, emoji) => {
+    const bonusPart = (b, ab, emoji, lb, fb, fs) => {
       let parts = [];
+      if (lb > 0) parts.push(`+${lb} Lv`);
       if (b > 0) parts.push(`+${b} Rarity`);
       if (ab > 0) parts.push(`+${ab} Khắc chế ${emoji}`);
+      if (fb !== 0) {
+        const sign = fb > 0 ? '+' : '';
+        parts.push(`${sign}${fb} Phong độ ${fs.emoji}`);
+      } else {
+        parts.push(`+0 Phong độ ➡️`);
+      }
       return parts.length > 0 ? ` [${parts.join(' & ')}]` : '';
     };
 
@@ -1632,12 +1848,12 @@ export default function App() {
 
     if (v1 > v2) {
       pScore++;
-      msg = `THẮNG! ${baseV1}${bonusPart(bonus1, attrBonus1, attr1.emoji)} > ${baseV2}${bonusPart(bonus2, attrBonus2, attr2.emoji)}`;
+      msg = `THẮNG! ${baseV1}${bonusPart(bonus1, attrBonus1, attr1.emoji, lvlBonus1, formBonus1, formResult1.state)} > ${baseV2}${bonusPart(bonus2, attrBonus2, attr2.emoji, lvlBonus2, formBonus2, formResult2.state)}`;
     } else if (v2 > v1) {
       aScore++;
-      msg = `THUA! ${baseV1}${bonusPart(bonus1, attrBonus1, attr1.emoji)} < ${baseV2}${bonusPart(bonus2, attrBonus2, attr2.emoji)}`;
+      msg = `THUA! ${baseV1}${bonusPart(bonus1, attrBonus1, attr1.emoji, lvlBonus1, formBonus1, formResult1.state)} < ${baseV2}${bonusPart(bonus2, attrBonus2, attr2.emoji, lvlBonus2, formBonus2, formResult2.state)}`;
     } else {
-      msg = `HÒA! ${baseV1}${bonusPart(bonus1, attrBonus1, attr1.emoji)} = ${baseV2}${bonusPart(bonus2, attrBonus2, attr2.emoji)}`;
+      msg = `HÒA! ${baseV1}${bonusPart(bonus1, attrBonus1, attr1.emoji, lvlBonus1, formBonus1, formResult1.state)} = ${baseV2}${bonusPart(bonus2, attrBonus2, attr2.emoji, lvlBonus2, formBonus2, formResult2.state)}`;
     }
     setMatchScore({ player: pScore, ai: aScore });
     setRoundResultMsg(msg);
@@ -2072,9 +2288,21 @@ export default function App() {
               </div>
 
               <div className="htp-step-card">
+                <div className="htp-step-num">⚡</div>
+                <div className="htp-step-body">
+                  <h3>Bước 5 — Khắc Chế Hệ Kỹ Năng</h3>
+                  <p>
+                    Cầu thủ chia làm 3 hệ nguyên tố: <strong style={{color:'#facc15'}}>Tốc Độ ⚡</strong> (khắc chế) <strong style={{color:'#22d3ee'}}>Kỹ Thuật 🌀</strong> (khắc chế) <strong style={{color:'#f87171'}}>Sức Mạnh 💪</strong> (khắc chế) <strong style={{color:'#facc15'}}>Tốc Độ ⚡</strong>.
+                    Khi so tài, nếu cầu thủ của bạn có hệ khắc chế đối thủ, bạn được <strong style={{color:'#4ade80'}}>cộng ngay +5 điểm</strong> vào chỉ số thi đấu! Sắp xếp bài khắc chế thay vì chỉ nhìn vào chỉ số cao thấp.
+                  </p>
+                  <span className="htp-tip">💡 Quan sát kỹ biểu tượng hệ nguyên tố ở góc trên bên phải của mỗi chiếc thẻ!</span>
+                </div>
+              </div>
+
+              <div className="htp-step-card">
                 <div className="htp-step-num">🌐</div>
                 <div className="htp-step-body">
-                  <h3>Bước 5 — PvP Online & Tích Luỹ</h3>
+                  <h3>Bước 6 — PvP Online & Tích Luỹ</h3>
                   <p>
                     Thách đấu bạn bè qua <strong style={{color:'#38bdf8'}}>PvP Online</strong> bằng cách chia sẻ mã phòng.
                     Mọi trận đều nhận Xu và XP:
@@ -2088,7 +2316,7 @@ export default function App() {
               <div className="htp-step-card">
                 <div className="htp-step-num">📊</div>
                 <div className="htp-step-body">
-                  <h3>Bước 6 — Nhiệm Vụ & Bảng Xếp Hạng</h3>
+                  <h3>Bước 7 — Nhiệm Vụ & Bảng Xếp Hạng</h3>
                   <p>
                     Hoàn thành <strong style={{color:'#f472b6'}}>Nhiệm Vụ Hàng Ngày</strong> để nhận thêm Xu và XP.
                     Kiểm tra <strong style={{color:'#c4f000'}}>Bảng Xếp Hạng</strong> để so sánh với
@@ -2302,7 +2530,7 @@ export default function App() {
                             setOpenedCards([]);
                             setGameState('packOpening');
                           } else {
-                            alert("Bạn không đủ Xu để mở gói thẻ. Hãy đi nhận quà thăng cấp hoặc làm nhiệm vụ nhé!");
+                            showAlert("🪙 Thiếu Xu!", "Bạn không đủ Xu để mở gói thẻ. Hãy đi nhận quà thăng cấp hoặc làm nhiệm vụ nhé!");
                           }
                         }}>
                         <PackageOpen size={48} className="text-fuchsia-400 mb-3 group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-300 drop-shadow-[0_0_15px_rgba(232,121,249,0.6)]" />
@@ -3022,6 +3250,122 @@ export default function App() {
                   </button>
                 </form>
               </div>
+
+              {/* Referral Panel */}
+              <div className="glass-panel rounded-3xl p-6 border border-white/10 shadow-2xl bg-gradient-to-b from-indigo-950/10 to-slate-900/40 mt-6">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 border-b border-white/5 pb-2 text-center flex items-center justify-center gap-1.5">
+                  🎁 GIỚI THIỆU BẠN BÈ (REFERRAL)
+                </h4>
+                
+                {/* Your Referral Code */}
+                <div className="bg-black/50 border border-amber-500/30 rounded-2xl p-3 text-center mb-4 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/5 rounded-full blur-xl"></div>
+                  <div className="text-[9px] text-amber-400 font-bold uppercase tracking-widest mb-1">Mã Giới Thiệu Của Bạn</div>
+                  <div 
+                    className="text-lg font-black text-white cursor-pointer select-all tracking-wider hover:text-amber-300 transition-colors"
+                    onClick={() => {
+                      navigator.clipboard.writeText(currentUser);
+                      showAlert("📋 Đã Sao Chép!", "Đã copy mã giới thiệu của bạn! Hãy gửi cho bạn bè để cùng nhận quà nhé!");
+                    }}
+                    title="Click để copy mã nhanh"
+                  >
+                    {currentUser} 📋
+                  </div>
+                </div>
+
+                {/* Submit Friend's Referral Code */}
+                {!referredBy ? (
+                  <div className="bg-slate-950/40 border border-white/5 p-3 rounded-2xl mb-4 text-left">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Nhập Mã Của Bạn Bè</label>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        placeholder="Nhập tên HLV giới thiệu..."
+                        className="bg-black/50 border border-white/15 px-3 py-1.5 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 flex-1 font-semibold"
+                        value={refCodeInput}
+                        onChange={(e) => setRefCodeInput(e.target.value)}
+                      />
+                      <button 
+                        type="button"
+                        className="btn !bg-cyan-600 hover:!bg-cyan-500 !py-1.5 !px-4 text-xs font-black uppercase rounded-xl transition-all cursor-pointer"
+                        onClick={() => {
+                          if (refCodeInput.trim()) {
+                            submitReferralCode(refCodeInput);
+                            setRefCodeInput('');
+                          }
+                        }}
+                      >
+                        Nhập
+                      </button>
+                    </div>
+                    <div className="text-[8px] text-gray-500 font-semibold mt-1">Nhận ngay +50 Xu (Chỉ dành cho tài khoản mới dưới Level 5)</div>
+                  </div>
+                ) : (
+                  <div className="bg-emerald-950/20 border border-emerald-500/20 p-3 rounded-2xl mb-4 text-center">
+                    <span className="text-[10px] font-bold text-emerald-400">
+                      ✓ Đã nhập mã giới thiệu từ HLV: <span className="underline font-black">{referredBy}</span>
+                    </span>
+                  </div>
+                )}
+
+                {/* Invite New Friend Input */}
+                <div className="bg-slate-950/40 border border-white/5 p-3 rounded-2xl mb-4 text-left">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Mời Bạn Mới Thi Đấu</label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      placeholder="Nhập tên HLV bạn muốn mời..."
+                      className="bg-black/50 border border-white/15 px-3 py-1.5 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 flex-1 font-semibold"
+                      value={inviteInput}
+                      onChange={(e) => setInviteInput(e.target.value)}
+                    />
+                    <button 
+                      type="button"
+                      className="btn !bg-purple-600 hover:!bg-purple-500 !py-1.5 !px-4 text-xs font-black uppercase rounded-xl transition-all cursor-pointer"
+                      onClick={() => {
+                        if (inviteInput.trim()) {
+                          addReferralFriend(inviteInput);
+                        }
+                      }}
+                    >
+                      Thêm
+                    </button>
+                  </div>
+                </div>
+
+                {/* Friend Invitation List */}
+                <div className="w-full">
+                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 text-left">HLV Bạn Đã Mời ({referrals.length})</div>
+                  <div className="flex flex-col gap-2 max-h-[140px] overflow-y-auto pr-1">
+                    {referrals.map(ref => {
+                      const canClaim = ref.level >= 5 && !ref.claimed;
+                      return (
+                        <div key={ref.username} className="flex justify-between items-center bg-black/40 border border-white/5 p-2 rounded-xl text-xs">
+                          <div className="text-left">
+                            <div className="font-extrabold text-white">{ref.username}</div>
+                            <div className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">
+                              Level {ref.level} {ref.level >= 5 ? '🎯 Hoàn Thành' : '⏳ Cần cày Cấp 5'}
+                            </div>
+                          </div>
+                          {ref.claimed ? (
+                            <span className="text-[9px] bg-white/5 text-gray-500 px-2 py-1 rounded-full font-black border border-white/5">ĐÃ NHẬN 🎁</span>
+                          ) : canClaim ? (
+                            <button 
+                              type="button"
+                              className="btn !bg-yellow-500 text-black font-black text-[9px] px-2.5 py-1 rounded-full animate-bounce"
+                              onClick={() => claimReferralReward(ref.username)}
+                            >
+                              Nhận Quà 🎁
+                            </button>
+                          ) : (
+                            <span className="text-[9px] text-gray-400 font-black">Chờ Cấp 5</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
             </div>
             
           </div>
@@ -3734,7 +4078,7 @@ export default function App() {
                     key={card.id} 
                     player={card} 
                     isSelectable 
-                    onClick={() => toggleSquad(card)} 
+                    onClick={() => setSelectedUpgradeCard(card)} 
                   />
                 ))}
               </div>
@@ -3748,12 +4092,114 @@ export default function App() {
                     player={card} 
                     isSelectable 
                     isSelected
-                    onClick={() => toggleSquad(card)} 
+                    onClick={() => setSelectedUpgradeCard(card)} 
                   />
                 ))}
               </div>
             </div>
           </div>
+
+          {/* Card Details & Upgrade Modal */}
+          {selectedUpgradeCard && (() => {
+            const cardInCollection = collection.find(c => c.id === selectedUpgradeCard.id);
+            const inSquad = squad.some(s => s.id === selectedUpgradeCard.id);
+            const lvl = cardInCollection ? (cardInCollection.level || 1) : 1;
+            const upgradeCost = lvl * 150;
+            const isMaxLvl = lvl >= 10;
+            return (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in">
+                <div className="glass-panel p-6 sm:p-8 rounded-[2.5rem] max-w-lg w-full flex flex-col md:flex-row items-center gap-6 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950/80 shadow-[0_0_80px_rgba(30,58,138,0.5)] relative border border-white/10">
+                  <button 
+                    className="absolute top-4 right-4 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full w-8 h-8 flex items-center justify-center transition-colors border border-white/10 z-50 cursor-pointer"
+                    onClick={() => setSelectedUpgradeCard(null)}
+                  >
+                    ✕
+                  </button>
+
+                  {/* Left Column: Big Card Visual */}
+                  <div className="w-44 sm:w-56 shrink-0 drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)] relative group">
+                    <Card player={cardInCollection} hideStats={false} />
+                  </div>
+
+                  {/* Right Column: Level Up Controls */}
+                  <div className="flex-1 flex flex-col justify-between w-full h-full text-left">
+                    <div>
+                      <span className="text-[10px] sm:text-xs font-black uppercase text-cyan-400 tracking-widest block mb-1">HỒ SƠ CẦU THỦ</span>
+                      <h3 className="text-xl sm:text-2xl font-black italic uppercase tracking-wide text-white mb-2 leading-none">{selectedUpgradeCard.name}</h3>
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        <span className="text-[10px] font-bold px-2 py-0.5 bg-white/10 rounded-full text-white/80 border border-white/10">{selectedUpgradeCard.type}</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 bg-yellow-500/20 text-yellow-400 rounded-full border border-yellow-500/30">Cấp Độ {lvl}</span>
+                      </div>
+
+                      <div className="bg-black/40 border border-white/5 rounded-2xl p-4 mb-4">
+                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Chỉ số thuộc tính (+2/Lv):</h4>
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-2">
+                            <div className="text-[9px] font-extrabold text-red-400 tracking-wider">ATK</div>
+                            <div className="text-base sm:text-lg font-black text-white">{selectedUpgradeCard.stats.attack + (lvl - 1) * 2}</div>
+                          </div>
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-2">
+                            <div className="text-[9px] font-extrabold text-green-400 tracking-wider">CTRL</div>
+                            <div className="text-base sm:text-lg font-black text-white">{selectedUpgradeCard.stats.control + (lvl - 1) * 2}</div>
+                          </div>
+                          <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-2">
+                            <div className="text-[9px] font-extrabold text-blue-400 tracking-wider">DEF</div>
+                            <div className="text-base sm:text-lg font-black text-white">{selectedUpgradeCard.stats.defense + (lvl - 1) * 2}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2 mt-2">
+                      <button
+                        className={`w-full py-3 px-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all cursor-pointer flex justify-between items-center ${
+                          isMaxLvl ? 'bg-gray-800 text-gray-500 border border-gray-700 cursor-not-allowed' :
+                          coins >= upgradeCost ? 'bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-slate-950 font-black shadow-lg shadow-yellow-950/20 hover:scale-[1.02]' :
+                          'bg-red-950/40 text-red-400 border border-red-500/20 cursor-not-allowed'
+                        }`}
+                        disabled={isMaxLvl}
+                        onClick={() => {
+                          playFx('click');
+                          upgradeCard(selectedUpgradeCard.id);
+                        }}
+                      >
+                        <span>{isMaxLvl ? "ĐÃ ĐẠT CẤP ĐỘ MAX" : `⚡ CƯỜNG HÓA (+2 CHỈ SỐ)`}</span>
+                        {!isMaxLvl && (
+                          <span className="text-[10px] font-bold px-2 py-1 bg-black/20 rounded-lg text-white">
+                            🪙 {upgradeCost} Xu
+                          </span>
+                        )}
+                      </button>
+
+                      <button
+                        className={`w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-widest transition-all cursor-pointer border ${
+                          inSquad ? 'bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20' :
+                          squad.length >= 11 ? 'bg-gray-800 border-gray-700 text-gray-500 cursor-not-allowed' :
+                          'bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20'
+                        }`}
+                        onClick={() => {
+                          playFx('click');
+                          if (inSquad) {
+                            setSquad(squad.filter(s => s.id !== selectedUpgradeCard.id));
+                            localStorage.setItem(`panini_${currentUser}_squad`, JSON.stringify(squad.filter(s => s.id !== selectedUpgradeCard.id)));
+                          } else {
+                            if (squad.length < 11) {
+                              setSquad([...squad, cardInCollection]);
+                              localStorage.setItem(`panini_${currentUser}_squad`, JSON.stringify([...squad, cardInCollection]));
+                            } else {
+                              showAlert("🚫 Đội Hình Đầy!", "Đội hình chính đã đủ 11 cầu thủ!");
+                            }
+                          }
+                        }}
+                      >
+                        {inSquad ? "❌ Rút Khỏi Đội Hình" : squad.length >= 11 ? "🚫 Đội Hình Chính Đầy (11/11)" : "⚽ Đưa Vào Đội Hình Chính"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 
@@ -3775,7 +4221,7 @@ export default function App() {
                 </h2>
                 <p className="text-xs text-gray-400 mb-6 font-medium">Chọn độ khó để bắt đầu trận đấu 11 vòng đầy kịch tính</p>
                 
-                <div className="flex flex-col gap-3 mb-8 w-full max-h-[380px] overflow-y-auto pr-1">
+                <div className="flex flex-col gap-3 mb-8 w-full">
                   {[
                     { id: 'Amateur', name: 'Nghiệp Dư', emoji: '🟢', color: 'border-emerald-500/30 hover:border-emerald-400 text-emerald-400 shadow-emerald-500/5', bg: 'bg-emerald-500/10 border-emerald-400 text-emerald-300 shadow-emerald-500/20', reward: '+30 Xu', desc: 'AI chọn bài ngẫu nhiên 100%, thích hợp làm quen.' },
                     { id: 'Professional', name: 'Chuyên Nghiệp', emoji: '🔵', color: 'border-blue-500/30 hover:border-blue-400 text-blue-400 shadow-blue-500/5', bg: 'bg-blue-500/10 border-blue-400 text-blue-300 shadow-blue-500/20', reward: '+50 Xu', desc: 'AI có 50% tính toán phản công, biết chặn đòn vừa phải.' },
@@ -3891,6 +4337,16 @@ export default function App() {
                           <span className="text-2xl sm:text-3xl font-black text-white">{selectedPlayerCard.stats.defense}</span>
                       </button>
                     </div>
+
+                    <button 
+                      className="mt-6 w-full py-2.5 bg-white/5 hover:bg-white/10 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer border border-white/10 hover:border-white/20 active:scale-[0.98]"
+                      onClick={() => {
+                        playFx('click');
+                        setSelectedPlayerCard(null);
+                      }}
+                    >
+                      ↺ Chọn Cầu Thủ Khác
+                    </button>
                   </div>
                 </div>
               )}
@@ -3952,6 +4408,36 @@ export default function App() {
                        <span className="text-red-400 font-black text-xs">AI</span>
                      </div>
                   </div>
+                </div>
+
+                {/* Weather & Environment HUD */}
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 bg-slate-950/80 border border-white/10 p-2.5 rounded-2xl mx-auto select-none mt-1 shadow-lg max-w-xl w-full text-center">
+                  <div className="flex items-center gap-1 text-[10px] sm:text-xs">
+                    <span className="text-gray-400 font-bold uppercase">Sân đấu:</span>
+                    <span className="text-amber-400 font-black">Lusail Iconic 🏟️</span>
+                  </div>
+                  <div className="w-[1px] bg-white/10 h-3 hidden sm:block"></div>
+                  <div className="flex items-center gap-1 text-[10px] sm:text-xs" title={matchEnvironment.weather.desc}>
+                    <span className="text-gray-400 font-bold uppercase">Thời tiết:</span>
+                    <span className="text-white font-extrabold">{matchEnvironment.weather.name}</span>
+                  </div>
+                  <div className="w-[1px] bg-white/10 h-3 hidden sm:block"></div>
+                  <div className="flex items-center gap-1 text-[10px] sm:text-xs" title={matchEnvironment.time.desc}>
+                    <span className="text-gray-400 font-bold uppercase">Khung giờ:</span>
+                    <span className="text-cyan-400 font-extrabold">{matchEnvironment.time.name}</span>
+                  </div>
+                </div>
+
+                {/* Sleek Counter Guide Pill */}
+                <div className="flex items-center justify-center gap-2 sm:gap-4 bg-slate-900/60 border border-white/5 py-1.5 px-4 rounded-full text-[9px] sm:text-xs font-semibold tracking-wide mx-auto select-none mt-1 shadow-md">
+                  <span className="text-gray-400 font-bold uppercase text-[8px] sm:text-[10px]">Khắc chế (+5 OVR):</span>
+                  <span className="flex items-center gap-1 font-bold text-yellow-400">Tốc độ ⚡</span>
+                  <span className="text-gray-500 font-black">➔</span>
+                  <span className="flex items-center gap-1 font-bold text-cyan-400">Kỹ thuật 🌀</span>
+                  <span className="text-gray-500 font-black">➔</span>
+                  <span className="flex items-center gap-1 font-bold text-red-400">Sức mạnh 💪</span>
+                  <span className="text-gray-500 font-black">➔</span>
+                  <span className="flex items-center gap-1 font-bold text-yellow-400">Tốc độ ⚡</span>
                 </div>
 
                 {/* Sân 3D */}
@@ -4218,6 +4704,101 @@ export default function App() {
           </div>
         </div>
       )}
+
+
+      {/* 2.5 KHOE THẺ XỊN SHOWCASE POSTER MODAL */}
+      {showSharePoster && (() => {
+        const card = showSharePoster;
+        const rarity = card._rarity || 'common';
+        const tier = RARITY_TIERS[rarity] || { color: '#ffffff', glow: 'rgba(255,255,255,0.4)', star: '★', label: 'SIÊU SAO' };
+        
+        return (
+          <div className="fixed inset-0 z-[220] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 overflow-y-auto animate-fade-in">
+            <div className="relative w-full max-w-lg bg-gradient-to-b from-slate-900 via-slate-950 to-black border-2 border-yellow-500/40 rounded-[2.5rem] p-6 sm:p-8 text-center shadow-[0_0_80px_rgba(251,191,36,0.35)] flex flex-col items-center gap-6 overflow-hidden">
+              
+              {/* Decorative glows */}
+              <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-red-500 via-yellow-500 to-cyan-500"></div>
+              <div className="absolute -top-20 -left-20 w-48 h-48 bg-cyan-500/10 rounded-full blur-[80px]"></div>
+              <div className="absolute -bottom-20 -right-20 w-48 h-48 bg-yellow-500/10 rounded-full blur-[80px]"></div>
+
+              {/* Header Title */}
+              <div>
+                <span className="text-[10px] font-black uppercase text-amber-400 tracking-[0.25em] pl-[0.25em] block mb-1">
+                  ✨ NHÀ VÔ ĐỊCH MỞ GÓI THẺ ✨
+                </span>
+                <h2 className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-yellow-300 to-amber-500 uppercase tracking-wide">
+                  ĐÃ MỞ ĐƯỢC SIÊU CẦU THỦ!
+                </h2>
+              </div>
+
+              {/* Poster frame that players screenshot */}
+              <div className="w-full bg-gradient-to-b from-slate-950 to-slate-900 border border-white/10 rounded-3xl p-5 relative overflow-hidden flex flex-col items-center shadow-inner">
+                {/* Diagonal strip background */}
+                <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(0,0,0,0.85)_25%,transparent_25%,transparent_50%,rgba(0,0,0,0.85)_50%,rgba(0,0,0,0.85)_75%,transparent_75%,transparent)] bg-[length:40px_40px] opacity-10 pointer-events-none"></div>
+
+                {/* Overall Rating & Headline */}
+                <div className="text-center z-10 mb-4">
+                  <h3 className="text-lg sm:text-xl font-black italic uppercase tracking-wider text-white">
+                    HLV <span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-cyan-400 font-black">{currentUser}</span>
+                  </h3>
+                  <div className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">Sở hữu thẻ Siêu Cấp Mùa giải 2026</div>
+                </div>
+
+                {/* The card itself */}
+                <div className="w-44 sm:w-56 aspect-[5/7] mb-5 relative group animate-bounce-subtle z-10">
+                  <div className="absolute -inset-1 rounded-[1.5rem] blur-md opacity-60 animate-pulse" style={{ background: tier.glow }}></div>
+                  <div className="relative rounded-2xl overflow-hidden" style={{ boxShadow: `0 0 25px ${tier.glow}` }}>
+                    <Card player={card} hideStats={false} />
+                  </div>
+                </div>
+
+                {/* QR Code and link strip */}
+                <div className="w-full flex items-center justify-between gap-4 border-t border-white/10 pt-4 z-10 bg-black/40 px-4 py-2.5 rounded-2xl mt-1">
+                  <div className="text-left">
+                    <div className="text-[9px] font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-500 uppercase tracking-wider">Chơi Game Miễn Phí Tại</div>
+                    <div className="text-xs font-black text-white tracking-wide">thebongda.vinhninh.com</div>
+                    <div className="text-[7px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">
+                      Nhập mã giới thiệu: <span className="text-amber-400 font-black">{currentUser}</span>
+                    </div>
+                  </div>
+                  <div className="bg-white p-1 rounded-lg shrink-0 shadow-lg border border-yellow-500/30">
+                    <QRCodeSVG value={`${window.location.origin}?ref=${currentUser}`} size={52} bgColor="#ffffff" fgColor="#000000" level="L" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Instructions and CTA */}
+              <div className="text-xs text-gray-400 font-semibold px-4">
+                📸 <span className="text-white">Hãy Chụp Ảnh Màn Hình điện thoại/máy tính ngay</span> để khoe thẻ siêu sao lấp lánh này lên Zalo cho bố mẹ hoặc gửi vào nhóm chat lớp để thách đấu cùng bạn bè nhé!
+              </div>
+
+              <div className="flex gap-4 w-full">
+                <button 
+                  type="button"
+                  className="flex-1 btn !bg-yellow-500 text-black font-black py-3 text-sm rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-yellow-500/20"
+                  onClick={() => {
+                    playFx('click');
+                    showAlert("📤 Link Đã Sẵn Sàng!", "Đã tạo link chia sẻ của bạn! Bạn chỉ cần chụp ảnh màn hình này hoặc gửi link này cho bạn bè nhé!");
+                  }}
+                >
+                  📤 Tạo Link Chia Sẻ
+                </button>
+                <button 
+                  type="button"
+                  className="flex-1 btn !bg-gray-700 hover:!bg-gray-600 text-white font-bold py-3 text-sm rounded-xl transition-all active:scale-[0.98]"
+                  onClick={() => {
+                    playFx('click');
+                    setShowSharePoster(null);
+                  }}
+                >
+                  Đóng
+                </button>
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
 
       {/* 3. IN-GAME CUSTOM ALERT MODAL */}
       {gameAlert && (
