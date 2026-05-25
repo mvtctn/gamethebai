@@ -268,7 +268,7 @@ export const generateCardForm = (card, opponentCard, env, rng = Math.random) => 
   const state = FORM_STATES[chosenIdx];
   let bonus = 0;
   if (state.min !== state.max) {
-    bonus = Math.floor(Math.random() * (state.max - state.min + 1)) + state.min;
+    bonus = Math.floor(rng() * (state.max - state.min + 1)) + state.min;
   } else {
     bonus = state.min;
   }

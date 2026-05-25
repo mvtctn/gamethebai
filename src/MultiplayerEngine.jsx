@@ -218,17 +218,15 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     }
 
     // Generate Form/Condition based on weather, elements, underdog logic
-    // Using seeded RNG to guarantee identical evaluation on both devices!
-    const roundRng = seededRNG(roundCountRef.current);
-    
+    // Using independent seeded RNGs for each card to guarantee identical evaluation regardless of order!
     let formResult1, formResult2;
     if (isHostRef.current) {
-      formResult1 = generateCardForm(myCard, opCard, matchEnvironment, roundRng);
-      formResult2 = generateCardForm(opCard, myCard, matchEnvironment, roundRng);
+      formResult1 = generateCardForm(myCard, opCard, matchEnvironment, seededRNG(roundCountRef.current * 10 + 1));
+      formResult2 = generateCardForm(opCard, myCard, matchEnvironment, seededRNG(roundCountRef.current * 10 + 2));
     } else {
-      // Guest must evaluate the opponent's card (which was Host's myCard) first, to consume the exact same random sequence
-      formResult2 = generateCardForm(opCard, myCard, matchEnvironment, roundRng);
-      formResult1 = generateCardForm(myCard, opCard, matchEnvironment, roundRng);
+      // Guest: opCard corresponds to Host's myCard (rng + 1), myCard corresponds to Host's opCard (rng + 2)
+      formResult2 = generateCardForm(opCard, myCard, matchEnvironment, seededRNG(roundCountRef.current * 10 + 1));
+      formResult1 = generateCardForm(myCard, opCard, matchEnvironment, seededRNG(roundCountRef.current * 10 + 2));
     }
 
     const formBonus1 = formResult1.bonus;
