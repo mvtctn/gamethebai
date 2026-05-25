@@ -345,15 +345,32 @@ export default function App() {
       // Đánh giá sức mạnh thẻ dựa trên chỉ số tốt nhất của nó
       const maxStat = Math.max(p.stats.attack, p.stats.defense, p.stats.control);
       
-      if (diff === 'Easy') return maxStat <= 75; // Chỉ dùng thẻ yếu
-      if (diff === 'Medium') return maxStat > 75 && maxStat <= 89; // Thẻ tầm trung và khá
-      if (diff === 'Hard') return maxStat >= 93; // Cực khó: Toàn siêu sao với chỉ số đỉnh cao >= 93
+      if (diff === 'Easy' || diff === 'Amateur') return maxStat <= 75; // Chỉ dùng thẻ yếu
+      if (diff === 'Medium' || diff === 'Professional') return maxStat > 75 && maxStat <= 87; // Thẻ tầm trung
+      if (diff === 'Hard' || diff === 'World Class') return maxStat > 87 && maxStat <= 94; // Thẻ tầm khá/giỏi
+      if (diff === 'Legendary') return maxStat >= 95; // Siêu sao đỉnh cao
+      if (diff === 'Ultimate') return maxStat >= 98; // Chỉ tuyển chọn các Icon, Golden Baller hàng đầu thế giới 98+
       return true;
     });
 
     const safePool = filteredPool.length >= 11 ? filteredPool : pool;
     const shuffled = safePool.sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 11);
+    
+    // Deep clone the shuffled cards so we don't mutate the original playersData pool!
+    const aiSelectedTeam = shuffled.slice(0, 11).map(card => {
+      const clonedCard = JSON.parse(JSON.stringify(card));
+      let boost = 0;
+      if (diff === 'Legendary') boost = 2;
+      else if (diff === 'Ultimate') boost = 5;
+      
+      if (boost > 0) {
+        clonedCard.stats.attack = Math.min(100, clonedCard.stats.attack + boost);
+        clonedCard.stats.defense = Math.min(100, clonedCard.stats.defense + boost);
+        clonedCard.stats.control = Math.min(100, clonedCard.stats.control + boost);
+      }
+      return clonedCard;
+    });
+    return aiSelectedTeam;
   };
 
   const startMatch = () => {
@@ -368,11 +385,65 @@ export default function App() {
     setCurrentAiCard(null);
   };
 
-    const playRound = (stat) => {
+  const playRound = (stat) => {
     setSelectedStat(stat);
     
-    // AI picks a random card
-    const aiIndex = Math.floor(Math.random() * aiHand.length);
+    // AI picks a card based on difficulty level
+    let aiIndex = 0;
+    
+    if (difficulty === 'Easy' || difficulty === 'Amateur') {
+      // 100% random choice
+      aiIndex = Math.floor(Math.random() * aiHand.length);
+    } else {
+      // Determine what stat we are comparing against on the AI card
+      let targetStat = '';
+      if (stat === 'attack') targetStat = 'defense';
+      else if (stat === 'defense') targetStat = 'attack';
+      else targetStat = 'control';
+
+      const playerVal = selectedPlayerCard.stats[stat];
+
+      // Smart AI Card Selection logic
+      // We want to find a card in aiHand that wins, draws, or minimizes loss
+      const aiCardsWithIndex = aiHand.map((card, idx) => ({ card, idx }));
+      
+      // Separate cards into winning, drawing, and losing groups
+      const winners = aiCardsWithIndex.filter(item => item.card.stats[targetStat] > playerVal);
+      const drawers = aiCardsWithIndex.filter(item => item.card.stats[targetStat] === playerVal);
+      const losers = aiCardsWithIndex.filter(item => item.card.stats[targetStat] < playerVal);
+
+      // Determine smart selection probability based on difficulty
+      let isSmart = false;
+      const rand = Math.random();
+      if (difficulty === 'Medium' || difficulty === 'Professional') {
+        isSmart = rand < 0.50; // 50% smart
+      } else if (difficulty === 'Hard' || difficulty === 'World Class') {
+        isSmart = rand < 0.75; // 75% smart
+      } else if (difficulty === 'Legendary') {
+        isSmart = rand < 0.90; // 90% smart
+      } else if (difficulty === 'Ultimate') {
+        isSmart = true; // 100% smart
+      }
+
+      if (isSmart) {
+        if (winners.length > 0) {
+          // A smart AI chooses the lowest winning card to conserve its super cards!
+          winners.sort((a, b) => a.card.stats[targetStat] - b.card.stats[targetStat]);
+          aiIndex = winners[0].idx;
+        } else if (drawers.length > 0) {
+          // If it can't win, try to draw
+          aiIndex = drawers[Math.floor(Math.random() * drawers.length)].idx;
+        } else {
+          // If it must lose, play the card with the lowest stat in this category to conserve strong cards!
+          losers.sort((a, b) => a.card.stats[targetStat] - b.card.stats[targetStat]);
+          aiIndex = losers[0].idx; // Sacrificial play
+        }
+      } else {
+        // Normal random choice
+        aiIndex = Math.floor(Math.random() * aiHand.length);
+      }
+    }
+
     const aiCard = aiHand[aiIndex];
     setCurrentAiCard(aiCard);
 
@@ -421,10 +492,22 @@ export default function App() {
 
   const nextRound = () => {
     if (playedCardIds.length >= 11) { // Đã đánh 11 lá (0 đến 11 là 11 lá, check sau khi cộng)
-      // Trận đấu kết thúc -> Tính thưởng
+      // Trận đấu kết thúc -> Tính thưởng theo độ khó
       let reward = 10;
-      if (matchScore.player > matchScore.ai) reward = 50;
-      else if (matchScore.player === matchScore.ai) reward = 20;
+      const isWin = matchScore.player > matchScore.ai;
+      const isDraw = matchScore.player === matchScore.ai;
+
+      if (difficulty === 'Easy' || difficulty === 'Amateur') {
+        reward = isWin ? 30 : isDraw ? 15 : 8;
+      } else if (difficulty === 'Medium' || difficulty === 'Professional') {
+        reward = isWin ? 50 : isDraw ? 20 : 10;
+      } else if (difficulty === 'Hard' || difficulty === 'World Class') {
+        reward = isWin ? 80 : isDraw ? 30 : 15;
+      } else if (difficulty === 'Legendary') {
+        reward = isWin ? 120 : isDraw ? 45 : 20;
+      } else if (difficulty === 'Ultimate') {
+        reward = isWin ? 180 : isDraw ? 60 : 30;
+      }
       
       setCoins(c => c + reward);
       setLastReward(reward);
@@ -851,23 +934,66 @@ export default function App() {
         <div className="w-full h-[100dvh] flex flex-col overflow-hidden bg-black/50 animate-fade-in relative z-10">
           
           {matchPhase === 'setup' && (
-            <div className="flex-1 flex flex-col items-center justify-center p-4">
-              <div className="glass-panel p-8 sm:p-12 rounded-3xl text-center w-full max-w-lg">
-                <button className="btn !bg-gray-700 self-start mb-4" onClick={() => setGameState('lobby')}>← Về Sảnh</button>
-                <h2 className="text-3xl font-black uppercase text-amber-400 mb-8">Đấu trường AI</h2>
-                <div className="flex gap-4 justify-center mb-8">
-                  {['Easy', 'Medium', 'Hard'].map(diff => (
-                    <button 
-                      key={diff}
-                      className={`px-6 py-2 rounded-full font-bold transition-all ${difficulty === diff ? 'bg-amber-500 text-black scale-110' : 'bg-white/10 text-white hover:bg-white/20'}`}
-                      onClick={() => setDifficulty(diff)}
-                    >
-                      {diff}
-                    </button>
-                  ))}
+            <div className="flex-1 flex flex-col items-center justify-center p-4 overflow-y-auto hide-scrollbar z-20">
+              <div className="glass-panel p-6 sm:p-10 rounded-3xl text-center w-full max-w-xl bg-gradient-to-t from-slate-950 to-slate-900/90 shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/10 relative">
+                <button 
+                  className="absolute top-4 left-4 text-gray-400 hover:text-white bg-black/40 hover:bg-black/80 px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 border border-white/10" 
+                  onClick={() => setGameState('lobby')}
+                >
+                  ← Về Sảnh
+                </button>
+                
+                <h2 className="text-2xl sm:text-3xl font-black uppercase text-amber-400 mt-6 mb-2 tracking-widest drop-shadow-[0_2px_10px_rgba(251,191,36,0.3)]">
+                  Đấu trường AI
+                </h2>
+                <p className="text-xs text-gray-400 mb-6 font-medium">Chọn độ khó để bắt đầu trận đấu 11 vòng đầy kịch tính</p>
+                
+                <div className="flex flex-col gap-3 mb-8 w-full max-h-[380px] overflow-y-auto pr-1">
+                  {[
+                    { id: 'Amateur', name: 'Nghiệp Dư', emoji: '🟢', color: 'border-emerald-500/30 hover:border-emerald-400 text-emerald-400 shadow-emerald-500/5', bg: 'bg-emerald-500/10 border-emerald-400 text-emerald-300 shadow-emerald-500/20', reward: '+30 Xu', desc: 'AI chọn bài ngẫu nhiên 100%, thích hợp làm quen.' },
+                    { id: 'Professional', name: 'Chuyên Nghiệp', emoji: '🔵', color: 'border-blue-500/30 hover:border-blue-400 text-blue-400 shadow-blue-500/5', bg: 'bg-blue-500/10 border-blue-400 text-blue-300 shadow-blue-500/20', reward: '+50 Xu', desc: 'AI có 50% tính toán phản công, biết chặn đòn vừa phải.' },
+                    { id: 'World Class', name: 'Thế Giới', emoji: '🟡', color: 'border-yellow-500/30 hover:border-yellow-400 text-yellow-400 shadow-yellow-500/5', bg: 'bg-yellow-500/10 border-yellow-400 text-yellow-300 shadow-yellow-500/20', reward: '+80 Xu', desc: 'AI có 75% phản công mạnh mẽ, yêu cầu đội hình tốt.' },
+                    { id: 'Legendary', name: 'Huyền Thoại', emoji: '🟣', color: 'border-purple-500/30 hover:border-purple-400 text-purple-400 shadow-purple-500/5', bg: 'bg-purple-500/10 border-purple-400 text-purple-300 shadow-purple-500/20', reward: '+120 Xu', desc: 'AI 90% siêu thông minh, toàn siêu sao và được cộng +2 tất cả chỉ số!' },
+                    { id: 'Ultimate', name: 'Vô Địch', emoji: '🔴', color: 'border-red-500/30 hover:border-red-400 text-red-400 shadow-red-500/5', bg: 'bg-red-500/10 border-red-400 text-red-300 shadow-red-500/20', reward: '+180 Xu', desc: 'Ác mộng thực sự! AI 100% hoàn hảo và được cộng +5 tất cả chỉ số!' }
+                  ].map(diff => {
+                    const isSelected = difficulty === diff.id;
+                    return (
+                      <div 
+                        key={diff.id}
+                        className={`p-3 rounded-2xl border text-left cursor-pointer transition-all duration-200 flex items-center justify-between gap-3 ${
+                          isSelected ? diff.bg + ' scale-[1.01] shadow-lg ring-1 ring-white/10' : diff.color + ' bg-black/40 hover:bg-black/60'
+                        }`}
+                        onClick={() => {
+                          playFx('click');
+                          setDifficulty(diff.id);
+                        }}
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="text-lg">{diff.emoji}</span>
+                            <span className="font-extrabold text-sm sm:text-base text-white">{diff.name}</span>
+                            <span className="text-[10px] px-2 py-0.5 bg-yellow-400/20 text-yellow-400 border border-yellow-400/30 font-black rounded-full uppercase tracking-wider">{diff.reward}</span>
+                          </div>
+                          <p className="text-[10px] sm:text-xs text-gray-400 leading-snug font-medium">{diff.desc}</p>
+                        </div>
+                        {isSelected && (
+                          <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center shadow-md animate-scale-in shrink-0">
+                            <span className="text-[10px] text-slate-900 font-bold">✓</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-                <button className="btn w-full flex items-center justify-center gap-2 !bg-red-600 hover:!bg-red-500" onClick={startMatch}>
-                  <Play /> BẮT ĐẦU TRẬN ĐẤU
+                
+                <button 
+                  className="btn w-full flex items-center justify-center gap-2 !bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 font-black tracking-widest text-lg py-4 rounded-2xl shadow-[0_4px_20px_rgba(239,68,68,0.3)] hover:scale-[1.02] transition-all cursor-pointer animate-pulse-subtle" 
+                  onClick={() => {
+                    playFx('click');
+                    startMatch();
+                  }}
+                >
+                  <Play size={20} fill="currentColor" /> BẮT ĐẦU TRẬN ĐẤU
                 </button>
               </div>
             </div>
