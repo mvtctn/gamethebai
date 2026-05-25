@@ -1,0 +1,41 @@
+{
+  "rules": {
+    ".read": true,
+    ".write": true,
+    "users": {
+      "$username": {
+        // Prevent oversized usernames
+        ".validate": "$username.length > 0 && $username.length < 50",
+        "pin": {
+          ".validate": "newData.isString() && (newData.val().length === 4 || newData.val().length === 64)"
+        },
+        "coins": {
+          ".validate": "newData.isNumber()"
+        },
+        "level": {
+          ".validate": "newData.isNumber() && newData.val() >= 1"
+        },
+        "xp": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        }
+      }
+    },
+    "leaderboard": {
+      "$username": {
+        ".validate": "$username.length > 0 && $username.length < 50",
+        "coins": {
+          ".validate": "newData.isNumber()"
+        },
+        "level": {
+          ".validate": "newData.isNumber() && newData.val() >= 1"
+        },
+        "xp": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
+        "wins": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        }
+      }
+    }
+  }
+}

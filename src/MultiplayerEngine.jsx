@@ -155,6 +155,16 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
   const isHostRef = useRef(false);
   const roundCountRef = useRef(0);
   const phaseRef = useRef('select_card');
+  const roundSeedRef = useRef(12345);
+
+  const seededRNG = (seedOffset) => {
+    // A simple fast pseudo-random generator
+    let seed = roundSeedRef.current + seedOffset;
+    return () => {
+      seed = (seed * 9301 + 49297) % 233280;
+      return seed / 233280;
+    };
+  };
 
   const updateActiveStat = (stat) => {
     setActiveStat(stat);
@@ -208,8 +218,19 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     }
 
     // Generate Form/Condition based on weather, elements, underdog logic
-    const formResult1 = generateCardForm(myCard, opCard, matchEnvironment);
-    const formResult2 = generateCardForm(opCard, myCard, matchEnvironment);
+    // Using seeded RNG to guarantee identical evaluation on both devices!
+    const roundRng = seededRNG(roundCountRef.current);
+    
+    let formResult1, formResult2;
+    if (isHostRef.current) {
+      formResult1 = generateCardForm(myCard, opCard, matchEnvironment, roundRng);
+      formResult2 = generateCardForm(opCard, myCard, matchEnvironment, roundRng);
+    } else {
+      // Guest must evaluate the opponent's card (which was Host's myCard) first, to consume the exact same random sequence
+      formResult2 = generateCardForm(opCard, myCard, matchEnvironment, roundRng);
+      formResult1 = generateCardForm(myCard, opCard, matchEnvironment, roundRng);
+    }
+
     const formBonus1 = formResult1.bonus;
     const formBonus2 = formResult2.bonus;
 
@@ -279,9 +300,11 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
           // Host generates next stat and pushes to guest
           const stats = ['attack', 'control', 'defense'];
           const nextStat = stats[Math.floor(Math.random() * stats.length)];
+          const roundSeed = Math.floor(Math.random() * 1000000);
+          roundSeedRef.current = roundSeed;
           updateActiveStat(nextStat);
           updatePhase('select_card');
-          sendData({ type: 'start_round', stat: nextStat, roundIndex: roundCountRef.current });
+          sendData({ type: 'start_round', stat: nextStat, roundIndex: roundCountRef.current, seed: roundSeed });
         } else {
           // GUEST ONLY: Only transition to waiting_start if we haven't already transitioned
           // to select_card via a fast-arriving network 'start_round' message.
@@ -304,16 +327,22 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       const timeIdx = Math.floor(Math.random() * ENV_TIME.length);
       setMatchEnvironment({ weather: ENV_WEATHER[weatherIdx], time: ENV_TIME[timeIdx] });
       
+      const roundSeed = Math.floor(Math.random() * 1000000);
+      roundSeedRef.current = roundSeed;
+      
       updateActiveStat(firstStat);
       updatePhase('select_card');
       setTimeout(() => {
-        sendData({ type: 'start_round', stat: firstStat, roundIndex: 0, weatherIdx, timeIdx });
+        sendData({ type: 'start_round', stat: firstStat, roundIndex: 0, weatherIdx, timeIdx, seed: roundSeed });
       }, 300);
     }
     else if (data.type === 'start_round') {
       // Synchronize environment if provided
       if (data.weatherIdx !== undefined && data.timeIdx !== undefined) {
         setMatchEnvironment({ weather: ENV_WEATHER[data.weatherIdx], time: ENV_TIME[data.timeIdx] });
+      }
+      if (data.seed !== undefined) {
+        roundSeedRef.current = data.seed;
       }
 
       // Synchronize round count

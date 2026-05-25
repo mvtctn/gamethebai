@@ -4,7 +4,18 @@ import confetti from 'canvas-confetti';
 import playersData from './players.json';
 import MultiplayerEngine from './MultiplayerEngine';
 import { database, isConnectedToFirebase } from './firebase';
-import { ref, set, push, onValue, onDisconnect, serverTimestamp, get } from 'firebase/database';
+import { ref, set, push, onValue, onDisconnect, serverTimestamp, get, update } from 'firebase/database';
+
+export const hashPIN = async (pin) => {
+  if (!pin) return "";
+  const encoder = new TextEncoder();
+  const data = encoder.encode(pin);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashHex;
+};
+
 
 const PITCH_POSITIONS = [
   { top: '80%', left: '50%' }, // GK
@@ -207,7 +218,7 @@ export const FORM_STATES = [
   { key: 'bad', name: 'Tồi Tệ', emoji: '❄️', min: -6, max: -4, color: 'text-cyan-400' }
 ];
 
-export const generateCardForm = (card, opponentCard, env) => {
+export const generateCardForm = (card, opponentCard, env, rng = Math.random) => {
   if (!card) return { state: FORM_STATES[2], bonus: 0 };
   const attr = getPlayerAttr(card).key;
   const rating = Math.max(card.stats.attack, card.stats.defense, card.stats.control) + ((card.level || 1) - 1) * 2;
@@ -234,7 +245,7 @@ export const generateCardForm = (card, opponentCard, env) => {
   if (opponentCard) {
     const oppRating = Math.max(opponentCard.stats.attack, opponentCard.stats.defense, opponentCard.stats.control) + ((opponentCard.level || 1) - 1) * 2;
     if (rating <= oppRating - 5) {
-      if (Math.random() < 0.25) {
+      if (rng() < 0.25) {
         weights = [0.90, 0.10, 0.0, 0.0, 0.0];
       }
     }
@@ -243,7 +254,7 @@ export const generateCardForm = (card, opponentCard, env) => {
   const total = weights.reduce((a, b) => a + b, 0);
   const normalized = weights.map(w => w / total);
 
-  const roll = Math.random();
+  const roll = rng();
   let cumulative = 0;
   let chosenIdx = 2;
   for (let i = 0; i < normalized.length; i++) {
@@ -685,48 +696,91 @@ export default function App() {
     }
   }, [gameState, email]);
 
+  // Helper to sync stats to the dedicated leaderboard node for performance
+  const syncLeaderboard = async (username, stats) => {
+    if (!isConnectedToFirebase || !username) return;
+    try {
+      await update(ref(database, `/leaderboard/${username}`), stats);
+    } catch (error) {
+      console.error('Failed to sync leaderboard stats:', error);
+    }
+  };
+
   // Fetch Global Leaderboard
   useEffect(() => {
     if (gameState === 'leaderboard') {
       setLoadingLeaderboard(true);
-      const usersRef = ref(database, 'users');
-      get(usersRef).then((snapshot) => {
+      const lbRef = ref(database, 'leaderboard');
+      get(lbRef).then((snapshot) => {
         if (snapshot.exists()) {
-          const usersObj = snapshot.val();
-          const list = Object.keys(usersObj).map((key) => {
-            const userVal = usersObj[key];
-            const cardCount = userVal.collection ? Object.keys(userVal.collection).length : 0;
-            const userOvr = userVal.squad ? Math.round(userVal.squad.reduce((acc, card) => acc + Math.max(card.stats.attack, card.stats.defense, card.stats.control), 0) / 11) : 0;
+          const lbObj = snapshot.val();
+          const list = Object.keys(lbObj).map((key) => {
+            const val = lbObj[key];
             return {
               username: key,
-              level: userVal.level || 1,
-              xp: userVal.xp || 0,
-              coins: userVal.coins || 0,
-              wins: userVal.stats?.wins || 0,
-              losses: userVal.stats?.losses || 0,
-              draws: userVal.stats?.draws || 0,
-              totalMatches: (userVal.stats?.wins || 0) + (userVal.stats?.losses || 0) + (userVal.stats?.draws || 0),
-              cardCount: cardCount,
-              ovr: userOvr,
+              level: val.level || 1,
+              xp: val.xp || 0,
+              coins: val.coins || 0,
+              wins: val.wins || 0,
+              losses: val.losses || 0,
+              draws: val.draws || 0,
+              totalMatches: (val.wins || 0) + (val.losses || 0) + (val.draws || 0),
+              cardCount: val.cardCount || 0,
+              ovr: val.ovr || 0,
             };
           });
-
-          // Sort by Level DESC, then XP DESC, then Wins DESC
           list.sort((a, b) => {
             if (b.level !== a.level) return b.level - a.level;
             if (b.xp !== a.xp) return b.xp - a.xp;
             return b.wins - a.wins;
           });
-
           setLeaderboardData(list);
+          setLoadingLeaderboard(false);
+        } else {
+          // Fallback migration: if leaderboard node is empty, fetch from users and populate
+          const usersRef = ref(database, 'users');
+          get(usersRef).then((snap) => {
+            if (snap.exists()) {
+              const usersObj = snap.val();
+              const list = Object.keys(usersObj).map((key) => {
+                const userVal = usersObj[key];
+                const cardCount = userVal.collection ? Object.keys(userVal.collection).length : 0;
+                const userOvr = userVal.squad ? Math.round(userVal.squad.reduce((acc, card) => acc + Math.max(card.stats.attack, card.stats.defense, card.stats.control), 0) / 11) : 0;
+                const stats = {
+                  level: userVal.level || 1,
+                  xp: userVal.xp || 0,
+                  coins: userVal.coins || 0,
+                  wins: userVal.stats?.wins || 0,
+                  losses: userVal.stats?.losses || 0,
+                  draws: userVal.stats?.draws || 0,
+                  cardCount: cardCount,
+                  ovr: userOvr
+                };
+                syncLeaderboard(key, stats); // auto-migrate
+                return {
+                  username: key,
+                  ...stats,
+                  totalMatches: (stats.wins || 0) + (stats.losses || 0) + (stats.draws || 0)
+                };
+              });
+              list.sort((a, b) => {
+                if (b.level !== a.level) return b.level - a.level;
+                if (b.xp !== a.xp) return b.xp - a.xp;
+                return b.wins - a.wins;
+              });
+              setLeaderboardData(list);
+            }
+            setLoadingLeaderboard(false);
+          });
         }
-        setLoadingLeaderboard(false);
       }).catch((err) => {
         console.error(err);
         setLoadingLeaderboard(false);
       });
     }
   }, [gameState]);
+
+
 
   // Auto-save state to localStorage & Firebase when they change
   useEffect(() => {
@@ -791,6 +845,26 @@ export default function App() {
       }
     }
   }, [stats, currentUser]);
+
+  // Sync to Leaderboard node
+  useEffect(() => {
+    if (currentUser && isConnectedToFirebase) {
+      const cardCount = Object.keys(collection).length;
+      const userOvr = squad.length === 11 ? Math.round(squad.reduce((acc, card) => acc + Math.max(card.stats.attack, card.stats.defense, card.stats.control), 0) / 11) : 0;
+      
+      const lbStats = {
+        level: level || 1,
+        xp: xp || 0,
+        coins: coins || 0,
+        wins: stats?.wins || 0,
+        losses: stats?.losses || 0,
+        draws: stats?.draws || 0,
+        cardCount: cardCount,
+        ovr: userOvr
+      };
+      syncLeaderboard(currentUser, lbStats);
+    }
+  }, [currentUser, level, xp, coins, stats, collection, squad, isConnectedToFirebase]);
 
   useEffect(() => {
     if (currentUser) {
@@ -1148,6 +1222,7 @@ export default function App() {
       setChatMessages(msgs.slice(-50)); // Last 50 messages
     });
 
+
     // 4. Listen to direct invitations
     const invitesRef = ref(database, `/invites/${currentUser}`);
     const unsubscribeInvites = onValue(invitesRef, (snapshot) => {
@@ -1348,7 +1423,31 @@ export default function App() {
       const snapshot = await get(ref(database, `/users/${name}/pin`));
       const storedPin = snapshot.val();
       setAuthCheckingUser(false);
-      if (storedPin && storedPin === pin) {
+      
+      let isPinValid = false;
+      let needsUpgrade = false;
+
+      if (storedPin) {
+        if (storedPin.length === 4) {
+          // Legacy plain text PIN
+          if (storedPin === pin) {
+            isPinValid = true;
+            needsUpgrade = true;
+          }
+        } else {
+          // Hashed PIN
+          const hashedInput = await hashPIN(pin);
+          if (storedPin === hashedInput) {
+            isPinValid = true;
+          }
+        }
+      }
+
+      if (isPinValid) {
+        if (needsUpgrade) {
+          const newHashedPin = await hashPIN(pin);
+          await update(ref(database, `/users/${name}`), { pin: newHashedPin });
+        }
         localStorage.setItem('panini_currentUser', name);
         window.location.reload();
       } else {
@@ -1371,9 +1470,11 @@ export default function App() {
       return;
     }
 
+    const hashedPin = pin ? await hashPIN(pin) : '';
+
     const initialData = {
       username: name,
-      pin: pin || '', // optional 4-digit PIN
+      pin: hashedPin, // optional hashed PIN
       email: '',
       coins: 200, // Thành viên mới được 200 Xu để bắt đầu mở thẻ
       collection: [],
@@ -1458,7 +1559,11 @@ export default function App() {
 
     try {
       const cleanUsername = authUsername.trim();
-      await set(ref(database, `/users/${cleanUsername}/password`), newPasswordReset);
+      const hashedReset = await hashPIN(newPasswordReset);
+      await update(ref(database, `/users/${cleanUsername}`), {
+        pin: hashedReset,
+        password: hashedReset
+      });
       showAlert("Thành Công 🎉", "Đặt lại mật khẩu thành công! Bây giờ bạn có thể đăng nhập bằng mật khẩu mới.");
       setAuthMode('login');
       setAuthPassword("");
@@ -1494,14 +1599,44 @@ export default function App() {
 
     try {
       const snapshot = await get(ref(database, `/users/${currentUser}/password`));
-      const storedPassword = snapshot.val() || "";
+      let storedPassword = snapshot.val();
       
-      if (storedPassword && storedPassword !== profileOldPassword) {
+      // Fallback to check "pin" if "password" doesn't exist
+      if (!storedPassword) {
+        const pinSnap = await get(ref(database, `/users/${currentUser}/pin`));
+        storedPassword = pinSnap.val() || "";
+      }
+      
+      let isOldPasswordValid = false;
+
+      if (!storedPassword) {
+        // If there is no stored password/pin at all
+        isOldPasswordValid = true;
+      } else if (storedPassword.length === 4) {
+        // Legacy plain text
+        if (storedPassword === profileOldPassword) {
+          isOldPasswordValid = true;
+        }
+      } else {
+        // Hashed password
+        const hashedOld = await hashPIN(profileOldPassword);
+        if (storedPassword === hashedOld) {
+          isOldPasswordValid = true;
+        }
+      }
+
+      if (!isOldPasswordValid) {
         showAlert("Sai Mật Khẩu 🔑", "Mật khẩu cũ không chính xác!");
         return;
       }
 
-      await set(ref(database, `/users/${currentUser}/password`), profileNewPassword);
+      const hashedNew = await hashPIN(profileNewPassword);
+      // We will unify storage to use "pin" field for auth, but update both to be safe during migration
+      await update(ref(database, `/users/${currentUser}`), {
+        pin: hashedNew,
+        password: hashedNew
+      });
+
       showAlert("Thành Công 🎉", "Đã đổi mật khẩu tài khoản thành công!");
       setProfileOldPassword("");
       setProfileNewPassword("");
@@ -2974,9 +3109,9 @@ export default function App() {
 
       {gameState === 'quests' && (
         <div className="w-full max-w-3xl mx-auto flex flex-col items-center mt-8">
-          <div className="flex justify-between items-center w-full mb-8">
+          <div className="flex flex-wrap items-center justify-between w-full gap-y-4 mb-8">
             <button className="btn !bg-gray-700" onClick={() => setGameState('lobby')}>← Về Sảnh</button>
-            <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 uppercase">
+            <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 uppercase order-last sm:order-none w-full sm:w-auto text-center mt-2 sm:mt-0">
               Nhiệm Vụ
             </h2>
             <div className="flex items-center gap-2 bg-black/40 px-4 py-2 rounded-lg border border-yellow-500/30">
@@ -3021,11 +3156,11 @@ export default function App() {
       {gameState === 'profile' && (
         <div className="w-full max-w-6xl mx-auto flex flex-col items-center mt-2 sm:mt-8 animate-fade-in px-1 sm:px-4">
           {/* Header */}
-          <div className="flex justify-between items-center w-full mb-8">
+          <div className="flex flex-wrap items-center justify-between w-full gap-y-4 mb-8">
             <button className="btn !bg-gray-700 hover:!bg-gray-600 transition-colors flex items-center gap-2" onClick={() => setGameState('lobby')}>
               ← Về Sảnh
             </button>
-            <h2 className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 uppercase tracking-widest text-center">
+            <h2 className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 uppercase tracking-widest text-center order-last sm:order-none w-full sm:w-auto mt-2 sm:mt-0">
               Hồ Sơ HLV & Cài Đặt ⚙️
             </h2>
             <div className="flex items-center gap-2 bg-black/40 px-4 py-2 rounded-full border border-yellow-500/30">
@@ -3162,8 +3297,8 @@ export default function App() {
                             ⭐
                           </div>
                           
-                          {/* Floating name tag */}
-                          <div className="absolute top-4 bg-black/80 px-1 py-0.2 rounded text-[6px] font-bold text-white whitespace-nowrap opacity-0 group-hover/mini:opacity-100 transition-opacity border border-white/10 pointer-events-none">
+                          {/* Permanent name tag */}
+                          <div className="absolute top-5 bg-black/70 px-1.5 py-0.5 rounded text-[7px] font-bold text-white whitespace-nowrap border border-white/10 pointer-events-none shadow-md mt-0.5 z-20">
                             {player.name.split(' ').pop()} ({Math.max(player.stats.attack, player.stats.defense, player.stats.control)})
                           </div>
                         </div>
@@ -3493,11 +3628,11 @@ export default function App() {
       {gameState === 'leaderboard' && (
         <div className="w-full max-w-4xl mx-auto flex flex-col items-center mt-2 sm:mt-8 animate-fade-in px-1 sm:px-4">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-4 mb-8">
+          <div className="flex flex-wrap items-center justify-between w-full gap-y-4 mb-8">
             <button className="btn !bg-gray-700 hover:!bg-gray-600 transition-colors flex items-center gap-2" onClick={() => setGameState('lobby')}>
               ← Về Sảnh
             </button>
-            <h2 className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 uppercase tracking-widest text-center">
+            <h2 className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 uppercase tracking-widest text-center order-last sm:order-none w-full sm:w-auto mt-2 sm:mt-0">
               BXH & Cấp Hạng 🏆
             </h2>
             <div className="flex items-center gap-3">
@@ -3832,14 +3967,14 @@ export default function App() {
           <div className="max-w-4xl mx-auto">
 
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-wrap items-center justify-between w-full gap-y-4 mb-6">
               <button
                 className="text-gray-400 hover:text-white bg-black/40 hover:bg-black/80 px-3 py-1.5 rounded-full text-xs font-bold border border-white/10 transition-all"
                 onClick={() => { setOpenedCards([]); setRevealingCards([]); setGameState('lobby'); }}
               >
                 ← Về Sảnh
               </button>
-              <h2 className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-cyan-400 uppercase tracking-widest">Mở Gói Thẻ</h2>
+              <h2 className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-cyan-400 uppercase tracking-widest text-center order-last sm:order-none w-full sm:w-auto mt-2 sm:mt-0">Mở Gói Thẻ</h2>
               <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-yellow-500/20">
                 <span className="text-yellow-400 text-sm">💰</span>
                 <span className="text-white font-black text-sm">{coins} Xu</span>
