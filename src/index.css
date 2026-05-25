@@ -47,12 +47,18 @@ body {
 }
 
 .app-container {
-  padding: 2rem;
+  padding: 4rem 0.5rem 1rem 0.5rem;
   max-width: 1600px;
   margin: 0 auto;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+@media (min-width: 640px) {
+  .app-container {
+    padding: 2rem;
+  }
 }
 
 /* Animations WC 2026 */

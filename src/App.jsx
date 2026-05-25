@@ -3019,7 +3019,7 @@ export default function App() {
       )}
 
       {gameState === 'profile' && (
-        <div className="w-full max-w-6xl mx-auto flex flex-col items-center mt-8 animate-fade-in px-4">
+        <div className="w-full max-w-6xl mx-auto flex flex-col items-center mt-2 sm:mt-8 animate-fade-in px-1 sm:px-4">
           {/* Header */}
           <div className="flex justify-between items-center w-full mb-8">
             <button className="btn !bg-gray-700 hover:!bg-gray-600 transition-colors flex items-center gap-2" onClick={() => setGameState('lobby')}>
@@ -3491,7 +3491,7 @@ export default function App() {
       )}
 
       {gameState === 'leaderboard' && (
-        <div className="w-full max-w-4xl mx-auto flex flex-col items-center mt-8 animate-fade-in px-4">
+        <div className="w-full max-w-4xl mx-auto flex flex-col items-center mt-2 sm:mt-8 animate-fade-in px-1 sm:px-4">
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-4 mb-8">
             <button className="btn !bg-gray-700 hover:!bg-gray-600 transition-colors flex items-center gap-2" onClick={() => setGameState('lobby')}>
