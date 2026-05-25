@@ -2027,7 +2027,7 @@ export default function App() {
     }
     setMatchScore({ player: pScore, ai: aScore });
     setRoundResultMsg(msg);
-    setMatchLogs([...matchLogs, `Lượt ${playedCardIds.length + 1}: ${selectedPlayerCard.name} (${stat.toUpperCase()}${bonusPart(bonus1)}) vs ${aiCard.name} (${stat2Name.toUpperCase()}${bonusPart(bonus2)}) -> ${msg}`]);
+    setMatchLogs([...matchLogs, `Lượt ${playedCardIds.length + 1}: ${selectedPlayerCard.name} (${stat.toUpperCase()}${bonusPart(bonus1, attrBonus1, attr1.emoji, lvlBonus1, formBonus1, formResult1.state)}) vs ${aiCard.name} (${stat2Name.toUpperCase()}${bonusPart(bonus2, attrBonus2, attr2.emoji, lvlBonus2, formBonus2, formResult2.state)}) -> ${msg}`]);
     setMatchPhase('roundResult');
 
     // Remove cards from hands
