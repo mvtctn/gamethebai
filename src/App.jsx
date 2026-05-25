@@ -3564,17 +3564,17 @@ export default function App() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-white/10 text-gray-400 text-[10px] sm:text-xs font-black uppercase tracking-widest pb-3">
-                        <th className="py-3 px-4">Hạng</th>
-                        <th className="py-3 px-4">HLV</th>
-                        <th className="py-3 px-4">Hạng Cấp</th>
-                        <th className="py-3 px-4 text-center">Cấp Độ</th>
-                        <th className="py-3 px-4 text-center">Đội (OVR)</th>
-                        <th className="py-3 px-4 text-center">Thắng/Hòa/Thua</th>
-                        <th className="py-3 px-4 text-center">Thẻ sở hữu</th>
+                      <tr className="border-b border-white/10 text-gray-400 text-[9px] sm:text-xs font-black uppercase tracking-widest pb-3">
+                        <th className="py-2 px-1 sm:py-3 sm:px-4 text-center">Hạng</th>
+                        <th className="py-2 px-1 sm:py-3 sm:px-4">HLV</th>
+                        <th className="py-2 px-1 sm:py-3 sm:px-4 text-center">Hạng Cấp</th>
+                        <th className="py-2 px-1 sm:py-3 sm:px-4 text-center">Cấp Độ</th>
+                        <th className="py-2 px-1 sm:py-3 sm:px-4 text-center">Đội</th>
+                        <th className="py-2 px-1 sm:py-3 sm:px-4 text-center">T/H/B</th>
+                        <th className="py-2 px-1 sm:py-3 sm:px-4 text-center">Thẻ</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5 text-xs sm:text-sm font-semibold">
+                    <tbody className="divide-y divide-white/5 text-[10px] sm:text-sm font-semibold">
                       {leaderboardData.map((user, index) => {
                         const isMe = user.username === currentUser;
                         const rank = index + 1;
@@ -3586,14 +3586,14 @@ export default function App() {
                             key={user.username} 
                             className={`transition-colors border-b border-white/5 ${
                               isMe 
-                                ? 'bg-fuchsia-950/20 hover:bg-fuchsia-950/30 border-l-4 border-l-fuchsia-500' 
+                                ? 'bg-fuchsia-950/20 hover:bg-fuchsia-950/30 border-l-2 sm:border-l-4 border-l-fuchsia-500' 
                                 : 'hover:bg-white/5'
                             }`}
                           >
-                            <td className="py-4 px-4 font-black">
-                              {rank === 1 ? '🥇 1' : rank === 2 ? '🥈 2' : rank === 3 ? '🥉 3' : rank}
+                            <td className="py-1.5 px-1 sm:py-4 sm:px-4 text-center font-black">
+                              {rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank}
                             </td>
-                            <td className="py-4 px-4">
+                            <td className="py-1.5 px-1 sm:py-4 sm:px-4">
                               <span 
                                 className={`font-extrabold hover:underline hover:text-cyan-400 cursor-pointer ${
                                   rank === 1 ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]' : isMe ? 'text-fuchsia-400' : 'text-white'
@@ -3603,19 +3603,19 @@ export default function App() {
                                 {user.username} {isMe && ' (BẠN)'}
                               </span>
                             </td>
-                            <td className="py-4 px-4">
-                              <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${tier.color} ${tier.glow}`}>
-                                {tier.icon} {tier.name}
+                            <td className="py-1.5 px-1 sm:py-4 sm:px-4 text-center">
+                              <span className={`text-[8px] sm:text-[9px] font-black uppercase px-1 sm:px-2 py-0.5 rounded-full border ${tier.color} ${tier.glow}`}>
+                                <span className="hidden sm:inline">{tier.icon} </span>{tier.name}
                               </span>
                             </td>
-                            <td className="py-4 px-4 text-center font-black text-cyan-400">
-                              {user.level} <span className="text-[10px] text-gray-500 font-medium">({user.xp} XP)</span>
+                            <td className="py-1.5 px-1 sm:py-4 sm:px-4 text-center font-black text-cyan-400">
+                              {user.level} <span className="text-[8px] sm:text-[10px] text-gray-500 font-medium block sm:inline">({user.xp} XP)</span>
                             </td>
-                            <td className="py-4 px-4 text-center font-black text-emerald-400">{user.ovr} OVR</td>
-                            <td className="py-4 px-4 text-center text-gray-300">
-                              <span className="text-green-400">{user.wins}T</span> - <span className="text-yellow-400">{user.draws}H</span> - <span className="text-red-400">{user.losses}B</span>
+                            <td className="py-1.5 px-1 sm:py-4 sm:px-4 text-center font-black text-emerald-400">{user.ovr}</td>
+                            <td className="py-1.5 px-1 sm:py-4 sm:px-4 text-center text-gray-300 whitespace-nowrap">
+                              <span className="text-green-400">{user.wins}</span>-<span className="text-yellow-400">{user.draws}</span>-<span className="text-red-400">{user.losses}</span>
                             </td>
-                            <td className="py-4 px-4 text-center font-black text-purple-400">{user.cardCount} / {playersData.length} Thẻ</td>
+                            <td className="py-1.5 px-1 sm:py-4 sm:px-4 text-center font-black text-purple-400 whitespace-nowrap">{user.cardCount}/{playersData.length}</td>
                           </tr>
                         );
                       })}
