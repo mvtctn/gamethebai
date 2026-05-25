@@ -1449,12 +1449,7 @@ export default function App() {
           <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_transparent_0%,_rgba(0,0,0,0.8)_100%)] z-50 mix-blend-overlay"></div>
           <div className="fixed inset-0 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 z-50"></div>
           
-          {/* Copyright Footer */}
-          <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-1 rounded-full pointer-events-none opacity-50 hover:opacity-100 transition-opacity w-full max-w-max justify-center">
-            <span className="text-[10px] sm:text-xs font-bold text-gray-400 whitespace-nowrap drop-shadow-md">
-              Tác giả: <span className="text-blue-400">Mai Quang Vinh</span> - Tiểu học Nghĩa Tân - Vibecoding với Antigravity
-            </span>
-          </div>
+          {/* Native flow footer used at the bottom of app-container instead */}
 
           {/* User Header Profile */}
           <div className="absolute top-4 right-4 z-50 flex items-center gap-4 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
@@ -2342,7 +2337,21 @@ export default function App() {
           )}
         </div>
       )}
-          </div>
+
+      {/* Professional Footer */}
+      <footer className="mt-auto pt-12 pb-4 border-t border-white/5 text-center flex flex-col sm:flex-row items-center justify-between gap-4 w-full relative z-20">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_#22c55e]"></span>
+          <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">Máy Chủ Trực Tuyến Hợp Lệ</span>
+        </div>
+        <div className="text-[10px] sm:text-xs font-bold text-gray-400 tracking-wider">
+          © 2026 WC Ultimate Card - Bản quyền thuộc về <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 font-extrabold">Mai Quang Vinh</span> (Tiểu học Nghĩa Tân)
+        </div>
+        <div className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/5">
+          Vibecoding với Antigravity
+        </div>
+      </footer>
+    </div>
         </>
       )}
 
