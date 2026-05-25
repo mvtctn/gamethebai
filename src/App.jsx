@@ -20,6 +20,34 @@ const PITCH_POSITIONS = [
   { top: '20%', left: '75%' }, // RW
 ];
 
+const TIERS = [
+  { name: 'Hạng Đồng', minLevel: 1, maxLevel: 5, color: 'text-amber-500 border-amber-500/30 bg-amber-950/20', glow: 'shadow-[0_0_15px_rgba(245,158,11,0.3)]', icon: '🥉' },
+  { name: 'Hạng Bạc', minLevel: 6, maxLevel: 10, color: 'text-slate-300 border-slate-300/30 bg-slate-800/20', glow: 'shadow-[0_0_15px_rgba(203,213,225,0.3)]', icon: '🥈' },
+  { name: 'Hạng Vàng', minLevel: 11, maxLevel: 15, color: 'text-yellow-400 border-yellow-400/30 bg-yellow-950/20', glow: 'shadow-[0_0_15px_rgba(234,179,8,0.4)]', icon: '🥇' },
+  { name: 'Bạch Kim', minLevel: 16, maxLevel: 20, color: 'text-cyan-400 border-cyan-400/30 bg-cyan-950/20', glow: 'shadow-[0_0_15px_rgba(34,211,238,0.4)]', icon: '💎' },
+  { name: 'Kim Cương', minLevel: 21, maxLevel: 25, color: 'text-purple-400 border-purple-400/30 bg-purple-950/20', glow: 'shadow-[0_0_15px_rgba(168,85,247,0.4)]', icon: '💠' },
+  { name: 'Cao Thủ', minLevel: 26, maxLevel: 30, color: 'text-pink-500 border-pink-500/30 bg-pink-950/20', glow: 'shadow-[0_0_15px_rgba(236,72,153,0.5)]', icon: '👑' },
+  { name: 'Thách Đấu', minLevel: 31, maxLevel: 999, color: 'text-rose-500 border-rose-500/30 bg-rose-950/20 animate-pulse', glow: 'shadow-[0_0_20px_rgba(244,63,94,0.6)]', icon: '🔥' },
+];
+
+const getPlayerTier = (lvl) => {
+  const tier = TIERS.find(t => lvl >= t.minLevel && lvl <= t.maxLevel);
+  return tier || TIERS[0];
+};
+
+const LEVEL_MILESTONES = [
+  { level: 2, coins: 200, packs: 0, desc: 'Tiền thưởng thăng cấp 2 khởi đầu' },
+  { level: 3, coins: 300, packs: 0, desc: 'Tiền thưởng thăng cấp 3' },
+  { level: 4, coins: 200, packs: 1, desc: 'Tặng thêm 1 Gói Thẻ Miễn Phí' },
+  { level: 5, coins: 500, packs: 1, desc: 'Đạt mốc lớn Cấp 5!' },
+  { level: 8, coins: 500, packs: 1, desc: 'Tặng thêm 1 Gói Thẻ Miễn Phí' },
+  { level: 10, coins: 1500, packs: 2, desc: 'Cột mốc Cấp 10 huyền thoại!' },
+  { level: 15, coins: 2000, packs: 2, desc: 'Bứt phá Cấp 15 siêu phàm!' },
+  { level: 20, coins: 3000, packs: 3, desc: 'Bạch Kim Cấp 20 đỉnh giới!' },
+  { level: 25, coins: 4000, packs: 4, desc: 'Kim Cương Cấp 25 bá chủ!' },
+  { level: 30, coins: 5000, packs: 5, desc: 'Thần thoại Cao Thủ tối thượng!' },
+];
+
 const playFx = (type) => {
   try {
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -280,6 +308,84 @@ export default function App() {
   const [privateChatInput, setPrivateChatInput] = useState('');
   const [unreadPartners, setUnreadPartners] = useState({});
 
+  // Leaderboard & Levels States
+  const [claimedLevelRewards, setClaimedLevelRewards] = useState(() => {
+    if (!currentUser) return [];
+    const saved = localStorage.getItem(`panini_${currentUser}_claimedLevelRewards`);
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [freePacks, setFreePacks] = useState(() => {
+    if (!currentUser) return 0;
+    const saved = localStorage.getItem(`panini_${currentUser}_freePacks`);
+    return saved ? parseInt(saved) : 0;
+  });
+
+  const [leaderboardData, setLeaderboardData] = useState([]);
+  const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
+  const [leaderboardTab, setLeaderboardTab] = useState('leaderboard'); // 'leaderboard', 'tiers', 'milestones'
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(`panini_${currentUser}_claimedLevelRewards`, JSON.stringify(claimedLevelRewards));
+      if (isConnectedToFirebase) {
+        set(ref(database, `/users/${currentUser}/claimedLevelRewards`), claimedLevelRewards);
+      }
+    }
+  }, [claimedLevelRewards, currentUser]);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(`panini_${currentUser}_freePacks`, freePacks.toString());
+      if (isConnectedToFirebase) {
+        set(ref(database, `/users/${currentUser}/freePacks`), freePacks);
+      }
+    }
+  }, [freePacks, currentUser]);
+
+  // Fetch Global Leaderboard
+  useEffect(() => {
+    if (gameState === 'leaderboard') {
+      setLoadingLeaderboard(true);
+      const usersRef = ref(database, 'users');
+      get(usersRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          const usersObj = snapshot.val();
+          const list = Object.keys(usersObj).map((key) => {
+            const userVal = usersObj[key];
+            const cardCount = userVal.collection ? Object.keys(userVal.collection).length : 0;
+            const userOvr = userVal.squad ? Math.round(userVal.squad.reduce((acc, card) => acc + Math.max(card.stats.attack, card.stats.defense, card.stats.control), 0) / 11) : 0;
+            return {
+              username: key,
+              level: userVal.level || 1,
+              xp: userVal.xp || 0,
+              coins: userVal.coins || 0,
+              wins: userVal.stats?.wins || 0,
+              losses: userVal.stats?.losses || 0,
+              draws: userVal.stats?.draws || 0,
+              totalMatches: (userVal.stats?.wins || 0) + (userVal.stats?.losses || 0) + (userVal.stats?.draws || 0),
+              cardCount: cardCount,
+              ovr: userOvr,
+            };
+          });
+
+          // Sort by Level DESC, then XP DESC, then Wins DESC
+          list.sort((a, b) => {
+            if (b.level !== a.level) return b.level - a.level;
+            if (b.xp !== a.xp) return b.xp - a.xp;
+            return b.wins - a.wins;
+          });
+
+          setLeaderboardData(list);
+        }
+        setLoadingLeaderboard(false);
+      }).catch((err) => {
+        console.error(err);
+        setLoadingLeaderboard(false);
+      });
+    }
+  }, [gameState]);
+
   // Auto-save state to localStorage & Firebase when they change
   useEffect(() => {
     if (currentUser) {
@@ -369,6 +475,8 @@ export default function App() {
         if (data.xp !== undefined) setXp(data.xp);
         if (data.stats) setStats(data.stats);
         if (data.email !== undefined) setEmail(data.email);
+        if (data.freePacks !== undefined) setFreePacks(data.freePacks);
+        if (data.claimedLevelRewards) setClaimedLevelRewards(data.claimedLevelRewards);
       } else {
         // Initialize new user on Firebase Realtime Database
         const starterCollection = playersData.filter(p => p.type === 'Base').slice(0, 11);
@@ -381,6 +489,8 @@ export default function App() {
           squad: starterCollection,
           level: 1,
           xp: 0,
+          freePacks: 0,
+          claimedLevelRewards: [],
           stats: { played: 0, wins: 0, draws: 0, losses: 0 },
           quests: [
             { id: 'play1', title: 'Đá 1 trận với AI', target: 1, progress: 0, reward: 50, isCompleted: false, isClaimed: false },
@@ -430,6 +540,30 @@ export default function App() {
       
       return newXp;
     });
+  };
+
+  const claimMilestone = (m) => {
+    if (level < m.level) return;
+    const claimed = claimedLevelRewards || [];
+    if (claimed.includes(m.level)) return;
+    
+    // Add rewards
+    if (m.coins) setCoins(c => c + m.coins);
+    if (m.packs) setFreePacks(f => f + m.packs);
+    
+    // Mark as claimed
+    setClaimedLevelRewards(prev => [...(prev || []), m.level]);
+    playFx('winPoint');
+    
+    // Show confetti
+    confetti({
+      particleCount: 120,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#eab308', '#fbbf24', '#f59e0b', '#3b82f6']
+    });
+    
+    showAlert("Nhận Quà Thành Công 🎁", `Chúc mừng! Bạn đã nhận được ${m.coins ? `${m.coins} Xu` : ''}${m.coins && m.packs ? ' + ' : ''}${m.packs ? `${m.packs} Gói Thẻ Miễn Phí` : ''} từ mốc Cấp Độ ${m.level}.`);
   };
 
   // Inspect User effect
@@ -928,11 +1062,17 @@ export default function App() {
 
   // --- Logic ---
   const openPack = () => {
-    if (coins < 100) {
-      alert("Bạn không đủ Xu để mua gói thẻ. Hãy làm nhiệm vụ để kiếm thêm Xu!");
+    const isFree = freePacks > 0;
+    if (!isFree && coins < 100) {
+      alert("Bạn không đủ Xu để mua gói thẻ. Hãy làm nhiệm vụ để kiếm thêm Xu hoặc cày cấp nhận Gói Thẻ Miễn Phí nhé!");
       return;
     }
-    setCoins(c => c - 100);
+    
+    if (isFree) {
+      setFreePacks(f => f - 1);
+    } else {
+      setCoins(c => c - 100);
+    }
     gainXp(5); // Gaining 5 XP for card pack openings!
     setIsPackOpeningAnim(true);
     setTimeout(() => {
@@ -1466,9 +1606,18 @@ export default function App() {
 
           {/* User Header Profile */}
           <div className="absolute top-4 right-4 z-50 flex items-center gap-4 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
-            <div className="text-sm">
+            <div className="text-sm flex items-center gap-2">
               <span className="text-gray-400">HLV: </span>
               <span className="font-bold text-fuchsia-400">{currentUser}</span>
+              <span className="text-[10px] bg-white/10 text-gray-300 px-2 py-0.5 rounded-full border border-white/10 font-bold">Lv.{level}</span>
+              {(() => {
+                const tier = getPlayerTier(level);
+                return (
+                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border flex items-center gap-1 ${tier.color} ${tier.glow}`}>
+                    {tier.icon} {tier.name}
+                  </span>
+                );
+              })()}
             </div>
             <div className="w-[1px] h-4 bg-white/20"></div>
             <button onClick={handleLogout} className="text-xs text-red-400 hover:text-red-300 font-bold uppercase tracking-wider">Thoát</button>
@@ -1518,18 +1667,20 @@ export default function App() {
                     </div>
 
                     {/* Glass Menu */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-full z-20">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 w-full z-20">
                       <button className="glass-menu-card p-6 rounded-3xl flex flex-col items-center group cursor-pointer" onClick={() => {
-                          if (coins >= 100) {
+                          if (freePacks > 0 || coins >= 100) {
                             setOpenedCards([]);
                             setGameState('packOpening');
                           } else {
-                            alert("Bạn không đủ Xu!");
+                            alert("Bạn không đủ Xu để mở gói thẻ. Hãy đi nhận quà thăng cấp hoặc làm nhiệm vụ nhé!");
                           }
                         }}>
                         <PackageOpen size={48} className="text-fuchsia-400 mb-3 group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-300 drop-shadow-[0_0_15px_rgba(232,121,249,0.6)]" />
                         <h3 className="text-lg sm:text-xl font-black italic uppercase tracking-wider mb-1 text-white">Mở Gói Thẻ</h3>
-                        <p className="text-gray-300 text-center font-medium text-xs">100 Xu • Nhận siêu sao.</p>
+                        <p className="text-gray-300 text-center font-medium text-xs">
+                          {freePacks > 0 ? `Miễn phí: ${freePacks} Gói 🎁` : '100 Xu • Nhận siêu sao.'}
+                        </p>
                       </button>
 
                       <button className={`glass-menu-card p-6 rounded-3xl flex flex-col items-center group cursor-pointer ${collection.length === 0 ? 'opacity-50 grayscale' : ''}`} onClick={() => collection.length > 0 && setGameState('teamBuilder')}>
@@ -1555,6 +1706,15 @@ export default function App() {
                         </div>
                         <h3 className="text-lg sm:text-xl font-black italic uppercase tracking-wider mb-1 text-white">PVP ONLINE</h3>
                         <p className="text-gray-300 text-center font-medium text-xs">Đấu với bạn bè qua mạng.</p>
+                      </button>
+
+                      <button className="glass-menu-card p-6 rounded-3xl flex flex-col items-center group cursor-pointer" onClick={() => {
+                          playFx('click');
+                          setGameState('leaderboard');
+                        }}>
+                        <Trophy size={48} className="text-yellow-400 mb-3 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300 drop-shadow-[0_0_15px_rgba(234,179,8,0.6)]" />
+                        <h3 className="text-lg sm:text-xl font-black italic uppercase tracking-wider mb-1 text-white">BXH & Cấp Hạng</h3>
+                        <p className="text-gray-300 text-center font-medium text-xs">BXH • Cấp hạng • Nhận quà.</p>
                       </button>
                     </div>
 
@@ -1646,7 +1806,7 @@ export default function App() {
                                       }`}
                                     >
                                       <span 
-                                        className={`text-[9px] font-black mb-0.5 px-1 ${
+                                        className={`text-[9px] font-black mb-0.5 px-1 flex items-center flex-wrap gap-1.5 ${
                                           isSystem ? 'text-amber-400' : isMe ? 'text-fuchsia-400' : 'text-blue-400'
                                         } ${(!isSystem && !isMe) ? 'cursor-pointer hover:underline hover:text-cyan-400' : ''}`}
                                         onClick={() => {
@@ -1656,7 +1816,20 @@ export default function App() {
                                           }
                                         }}
                                       >
-                                        {isSystem ? '' : `Lv. ${msg.senderLevel || 1} `}{msg.sender}
+                                        {isSystem ? msg.sender : (
+                                          <>
+                                            <span>{msg.sender}</span>
+                                            <span className="text-[8px] bg-white/10 text-gray-300 px-1.5 py-0.2 rounded border border-white/10">Lv.{msg.senderLevel || 1}</span>
+                                            {(() => {
+                                              const tier = getPlayerTier(msg.senderLevel || 1);
+                                              return (
+                                                <span className={`text-[8px] font-extrabold px-1.5 py-0.2 rounded border shrink-0 ${tier.color} ${tier.glow}`}>
+                                                  {tier.icon} {tier.name.split(' ')[1] || tier.name}
+                                                </span>
+                                              );
+                                            })()}
+                                          </>
+                                        )}
                                       </span>
                                       <div className={`p-2.5 rounded-2xl text-xs font-semibold leading-relaxed border ${
                                         isSystem 
@@ -1837,14 +2010,23 @@ export default function App() {
                                   className="p-3 bg-black/40 rounded-2xl border border-white/5 flex items-center justify-between gap-3 hover:border-cyan-500/30 hover:bg-black/60 transition-all group"
                                 >
                                   <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-0.5">
+                                    <div className="flex items-center flex-wrap gap-2 mb-0.5">
                                       <span className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)] shrink-0 animate-pulse"></span>
                                       <span 
                                         className="font-extrabold text-xs text-white truncate hover:underline hover:text-cyan-400 cursor-pointer"
                                         onClick={() => { playFx('click'); setInspectingUser(user.username); }}
                                       >
-                                        Lv. {user.level || 1} {user.username}
+                                        {user.username}
                                       </span>
+                                      <span className="text-[10px] bg-white/10 text-gray-300 px-1.5 py-0.5 rounded-full border border-white/10 font-bold shrink-0">Lv.{user.level || 1}</span>
+                                      {(() => {
+                                        const tier = getPlayerTier(user.level || 1);
+                                        return (
+                                          <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border shrink-0 ${tier.color} ${tier.glow}`}>
+                                            {tier.icon} {tier.name}
+                                          </span>
+                                        );
+                                      })()}
                                       <span className="text-[9px] px-1.5 py-0.5 bg-cyan-900/30 text-cyan-400 border border-cyan-500/20 font-black rounded uppercase tracking-wider shrink-0">{user.rating} OVR</span>
                                     </div>
                                     <p className="text-[9px] text-gray-500 font-mono truncate">ID: {user.peerId}</p>
@@ -1976,6 +2158,343 @@ export default function App() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {gameState === 'leaderboard' && (
+        <div className="w-full max-w-4xl mx-auto flex flex-col items-center mt-8 animate-fade-in px-4">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-4 mb-8">
+            <button className="btn !bg-gray-700 hover:!bg-gray-600 transition-colors flex items-center gap-2" onClick={() => setGameState('lobby')}>
+              ← Về Sảnh
+            </button>
+            <h2 className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 uppercase tracking-widest text-center">
+              BXH & Cấp Hạng 🏆
+            </h2>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 bg-black/40 px-4 py-2 rounded-full border border-yellow-500/30">
+                <Coins className="text-yellow-400" size={16} />
+                <span className="font-bold text-yellow-400 text-sm">{coins} Xu</span>
+              </div>
+              {freePacks > 0 && (
+                <div className="flex items-center gap-1.5 bg-fuchsia-950/20 px-4 py-2 rounded-full border border-fuchsia-500/30 animate-pulse">
+                  <span className="text-sm">🎁</span>
+                  <span className="font-bold text-fuchsia-400 text-sm">{freePacks} Gói</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Sub Tab Buttons */}
+          <div className="flex border border-white/10 rounded-2xl overflow-hidden bg-black/40 mb-8 w-full max-w-xl">
+            <button 
+              className={`flex-1 py-3 text-xs sm:text-sm font-black uppercase tracking-wider flex items-center justify-center gap-2 border-b-2 transition-all ${
+                leaderboardTab === 'leaderboard' 
+                  ? 'border-yellow-500 text-yellow-400 bg-white/5 font-extrabold' 
+                  : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+              onClick={() => { playFx('click'); setLeaderboardTab('leaderboard'); }}
+            >
+              🏆 Bảng Xếp Hạng
+            </button>
+            <button 
+              className={`flex-1 py-3 text-xs sm:text-sm font-black uppercase tracking-wider flex items-center justify-center gap-2 border-b-2 transition-all ${
+                leaderboardTab === 'tiers' 
+                  ? 'border-cyan-500 text-cyan-400 bg-white/5 font-extrabold' 
+                  : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+              onClick={() => { playFx('click'); setLeaderboardTab('tiers'); }}
+            >
+              🛡️ Cấp Hạng
+            </button>
+            <button 
+              className={`flex-1 py-3 text-xs sm:text-sm font-black uppercase tracking-wider flex items-center justify-center gap-2 border-b-2 transition-all ${
+                leaderboardTab === 'milestones' 
+                  ? 'border-fuchsia-500 text-fuchsia-400 bg-white/5 font-extrabold' 
+                  : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+              onClick={() => { playFx('click'); setLeaderboardTab('milestones'); }}
+            >
+              🎁 Quà Cấp Độ
+            </button>
+          </div>
+
+          {/* TAB 1: Global Leaderboard */}
+          {leaderboardTab === 'leaderboard' && (
+            <div className="w-full glass-panel rounded-3xl overflow-hidden border border-white/10 shadow-2xl animate-fade-in p-6">
+              <h3 className="text-xl font-black italic uppercase tracking-wider text-center text-white mb-6">HLV Xuất Sắc Nhất Lục Địa 🌍</h3>
+              
+              {loadingLeaderboard ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-4">
+                  <div className="w-12 h-12 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="text-yellow-400 font-extrabold tracking-widest text-xs uppercase animate-pulse">Đang tải bảng xếp hạng...</div>
+                </div>
+              ) : leaderboardData.length === 0 ? (
+                <div className="text-center py-12 text-gray-500 italic">Chưa có dữ liệu người chơi.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-white/10 text-gray-400 text-[10px] sm:text-xs font-black uppercase tracking-widest pb-3">
+                        <th className="py-3 px-4">Hạng</th>
+                        <th className="py-3 px-4">HLV</th>
+                        <th className="py-3 px-4">Hạng Cấp</th>
+                        <th className="py-3 px-4 text-center">Cấp Độ</th>
+                        <th className="py-3 px-4 text-center">Đội (OVR)</th>
+                        <th className="py-3 px-4 text-center">Thắng/Hòa/Thua</th>
+                        <th className="py-3 px-4 text-center">Thẻ sở hữu</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5 text-xs sm:text-sm font-semibold">
+                      {leaderboardData.map((user, index) => {
+                        const isMe = user.username === currentUser;
+                        const rank = index + 1;
+                        const tier = getPlayerTier(user.level);
+                        const isTop3 = rank <= 3;
+                        
+                        return (
+                          <tr 
+                            key={user.username} 
+                            className={`transition-colors border-b border-white/5 ${
+                              isMe 
+                                ? 'bg-fuchsia-950/20 hover:bg-fuchsia-950/30 border-l-4 border-l-fuchsia-500' 
+                                : 'hover:bg-white/5'
+                            }`}
+                          >
+                            <td className="py-4 px-4 font-black">
+                              {rank === 1 ? '🥇 1' : rank === 2 ? '🥈 2' : rank === 3 ? '🥉 3' : rank}
+                            </td>
+                            <td className="py-4 px-4">
+                              <span 
+                                className={`font-extrabold hover:underline hover:text-cyan-400 cursor-pointer ${
+                                  rank === 1 ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]' : isMe ? 'text-fuchsia-400' : 'text-white'
+                                }`}
+                                onClick={() => { playFx('click'); setInspectingUser(user.username); }}
+                              >
+                                {user.username} {isMe && ' (BẠN)'}
+                              </span>
+                            </td>
+                            <td className="py-4 px-4">
+                              <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${tier.color} ${tier.glow}`}>
+                                {tier.icon} {tier.name}
+                              </span>
+                            </td>
+                            <td className="py-4 px-4 text-center font-black text-cyan-400">
+                              {user.level} <span className="text-[10px] text-gray-500 font-medium">({user.xp} XP)</span>
+                            </td>
+                            <td className="py-4 px-4 text-center font-black text-emerald-400">{user.ovr} OVR</td>
+                            <td className="py-4 px-4 text-center text-gray-300">
+                              <span className="text-green-400">{user.wins}T</span> - <span className="text-yellow-400">{user.draws}H</span> - <span className="text-red-400">{user.losses}B</span>
+                            </td>
+                            <td className="py-4 px-4 text-center font-black text-purple-400">{user.cardCount} / {playersData.length} Thẻ</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 2: Rank Tiers System */}
+          {leaderboardTab === 'tiers' && (
+            <div className="w-full glass-panel rounded-3xl border border-white/10 shadow-2xl animate-fade-in p-6">
+              <div className="flex flex-col items-center mb-8 text-center">
+                <h3 className="text-xl font-black italic uppercase tracking-wider text-white mb-2">Hệ Thống Phân Cấp HLV 🛡️</h3>
+                <p className="text-gray-400 text-xs sm:text-sm max-w-lg">Cấp Hạng phản ánh thực lực, trình độ và thời gian cống hiến của mỗi HLV. Cày cấp để mở khóa các Cấp Hạng phát sáng rực rỡ và nhận nhiều quà tặng thăng cấp hơn!</p>
+              </div>
+
+              {/* Current user's tier showcase */}
+              <div className="bg-slate-950/60 rounded-3xl border border-white/10 p-6 flex flex-col md:flex-row items-center justify-between gap-6 mb-8 w-full max-w-2xl mx-auto shadow-inner relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-[40px] pointer-events-none"></div>
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500/30 to-purple-600/30 flex items-center justify-center border-2 border-white/20 shadow-lg relative">
+                    <span className="text-4xl">{getPlayerTier(level).icon}</span>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-0.5">HLV Hiện Tại</div>
+                    <h4 className="text-2xl font-black text-white leading-tight mb-1">{currentUser}</h4>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs bg-white/10 text-gray-300 px-2 py-0.5 rounded border border-white/5 font-extrabold">Cấp {level}</span>
+                      <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border ${getPlayerTier(level).color} ${getPlayerTier(level).glow}`}>
+                        {getPlayerTier(level).icon} {getPlayerTier(level).name}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="text-center md:text-right">
+                  {level < 31 ? (
+                    (() => {
+                      const currentTier = getPlayerTier(level);
+                      const currentTierIdx = TIERS.findIndex(t => t.name === currentTier.name);
+                      const nextTier = TIERS[currentTierIdx + 1];
+                      if (nextTier) {
+                        const lvlNeeded = nextTier.minLevel - level;
+                        return (
+                          <>
+                            <div className="text-sm font-bold text-gray-300">Cần thăng thêm <span className="text-cyan-400 font-black">{lvlNeeded} Cấp</span></div>
+                            <div className="text-[10px] text-gray-500 font-medium mt-1">Để đột phá lên Cấp Hạng <span className="font-extrabold text-white">{nextTier.icon} {nextTier.name}</span></div>
+                          </>
+                        );
+                      }
+                      return null;
+                    })()
+                  ) : (
+                    <div className="text-sm font-black text-rose-500 animate-pulse flex items-center gap-1.5 justify-center md:justify-end">
+                      🔥 BẠN ĐÃ ĐẠT CẤP HẠNG TỐI CAO!
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Tiers List */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {TIERS.map((tier) => {
+                  const isCurrent = level >= tier.minLevel && level <= tier.maxLevel;
+                  return (
+                    <div 
+                      key={tier.name}
+                      className={`p-5 rounded-2xl border transition-all flex flex-col justify-between ${
+                        isCurrent 
+                          ? 'bg-slate-900 border-white/20 shadow-xl relative overflow-hidden ring-2 ring-cyan-500/40' 
+                          : 'bg-black/40 border-white/5 opacity-70 hover:opacity-100 hover:border-white/10'
+                      }`}
+                    >
+                      {isCurrent && (
+                        <span className="absolute -top-1 -right-1 bg-cyan-600 text-white text-[8px] font-black px-2 py-0.5 rounded-bl-lg uppercase tracking-wider animate-pulse">
+                          CỦA BẠN
+                        </span>
+                      )}
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-3xl">{tier.icon}</span>
+                          <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest font-mono">
+                            {tier.maxLevel === 999 ? `Cấp ${tier.minLevel}+` : `Cấp ${tier.minLevel} - ${tier.maxLevel}`}
+                          </span>
+                        </div>
+                        <h4 className={`text-lg font-black uppercase italic ${tier.color.split(' ')[0]} mb-1`}>{tier.name}</h4>
+                        <p className="text-[11px] text-gray-400 font-medium leading-normal">
+                          {tier.name === 'Hạng Đồng' && 'Cấp bậc sơ khai của các HLV tập sự.'}
+                          {tier.name === 'Hạng Bạc' && 'Bắt đầu có kinh nghiệm và sở hữu một vài siêu sao.'}
+                          {tier.name === 'Hạng Vàng' && 'HLV cứng tay, đội hình có chiều sâu ổn định.'}
+                          {tier.name === 'Bạch Kim' && 'Cao thủ tầm cỡ, sở hữu nhiều thẻ hiếm nâng cấp.'}
+                          {tier.name === 'Kim Cương' && 'Đẳng cấp thượng lưu, thách thức mọi danh hiệu.'}
+                          {tier.name === 'Cao Thủ' && 'Thần thoại đương đại, nỗi khiếp sợ của mọi đối thủ.'}
+                          {tier.name === 'Thách Đấu' && 'HLV vĩ đại nhất, thống trị toàn bộ lục địa game!'}
+                        </p>
+                      </div>
+                      
+                      <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
+                        <span className="text-[9px] text-gray-500 font-bold uppercase">Mức độ lấp lánh</span>
+                        <span className={`h-2 w-2 rounded-full ${isCurrent ? 'bg-green-500' : 'bg-gray-700'}`}></span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: Milestone Rewards */}
+          {leaderboardTab === 'milestones' && (
+            <div className="w-full glass-panel rounded-3xl border border-white/10 shadow-2xl animate-fade-in p-6">
+              <div className="flex flex-col items-center mb-8 text-center">
+                <h3 className="text-xl font-black italic uppercase tracking-wider text-white mb-2">Quà Tặng Cột Mốc Cấp Độ 🎁</h3>
+                <p className="text-gray-400 text-xs sm:text-sm max-w-lg">Nhận các phần quà vô cùng giá trị bao gồm Xu và Gói Thẻ Miễn Phí khi HLV của bạn thăng tiến đạt các cột mốc cấp độ dưới đây!</p>
+              </div>
+
+              {/* Progress bar info */}
+              <div className="bg-slate-950/40 rounded-2xl border border-white/5 p-5 mb-8 w-full max-w-md mx-auto text-center">
+                <div className="text-xs text-gray-400 font-bold uppercase mb-2">Tiến Trình Cấp Độ Của Bạn</div>
+                <div className="text-2xl font-black text-white mb-3">Cấp HLV: {level}</div>
+                <div className="w-full bg-black/60 rounded-full h-3 border border-white/5 overflow-hidden relative mb-1">
+                  <div 
+                    className="bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 h-full rounded-full transition-all duration-1000"
+                    style={{ width: `${Math.min(100, (xp / (level * 100)) * 100)}%` }}
+                  ></div>
+                </div>
+                <div className="text-[10px] text-gray-500 font-semibold">{xp} / {level * 100} XP</div>
+              </div>
+
+              {/* Milestone list */}
+              <div className="flex flex-col gap-4 w-full max-w-2xl mx-auto">
+                {LEVEL_MILESTONES.map((m) => {
+                  const hasReached = level >= m.level;
+                  const isClaimed = (claimedLevelRewards || []).includes(m.level);
+                  
+                  return (
+                    <div 
+                      key={m.level}
+                      className={`p-5 rounded-2xl border flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 transition-all ${
+                        isClaimed 
+                          ? 'bg-black/50 border-gray-700 opacity-60' 
+                          : hasReached 
+                          ? 'bg-gradient-to-r from-yellow-950/20 to-slate-900 border-yellow-500/40 shadow-xl shadow-yellow-950/10' 
+                          : 'bg-black/40 border-white/5'
+                      }`}
+                    >
+                      {/* Left side: milestone info */}
+                      <div className="flex items-center gap-4">
+                        <div className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center font-black text-lg border shadow-lg shrink-0 ${
+                          isClaimed 
+                            ? 'bg-gray-800 text-gray-500 border-gray-700' 
+                            : hasReached 
+                            ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-black border-yellow-300 shadow-yellow-900/30' 
+                            : 'bg-slate-900 text-gray-300 border-white/10'
+                        }`}>
+                          <span className="text-[9px] uppercase tracking-wider font-bold mb-0.5 leading-none">Cấp</span>
+                          <span className="leading-none">{m.level}</span>
+                        </div>
+                        <div>
+                          <h4 className="text-sm sm:text-base font-extrabold text-white mb-0.5">{m.desc}</h4>
+                          <div className="flex items-center gap-3">
+                            {m.coins > 0 && (
+                              <span className="text-xs text-yellow-400 font-bold flex items-center gap-1">
+                                <Coins size={12} /> +{m.coins} Xu
+                              </span>
+                            )}
+                            {m.packs > 0 && (
+                              <span className="text-xs text-fuchsia-400 font-bold flex items-center gap-1">
+                                🎁 +{m.packs} Gói Thẻ Miễn Phí
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right side: action buttons */}
+                      <div className="flex items-center justify-end">
+                        {isClaimed ? (
+                          <button 
+                            className="btn !bg-gray-700 text-gray-500 !py-2 !px-5 rounded-xl font-bold uppercase tracking-wider text-xs cursor-not-allowed"
+                            disabled
+                          >
+                            Đã Nhận ✓
+                          </button>
+                        ) : hasReached ? (
+                          <button 
+                            className="btn !bg-gradient-to-r !from-green-500 !to-emerald-500 hover:!from-green-600 hover:!to-emerald-600 text-white !py-2.5 !px-6 rounded-xl font-black uppercase tracking-widest text-xs animate-bounce-subtle cursor-pointer shadow-lg shadow-green-900/30 transition-all hover:scale-105 active:scale-95"
+                            onClick={() => claimMilestone(m)}
+                          >
+                            Nhận Quà 🎁
+                          </button>
+                        ) : (
+                          <button 
+                            className="btn !bg-gray-800 text-gray-600 !py-2 !px-5 rounded-xl font-bold uppercase tracking-wider text-xs cursor-not-allowed"
+                            disabled
+                          >
+                            Chưa Đạt 🔒
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
