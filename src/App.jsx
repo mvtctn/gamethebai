@@ -2351,7 +2351,7 @@ export default function App() {
       {/* 1. INSPECT PROFILE MODAL */}
       {inspectingUser && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
-          <div className="glass-panel w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[2rem] border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col md:flex-row relative bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/80 p-6 md:p-8 gap-6 hide-scrollbar">
+          <div className="glass-panel w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-[2.5rem] border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col relative bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/80 p-8 gap-6 hide-scrollbar">
             
             <button 
               className="absolute top-4 right-4 text-gray-400 hover:text-white bg-black/40 hover:bg-black/80 p-2 rounded-full w-8 h-8 flex items-center justify-center transition-colors z-[160] cursor-pointer"
@@ -2361,131 +2361,98 @@ export default function App() {
             </button>
 
             {loadingInspectedUser ? (
-              <div className="flex-1 flex flex-col items-center justify-center py-24 gap-4 w-full">
+              <div className="flex flex-col items-center justify-center py-20 gap-4 w-full">
                 <div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
                 <div className="text-cyan-400 font-extrabold tracking-widest text-xs uppercase animate-pulse">Đang tải hồ sơ HLV...</div>
               </div>
             ) : !inspectedUserData ? (
-              <div className="flex-1 flex flex-col items-center justify-center py-24 gap-4 w-full text-center">
+              <div className="flex flex-col items-center justify-center py-20 gap-4 w-full text-center">
                 <div className="text-red-400 text-lg font-black uppercase mb-2">Không tìm thấy thông tin HLV ❌</div>
-                <p className="text-gray-400 text-sm max-w-sm">Dữ liệu HLV chưa sẵn sàng hoặc HLV đang chơi ở chế độ ngoại tuyến.</p>
+                <p className="text-gray-400 text-sm max-w-xs">Dữ liệu HLV chưa sẵn sàng hoặc HLV đang chơi ở chế độ ngoại tuyến.</p>
               </div>
             ) : (
-              <>
-                {/* Left Column: Stats & Actions */}
-                <div className="w-full md:w-80 shrink-0 flex flex-col gap-4 justify-between">
-                  <div className="flex flex-col items-center text-center">
-                    {/* Level Badge */}
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 flex items-center justify-center border-2 border-white/20 shadow-lg shadow-purple-900/50 mb-3 relative animate-pulse-subtle">
-                      <span className="text-xl font-black text-white">Lv.{inspectedUserData.level || 1}</span>
-                    </div>
-
-                    <h2 className="text-2xl font-black text-white mb-1 uppercase tracking-wider">{inspectedUserData.username}</h2>
-                    <span className="text-xs px-3 py-1 bg-cyan-900/40 text-cyan-400 border border-cyan-500/20 font-black rounded-full uppercase tracking-widest mb-4">
-                      {inspectedUserData.squad ? Math.round(inspectedUserData.squad.reduce((acc, card) => acc + Math.max(card.stats.attack, card.stats.defense, card.stats.control), 0) / 11) : 0} OVR
-                    </span>
-                    
-                    {/* XP Progress Bar */}
-                    <div className="w-full bg-black/60 rounded-full h-2.5 border border-white/5 overflow-hidden mb-6 relative">
-                      <div 
-                        className="bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-500 h-full rounded-full transition-all duration-1000"
-                        style={{ width: `${Math.min(100, ((inspectedUserData.xp || 0) / ((inspectedUserData.level || 1) * 100)) * 100)}%` }}
-                      ></div>
-                    </div>
+              <div className="w-full flex flex-col gap-4">
+                <div className="flex flex-col items-center text-center">
+                  {/* Level Badge */}
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 flex items-center justify-center border-2 border-white/20 shadow-lg shadow-purple-900/50 mb-3 relative animate-pulse-subtle">
+                    <span className="text-xl font-black text-white">Lv.{inspectedUserData.level || 1}</span>
                   </div>
 
-                  {/* Battle Stats Grid */}
-                  <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex flex-col gap-3">
-                    <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-white/5 pb-2 text-center">Thống Kê Trận Đấu</div>
-                    
-                    <div className="grid grid-cols-2 gap-3 text-center">
-                      <div className="bg-slate-900/50 border border-white/5 p-2 rounded-xl">
-                        <div className="text-[9px] text-gray-400 font-bold uppercase">Trận đã đấu</div>
-                        <div className="text-lg font-black text-white">{inspectedUserData.stats?.played || 0}</div>
-                      </div>
-                      <div className="bg-green-950/20 border border-green-500/10 p-2 rounded-xl">
-                        <div className="text-[9px] text-green-400 font-bold uppercase">Chiến Thắng</div>
-                        <div className="text-lg font-black text-green-400">{inspectedUserData.stats?.wins || 0}</div>
-                      </div>
-                      <div className="bg-yellow-950/20 border border-yellow-500/10 p-2 rounded-xl">
-                        <div className="text-[9px] text-yellow-400 font-bold uppercase">Hòa</div>
-                        <div className="text-lg font-black text-yellow-400">{inspectedUserData.stats?.draws || 0}</div>
-                      </div>
-                      <div className="bg-red-950/20 border border-red-500/10 p-2 rounded-xl">
-                        <div className="text-[9px] text-red-400 font-bold uppercase">Thất bại</div>
-                        <div className="text-lg font-black text-red-400">{inspectedUserData.stats?.losses || 0}</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Interactivity Buttons */}
-                  <div className="flex flex-col gap-2 mt-4">
-                    <button 
-                      className="btn !bg-violet-600 hover:!bg-violet-500 w-full flex items-center justify-center gap-2 !py-3 font-bold text-sm tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-violet-900/30"
-                      onClick={() => {
-                        playFx('click');
-                        setActivePrivatePartner(inspectedUserData.username);
-                        setChatTab('private');
-                        setInspectingUser(null);
-                      }}
-                    >
-                      <MessageSquare size={16} /> Nhắn Tin Riêng
-                    </button>
-                    
-                    <button 
-                      className={`btn w-full flex items-center justify-center gap-2 !py-3 font-bold text-sm tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg ${
-                        squad.length < 11
-                          ? 'opacity-40 !bg-gray-700 cursor-not-allowed text-gray-400' 
-                          : 'bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white shadow-red-900/30'
-                      }`}
-                      disabled={squad.length < 11}
-                      onClick={() => {
-                        if (squad.length === 11) {
-                          const activeObj = onlineUsers.find(o => o.username === inspectedUserData.username);
-                          if (activeObj) {
-                            sendChallengeInvite(activeObj.username, activeObj.peerId);
-                            setInspectingUser(null);
-                          } else {
-                            showAlert("Ngoại Tuyến ⚪", "HLV này đã ngoại tuyến hoặc không khả dụng để thách đấu pvp trực tiếp.");
-                          }
-                        }
-                      }}
-                    >
-                      <Swords size={16} /> Gửi Lời Thách Đấu
-                    </button>
-                  </div>
-                </div>
-
-                {/* Right Column: Squad Sân Cỏ 3D */}
-                <div className="flex-1 flex flex-col relative bg-black/30 border border-white/5 p-4 rounded-3xl overflow-hidden min-h-[420px] md:min-h-0">
-                  <h3 className="text-xs font-bold text-cyan-400 tracking-widest uppercase mb-1 text-center w-full z-20">Đội Hình Ra Sân (Active Lineup)</h3>
+                  <h2 className="text-2xl font-black text-white mb-1 uppercase tracking-wider">{inspectedUserData.username}</h2>
+                  <span className="text-xs px-3 py-1 bg-cyan-900/40 text-cyan-400 border border-cyan-500/20 font-black rounded-full uppercase tracking-widest mb-4">
+                    {inspectedUserData.squad ? Math.round(inspectedUserData.squad.reduce((acc, card) => acc + Math.max(card.stats.attack, card.stats.defense, card.stats.control), 0) / 11) : 0} OVR
+                  </span>
                   
-                  <div className="pitch-wrapper flex-1 mt-1 overflow-hidden scale-90 sm:scale-100">
-                    <div className="pitch-container !max-w-[420px] !scale-95 sm:!scale-100">
-                      <div className="pitch-lines"></div>
-                      <div className="penalty-box-top"></div>
-                      <div className="penalty-box-bottom"></div>
-                      
-                      {inspectedUserData.squad ? (
-                        inspectedUserData.squad.map((player, idx) => {
-                          const pos = PITCH_POSITIONS[idx] || { top: '50%', left: '50%' };
-                          return (
-                            <div 
-                              key={player.id || idx}
-                              className="pitch-player-slot scale-[0.8]"
-                              style={{ top: pos.top, left: pos.left, zIndex: Math.round(parseFloat(pos.top)) }}
-                            >
-                              <Card player={player} hideStats={false} />
-                            </div>
-                          );
-                        })
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-400">Không có thông tin đội hình.</div>
-                      )}
+                  {/* XP Progress Bar */}
+                  <div className="w-full bg-black/60 rounded-full h-2.5 border border-white/5 overflow-hidden mb-6 relative">
+                    <div 
+                      className="bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-500 h-full rounded-full transition-all duration-1000"
+                      style={{ width: `${Math.min(100, ((inspectedUserData.xp || 0) / ((inspectedUserData.level || 1) * 100)) * 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                {/* Battle Stats Grid */}
+                <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex flex-col gap-3">
+                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-white/5 pb-2 text-center">Thống Kê Trận Đấu</div>
+                  
+                  <div className="grid grid-cols-2 gap-3 text-center">
+                    <div className="bg-slate-900/50 border border-white/5 p-2 rounded-xl">
+                      <div className="text-[9px] text-gray-400 font-bold uppercase">Trận đã đấu</div>
+                      <div className="text-lg font-black text-white">{inspectedUserData.stats?.played || 0}</div>
+                    </div>
+                    <div className="bg-green-950/20 border border-green-500/10 p-2 rounded-xl">
+                      <div className="text-[9px] text-green-400 font-bold uppercase">Chiến Thắng</div>
+                      <div className="text-lg font-black text-green-400">{inspectedUserData.stats?.wins || 0}</div>
+                    </div>
+                    <div className="bg-yellow-950/20 border border-yellow-500/10 p-2 rounded-xl">
+                      <div className="text-[9px] text-yellow-400 font-bold uppercase">Hòa</div>
+                      <div className="text-lg font-black text-yellow-400">{inspectedUserData.stats?.draws || 0}</div>
+                    </div>
+                    <div className="bg-red-950/20 border border-red-500/10 p-2 rounded-xl">
+                      <div className="text-[9px] text-red-400 font-bold uppercase">Thất bại</div>
+                      <div className="text-lg font-black text-red-400">{inspectedUserData.stats?.losses || 0}</div>
                     </div>
                   </div>
                 </div>
-              </>
+
+                {/* Interactivity Buttons */}
+                <div className="flex flex-col gap-2 mt-4">
+                  <button 
+                    className="btn !bg-violet-600 hover:!bg-violet-500 w-full flex items-center justify-center gap-2 !py-3 font-bold text-sm tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-violet-900/30"
+                    onClick={() => {
+                      playFx('click');
+                      setActivePrivatePartner(inspectedUserData.username);
+                      setChatTab('private');
+                      setInspectingUser(null);
+                    }}
+                  >
+                    <MessageSquare size={16} /> Nhắn Tin Riêng
+                  </button>
+                  
+                  <button 
+                    className={`btn w-full flex items-center justify-center gap-2 !py-3 font-bold text-sm tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg ${
+                      squad.length < 11
+                        ? 'opacity-40 !bg-gray-700 cursor-not-allowed text-gray-400' 
+                        : 'bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white shadow-red-900/30'
+                    }`}
+                    disabled={squad.length < 11}
+                    onClick={() => {
+                      if (squad.length === 11) {
+                        const activeObj = onlineUsers.find(o => o.username === inspectedUserData.username);
+                        if (activeObj) {
+                          sendChallengeInvite(activeObj.username, activeObj.peerId);
+                          setInspectingUser(null);
+                        } else {
+                          showAlert("Ngoại Tuyến ⚪", "HLV này đã ngoại tuyến hoặc không khả dụng để thách đấu pvp trực tiếp.");
+                        }
+                      }
+                    }}
+                  >
+                    <Swords size={16} /> Gửi Lời Thách Đấu
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>
