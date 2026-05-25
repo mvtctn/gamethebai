@@ -139,6 +139,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
   const myDeckRef = useRef([...squad]);
   const myPlayedCardRef = useRef(null);
   const opponentPlayedCardRef = useRef(null);
+  const opponentPlayedStatRef = useRef(null);
   const activeStatRef = useRef('attack');
   const isHostRef = useRef(false);
   const roundCountRef = useRef(0);
@@ -201,6 +202,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       // Reset values for the next round
       myPlayedCardRef.current = null;
       opponentPlayedCardRef.current = null;
+      opponentPlayedStatRef.current = null;
       setMyPlayedCard(null);
       setOpponentPlayedCard(null);
       setRoundResultMsg('');
@@ -247,6 +249,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       // Clear played cards for the new round immediately to avoid race condition!
       myPlayedCardRef.current = null;
       opponentPlayedCardRef.current = null;
+      opponentPlayedStatRef.current = null;
       setMyPlayedCard(null);
       setOpponentPlayedCard(null);
       setRoundWinner(null);
@@ -262,11 +265,12 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
         return;
       }
       opponentPlayedCardRef.current = data.card;
+      opponentPlayedStatRef.current = data.stat;
       setOpponentPlayedCard(data.card);
       setOpponentDeckCount(prev => prev - 1);
 
       if (myPlayedCardRef.current) {
-        calculateRoundResult(myPlayedCardRef.current, data.card, activeStatRef.current);
+        calculateRoundResult(myPlayedCardRef.current, data.card, data.stat);
       }
     }
   }, [calculateRoundResult, sendData]);
@@ -403,10 +407,10 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       setMyDeck(newDeck);
 
       // Broadcast play card to opponent
-      sendData({ type: 'play_card', card, roundIndex: roundCountRef.current });
+      sendData({ type: 'play_card', card, roundIndex: roundCountRef.current, stat: activeStatRef.current });
 
       if (opponentPlayedCardRef.current) {
-        calculateRoundResult(card, opponentPlayedCardRef.current, activeStatRef.current);
+        calculateRoundResult(card, opponentPlayedCardRef.current, opponentPlayedStatRef.current || activeStatRef.current);
       } else {
         updatePhase('waiting');
         setRoundResultMsg('Đang chờ đối thủ ra bài...');
