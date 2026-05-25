@@ -563,7 +563,15 @@ export default function App() {
     onValue(userRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        if (data.coins !== undefined) setCoins(data.coins);
+        // Cấp 200 xu khởi đầu 1 lần cho tất cả user chưa nhận (kể cả user cũ coins=0)
+        if (!data.startingBonus) {
+          const bonusCoins = (data.coins || 0) + 200;
+          setCoins(bonusCoins);
+          set(ref(database, `/users/${currentUser}/coins`), bonusCoins);
+          set(ref(database, `/users/${currentUser}/startingBonus`), true);
+        } else {
+          if (data.coins !== undefined) setCoins(data.coins);
+        }
         if (data.collection) setCollection(data.collection);
         if (data.squad) setSquad(data.squad);
         if (data.quests) setQuests(data.quests);
@@ -575,12 +583,13 @@ export default function App() {
         if (data.claimedLevelRewards) setClaimedLevelRewards(data.claimedLevelRewards);
         if (data.rewardedMilestones) setRewardedMilestones(data.rewardedMilestones);
       } else {
-        // Initialize brand-new guest user — fresh start with 3 starter packs
+        // Initialize brand-new guest user — fresh start with 3 starter packs + 200 xu
         const initialData = {
           username: currentUser,
           password: "",
           email: "",
           coins: 200, // Thành viên mới được 200 Xu để bắt đầu mở thẻ
+          startingBonus: true,
           collection: [],
           squad: [],
           level: 1,
@@ -598,6 +607,7 @@ export default function App() {
           ]
         };
         set(userRef, initialData);
+        setCoins(200);
       }
     }, { onlyOnce: true });
   }, [currentUser, isConnectedToFirebase]);
