@@ -1756,9 +1756,9 @@ export default function App() {
           {/* Main: Banner left + Login right */}
           <div className="landing-main">
 
-            {/* ── LEFT: Banner full bleed ── */}
+            {/* ── LEFT: Banner Column ── */}
             <div className="landing-banner-col">
-              <div className="landing-banner-img">
+              <div className="landing-banner-card">
                 <img 
                   key={activeBannerIdx}
                   src={BANNERS[activeBannerIdx]} 
@@ -1767,14 +1767,9 @@ export default function App() {
                 />
               </div>
 
-              {/* Hero text overlay */}
-              <div className="landing-hero-text">
-                <div className="landing-hero-eyebrow">Chính thức mùa giải</div>
-                <h1 className="landing-hero-title">
-                  <span className="line1">World Cup</span>
-                  <span className="line2">2026</span>
-                </h1>
-                <p className="landing-hero-subtitle">Ultimate Card Champions</p>
+              {/* Info section underneath the banner card */}
+              <div className="landing-banner-info">
+                <div className="landing-hero-subtitle">🏆 Ultimate Card Champions 🏆</div>
                 <div className="landing-badges">
                   <span className="landing-badge green">⚽ 800+ Cầu Thủ</span>
                   <span className="landing-badge blue">🌐 PvP Online</span>
