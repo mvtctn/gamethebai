@@ -2435,29 +2435,40 @@ export default function App() {
               </div>
 
               <div className="htp-step-card">
+                <div className="htp-step-num">🌦️</div>
+                <div className="htp-step-body">
+                  <h3>Bước 6 — Thời Tiết & Phong Độ</h3>
+                  <p>
+                    Kết quả trận đấu bị ảnh hưởng lớn bởi <strong style={{color:'#38bdf8'}}>Thời Tiết (Nắng, Mưa, Tuyết...)</strong> và <strong style={{color:'#f472b6'}}>Giờ Thi Đấu</strong>. Trời mưa tuyết làm giảm tốc độ, Gió mạnh hỗ trợ kỹ thuật... 
+                    Đồng thời, mỗi thẻ sẽ có trạng thái <strong style={{color:'#4ade80'}}>Phong Độ</strong> ngẫu nhiên. Đặc biệt cơ chế lật kèo: nếu thẻ của bạn kém đối phương quá 5 điểm OVR, bạn sẽ có <strong style={{color:'#facc15'}}>25% cơ hội bùng nổ sức mạnh</strong> cực lớn!
+                  </p>
+                  <span className="htp-tip">💡 Phải luôn chú ý bảng điều kiện môi trường góc trên khi đấu PvP!</span>
+                </div>
+              </div>
+
+              <div className="htp-step-card">
                 <div className="htp-step-num">🌐</div>
                 <div className="htp-step-body">
-                  <h3>Bước 6 — PvP Online & Tích Luỹ</h3>
+                  <h3>Bước 7 — PvP Online & Tích Luỹ</h3>
                   <p>
                     Thách đấu bạn bè qua <strong style={{color:'#38bdf8'}}>PvP Online</strong> bằng cách chia sẻ mã phòng.
                     Mọi trận đều nhận Xu và XP:
                     <strong style={{color:'#c4f000'}}> Thắng nhiều hơn, Hòa vừa, Thua cũng có!</strong>
                     Tích đủ XP để lên cấp và nhận thêm phần thưởng lớn.
                   </p>
-                  <span className="htp-tip">⚡ Lên cấp nhận 500 Xu mỗi lần!</span>
+                  <span className="htp-tip">⚡ Lên cấp nhận thẻ và xu miễn phí!</span>
                 </div>
               </div>
 
               <div className="htp-step-card">
                 <div className="htp-step-num">📊</div>
                 <div className="htp-step-body">
-                  <h3>Bước 7 — Nhiệm Vụ & Bảng Xếp Hạng</h3>
+                  <h3>Bước 8 — Nhiệm Vụ & Bảng Xếp Hạng</h3>
                   <p>
                     Hoàn thành <strong style={{color:'#f472b6'}}>Nhiệm Vụ Hàng Ngày</strong> để nhận thêm Xu và XP.
-                    Kiểm tra <strong style={{color:'#c4f000'}}>Bảng Xếp Hạng</strong> để so sánh với
-                    các HLV khác toàn server. Đạt mốc hoạt động để nhận thẻ Edition đặc biệt tự động!
+                    Kiểm tra <strong style={{color:'#c4f000'}}>Bảng Xếp Hạng</strong> để đua top với các HLV toàn server. Đạt mốc hoạt động để nhận thẻ Edition đặc biệt!
                   </p>
-                  <span className="htp-tip">🎖️ Thẻ Icon & Super Limited chỉ nhận qua mốc thành tích</span>
+                  <span className="htp-tip">🎖️ Thẻ Icon & Super Limited cực hiếm chỉ có thể nhận qua mốc thành tích</span>
                 </div>
               </div>
 
