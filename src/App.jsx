@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { PackageOpen, Users, Swords, ChevronRight, CheckCircle2, Lock, Coins, Sparkles, Play, Trophy, Shield, Target, Wifi, User, ChevronLeft, Send, MessageSquare, Mail } from 'lucide-react';
-import confetti from 'canvas-confetti';
 import playersData from './players.json';
-import MultiplayerEngine from './MultiplayerEngine';
+const MultiplayerEngine = React.lazy(() => import('./MultiplayerEngine'));
 import { database, isConnectedToFirebase } from './firebase';
 import { ref, set, push, onValue, onDisconnect, serverTimestamp, get, update } from 'firebase/database';
 
@@ -16,6 +15,11 @@ export const hashPIN = async (pin) => {
   return hashHex;
 };
 
+const triggerConfetti = async (options) => {
+  const module = await import('canvas-confetti');
+  const confetti = module.default;
+  confetti(options);
+};
 
 const PITCH_POSITIONS = [
   { top: '80%', left: '50%' }, // GK
@@ -164,7 +168,7 @@ const playFx = (type) => {
       gainNode.gain.linearRampToValueAtTime(0, now + 1.0);
       oscillator.start(now);
       oscillator.stop(now + 1.0);
-      confetti({ particleCount: 300, spread: 100, origin: { y: 0.6 } });
+      triggerConfetti({ particleCount: 300, spread: 100, origin: { y: 0.6 } });
     }
   } catch (e) {
     console.error('Audio play error:', e);
@@ -988,7 +992,7 @@ export default function App() {
         playFx('winGame');
         
         setTimeout(() => {
-          confetti({
+          triggerConfetti({
             particleCount: 200,
             spread: 100,
             origin: { y: 0.5 },
@@ -1049,7 +1053,7 @@ export default function App() {
 
     // Confetti celebration
     setTimeout(() => {
-      confetti({ particleCount: 200, spread: 90, origin: { y: 0.5 },
+      triggerConfetti({ particleCount: 200, spread: 90, origin: { y: 0.5 },
         colors: ['#f59e0b','#fbbf24','#3b82f6','#ec4899','#10b981'] });
     }, 300);
 
@@ -1075,7 +1079,7 @@ export default function App() {
     playFx('winPoint');
     
     // Show confetti
-    confetti({
+    triggerConfetti({
       particleCount: 120,
       spread: 70,
       origin: { y: 0.6 },
@@ -2103,7 +2107,7 @@ export default function App() {
     if (matchPhase === 'roundResult') {
       if (roundResultMsg.includes('THẮNG')) {
         playFx('winPoint');
-        confetti({
+        triggerConfetti({
           particleCount: 150,
           spread: 80,
           origin: { y: 0.6 },
@@ -3141,16 +3145,18 @@ export default function App() {
             })()}
 
       {gameState === 'multiplayer' && (
-        <MultiplayerEngine 
-          squad={squad} 
-          currentUser={currentUser} 
-          initialJoinId={activePvpTarget}
-          CardComponent={Card}
-          onExit={handlePvpEnd}
-          onWin={() => {
-            setCoins(c => c + 100);
-          }}
-        />
+        <Suspense fallback={<div className="flex flex-col items-center justify-center py-20 gap-4 w-full h-full text-cyan-400 font-extrabold tracking-widest text-xs uppercase animate-pulse"><div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>Đang tải Đấu trường...</div>}>
+          <MultiplayerEngine 
+            squad={squad} 
+            currentUser={currentUser} 
+            initialJoinId={activePvpTarget}
+            CardComponent={Card}
+            onExit={handlePvpEnd}
+            onWin={() => {
+              setCoins(c => c + 100);
+            }}
+          />
+        </Suspense>
       )}
 
       {gameState === 'quests' && (
