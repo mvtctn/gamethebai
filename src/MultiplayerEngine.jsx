@@ -125,6 +125,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
   const [roundWinner, setRoundWinner] = useState(null); // 'me', 'opponent', 'draw'
   const [roundCount, setRoundCount] = useState(0); // Kept in state specifically for render-time safety
   const [copiedCode, setCopiedCode] = useState(false);
+  const [pvpAlert, setPvpAlert] = useState(null); // Custom in-game dialog alert: { title, message, onClose }
 
   const handleCopyCode = () => {
     if (!peerId) return;
@@ -228,7 +229,17 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
   }, [squad.length, sendData]);
 
   const handleNetworkData = useCallback((data) => {
-    if (data.type === 'start_round') {
+    if (data.type === 'ready') {
+      console.log('[PVP] Guest connected and ready! Initializing first round...');
+      const stats = ['attack', 'control', 'defense'];
+      const firstStat = stats[Math.floor(Math.random() * stats.length)];
+      updateActiveStat(firstStat);
+      updatePhase('select_card');
+      setTimeout(() => {
+        sendData({ type: 'start_round', stat: firstStat, roundIndex: 0 });
+      }, 300);
+    }
+    else if (data.type === 'start_round') {
       updateActiveStat(data.stat);
       updatePhase('select_card');
       setRoundResultMsg('');
@@ -242,15 +253,20 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
         calculateRoundResult(myPlayedCardRef.current, data.card, activeStatRef.current);
       }
     }
-  }, [calculateRoundResult]);
+  }, [calculateRoundResult, sendData]);
 
   const setupConnectionHandlers = useCallback((conn) => {
     conn.on('data', (data) => {
       handleNetworkData(data);
     });
     conn.on('close', () => {
-      alert('Đối thủ đã thoát trận!');
-      onExit();
+      setPvpAlert({
+        title: 'Mất Kết Nối ⚠️',
+        message: 'Đối thủ đã thoát trận hoặc bị gián đoạn kết nối!',
+        onClose: () => {
+          onExit();
+        }
+      });
     });
   }, [handleNetworkData, onExit]);
 
@@ -282,6 +298,10 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
             setStatus('playing');
             updatePhase('waiting_start');
             setupConnectionHandlers(conn);
+            // GUEST sends ready signal once open!
+            setTimeout(() => {
+              conn.send({ type: 'ready' });
+            }, 500);
           });
         } else {
           isHostRef.current = true;
@@ -293,20 +313,6 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
         setStatus('playing');
         isHostRef.current = true;
         setupConnectionHandlers(conn);
-
-        // Host generates the first stat
-        const stats = ['attack', 'control', 'defense'];
-        const firstStat = stats[Math.floor(Math.random() * stats.length)];
-        updateActiveStat(firstStat);
-        updatePhase('select_card');
-
-        if (conn.open) {
-          conn.send({ type: 'start_round', stat: firstStat, roundIndex: 0 });
-        } else {
-          conn.on('open', () => {
-            conn.send({ type: 'start_round', stat: firstStat, roundIndex: 0 });
-          });
-        }
       });
 
       peer.on('error', (err) => {
@@ -314,11 +320,21 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
           peer.destroy();
           initPeer(1);
         } else if (err.type === 'peer-unavailable') {
-          alert('Không tìm thấy đối thủ!');
-          setStatus('lobby');
+          setPvpAlert({
+            title: 'Không Tìm Thấy 🔍',
+            message: 'Không tìm thấy HLV đối thủ với mã đã cho! Vui lòng kiểm tra lại.',
+            onClose: () => {
+              setStatus('lobby');
+            }
+          });
         } else {
-          alert('Lỗi kết nối: ' + err.type);
-          setStatus('lobby');
+          setPvpAlert({
+            title: 'Lỗi Kết Nối ❌',
+            message: `Lỗi kết nối mạng PVP (Mã lỗi: ${err.type}).`,
+            onClose: () => {
+              setStatus('lobby');
+            }
+          });
         }
       });
     };
@@ -354,6 +370,10 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       setStatus('playing');
       updatePhase('waiting_start');
       setupConnectionHandlers(conn);
+      // GUEST sends ready signal on manual connect
+      setTimeout(() => {
+        conn.send({ type: 'ready' });
+      }, 500);
     });
   };
 
@@ -520,9 +540,9 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
             </h2>
             <p className="text-xl mb-8 text-gray-300">Tỉ số: <span className="font-black text-white text-2xl">{myScore} – {opponentScore}</span></p>
             <div className="flex flex-col gap-3">
-              <button className="btn !bg-gray-700 w-full !py-4 active:scale-95 transition-transform" onClick={onExit}>Thoát</button>
+              <button className="btn !bg-gray-700 w-full !py-4 active:scale-95 transition-transform" onClick={() => onExit(myScore === opponentScore ? 'draw' : 'lose')}>Thoát</button>
               {myScore > opponentScore && (
-                <button className="btn !bg-yellow-500 text-black w-full !py-4 font-black text-lg shadow-lg shadow-yellow-500/20 active:scale-95 transition-transform" onClick={() => { onWin(); onExit(); }}>
+                <button className="btn !bg-yellow-500 text-black w-full !py-4 font-black text-lg shadow-lg shadow-yellow-500/20 active:scale-95 transition-transform" onClick={() => { onWin(); onExit('win'); }}>
                   🎁 Nhận Thưởng
                 </button>
               )}
@@ -705,7 +725,31 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
               </div>
             </div>
           </div>
+        </div>
+      )}
 
+      {/* Reusable In-Game Custom Alert Modal */}
+      {pvpAlert && (
+        <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="glass-panel p-6 sm:p-8 rounded-[2rem] max-w-sm w-full text-center flex flex-col items-center bg-gradient-to-t from-slate-900 via-slate-950 to-slate-900 border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)] relative animate-scale-in">
+            <h3 className="text-base font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 mb-4 uppercase tracking-widest">
+              {pvpAlert.title || 'Thông Báo'}
+            </h3>
+            <p className="text-xs sm:text-sm font-semibold text-gray-200 mb-6 leading-relaxed">
+              {pvpAlert.message}
+            </p>
+            <button 
+              className="btn w-full !bg-cyan-600 hover:!bg-cyan-500 text-white font-bold py-3 rounded-xl transition-all active:scale-[0.98] cursor-pointer"
+              onClick={() => {
+                playFx('click');
+                const closeHandler = pvpAlert.onClose;
+                setPvpAlert(null);
+                if (closeHandler) closeHandler();
+              }}
+            >
+              Đồng Ý
+            </button>
+          </div>
         </div>
       )}
     </div>

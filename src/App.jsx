@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PackageOpen, Users, Swords, ChevronRight, CheckCircle2, Lock, Coins, Sparkles, Play, Trophy, Shield, Target, Wifi, User, ChevronLeft, Send, MessageSquare } from 'lucide-react';
+import { PackageOpen, Users, Swords, ChevronRight, CheckCircle2, Lock, Coins, Sparkles, Play, Trophy, Shield, Target, Wifi, User, ChevronLeft, Send, MessageSquare, Mail } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import playersData from './players.json';
 import MultiplayerEngine from './MultiplayerEngine';
@@ -228,30 +228,282 @@ export default function App() {
     }));
   }, [collection]);
 
-  // Auto-save state to localStorage when they change
+  // Level & XP State
+  const [level, setLevel] = useState(() => {
+    if (!currentUser) return 1;
+    const saved = localStorage.getItem(`panini_${currentUser}_level`);
+    return saved ? parseInt(saved) : 1;
+  });
+
+  const [xp, setXp] = useState(() => {
+    if (!currentUser) return 0;
+    const saved = localStorage.getItem(`panini_${currentUser}_xp`);
+    return saved ? parseInt(saved) : 0;
+  });
+
+  const [stats, setStats] = useState(() => {
+    if (!currentUser) return { played: 0, wins: 0, draws: 0, losses: 0 };
+    const saved = localStorage.getItem(`panini_${currentUser}_stats`);
+    return saved ? JSON.parse(saved) : { played: 0, wins: 0, draws: 0, losses: 0 };
+  });
+
+  // Level Up Modal State
+  const [showLevelUpModal, setShowLevelUpModal] = useState(null);
+
+  // Profile Inspector States
+  const [inspectingUser, setInspectingUser] = useState(null);
+  const [inspectedUserData, setInspectedUserData] = useState(null);
+  const [loadingInspectedUser, setLoadingInspectedUser] = useState(false);
+
+  // Private Chat States
+  const [activePrivatePartner, setActivePrivatePartner] = useState(null);
+  const [privateMessages, setPrivateMessages] = useState([]);
+  const [myPrivateChats, setMyPrivateChats] = useState([]);
+  const [privateChatInput, setPrivateChatInput] = useState('');
+  const [unreadPartners, setUnreadPartners] = useState({});
+
+  // Auto-save state to localStorage & Firebase when they change
   useEffect(() => {
     if (currentUser) {
       localStorage.setItem(`panini_${currentUser}_collection`, JSON.stringify(collection));
+      if (isConnectedToFirebase) {
+        set(ref(database, `/users/${currentUser}/collection`), collection);
+      }
     }
   }, [collection, currentUser]);
 
   useEffect(() => {
     if (currentUser) {
       localStorage.setItem(`panini_${currentUser}_squad`, JSON.stringify(squad));
+      if (isConnectedToFirebase) {
+        set(ref(database, `/users/${currentUser}/squad`), squad);
+      }
     }
   }, [squad, currentUser]);
 
   useEffect(() => {
     if (currentUser) {
       localStorage.setItem(`panini_${currentUser}_coins`, coins.toString());
+      if (isConnectedToFirebase) {
+        set(ref(database, `/users/${currentUser}/coins`), coins);
+      }
     }
   }, [coins, currentUser]);
 
   useEffect(() => {
     if (currentUser) {
       localStorage.setItem(`panini_${currentUser}_quests`, JSON.stringify(quests));
+      if (isConnectedToFirebase) {
+        set(ref(database, `/users/${currentUser}/quests`), quests);
+      }
     }
   }, [quests, currentUser]);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(`panini_${currentUser}_level`, level.toString());
+      if (isConnectedToFirebase) {
+        set(ref(database, `/users/${currentUser}/level`), level);
+      }
+    }
+  }, [level, currentUser]);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(`panini_${currentUser}_xp`, xp.toString());
+      if (isConnectedToFirebase) {
+        set(ref(database, `/users/${currentUser}/xp`), xp);
+      }
+    }
+  }, [xp, currentUser]);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(`panini_${currentUser}_stats`, JSON.stringify(stats));
+      if (isConnectedToFirebase) {
+        set(ref(database, `/users/${currentUser}/stats`), stats);
+      }
+    }
+  }, [stats, currentUser]);
+
+  // Sync from Firebase on login/mount
+  useEffect(() => {
+    if (!currentUser || !isConnectedToFirebase) return;
+
+    const userRef = ref(database, `/users/${currentUser}`);
+    onValue(userRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        if (data.coins !== undefined) setCoins(data.coins);
+        if (data.collection) setCollection(data.collection);
+        if (data.squad) setSquad(data.squad);
+        if (data.quests) setQuests(data.quests);
+        if (data.level !== undefined) setLevel(data.level);
+        if (data.xp !== undefined) setXp(data.xp);
+        if (data.stats) setStats(data.stats);
+      } else {
+        // Initialize new user on Firebase Realtime Database
+        const starterCollection = playersData.filter(p => p.type === 'Base').slice(0, 11);
+        const initialData = {
+          username: currentUser,
+          coins: 200,
+          collection: starterCollection,
+          squad: starterCollection,
+          level: 1,
+          xp: 0,
+          stats: { played: 0, wins: 0, draws: 0, losses: 0 },
+          quests: [
+            { id: 'play1', title: 'Đá 1 trận với AI', target: 1, progress: 0, reward: 50, isCompleted: false, isClaimed: false },
+            { id: 'win1', title: 'Thắng 1 trận với AI', target: 1, progress: 0, reward: 100, isCompleted: false, isClaimed: false },
+            { id: 'collect20', title: 'Sưu tầm 20 thẻ khác nhau', target: 20, progress: 0, reward: 150, isCompleted: false, isClaimed: false }
+          ]
+        };
+        set(userRef, initialData);
+      }
+    }, { onlyOnce: true });
+  }, [currentUser, isConnectedToFirebase]);
+
+  // Gain XP function
+  const gainXp = (amount) => {
+    setXp(currentXp => {
+      let newXp = currentXp + amount;
+      let currentLevel = level;
+      let xpNeeded = currentLevel * 100;
+      let leveledUp = false;
+      
+      while (newXp >= xpNeeded) {
+        newXp -= xpNeeded;
+        currentLevel += 1;
+        xpNeeded = currentLevel * 100;
+        leveledUp = true;
+      }
+      
+      if (leveledUp) {
+        setLevel(currentLevel);
+        setCoins(c => c + 500); // 500 coins level-up reward
+        setShowLevelUpModal({
+          oldLevel: level,
+          newLevel: currentLevel,
+          reward: 500
+        });
+        playFx('winGame');
+        
+        setTimeout(() => {
+          confetti({
+            particleCount: 200,
+            spread: 100,
+            origin: { y: 0.5 },
+            colors: ['#3b82f6', '#10b981', '#fbbf24', '#ec4899']
+          });
+        }, 200);
+      }
+      
+      return newXp;
+    });
+  };
+
+  // Inspect User effect
+  useEffect(() => {
+    if (!inspectingUser || !isConnectedToFirebase) {
+      setInspectedUserData(null);
+      return;
+    }
+
+    setLoadingInspectedUser(true);
+    const targetUserRef = ref(database, `/users/${inspectingUser}`);
+    onValue(targetUserRef, (snapshot) => {
+      const data = snapshot.val();
+      setInspectedUserData(data);
+      setLoadingInspectedUser(false);
+    }, { onlyOnce: true });
+  }, [inspectingUser, isConnectedToFirebase]);
+
+  // Private Chats List effect
+  useEffect(() => {
+    if (!currentUser || !isConnectedToFirebase) return;
+
+    const myChatsRef = ref(database, `/users/${currentUser}/private_chats`);
+    const unsubscribeChats = onValue(myChatsRef, (snapshot) => {
+      const list = [];
+      snapshot.forEach((child) => {
+        list.push({
+          username: child.key,
+          lastTimestamp: child.val()
+        });
+      });
+      list.sort((a, b) => b.lastTimestamp - a.lastTimestamp);
+      setMyPrivateChats(list);
+    });
+
+    return () => unsubscribeChats();
+  }, [currentUser, isConnectedToFirebase]);
+
+  // Active Private Room Message Listener
+  useEffect(() => {
+    if (!currentUser || !activePrivatePartner || !isConnectedToFirebase) {
+      setPrivateMessages([]);
+      return;
+    }
+
+    const chatId = [currentUser, activePrivatePartner].sort().join('_');
+    const chatMessagesRef = ref(database, `/private_chats/${chatId}`);
+
+    const unsubscribeMsgs = onValue(chatMessagesRef, (snapshot) => {
+      const msgs = [];
+      snapshot.forEach((child) => {
+        msgs.push({
+          id: child.key,
+          ...child.val()
+        });
+      });
+      setPrivateMessages(msgs);
+    });
+
+    // Clear unread mark
+    const unreadRef = ref(database, `/users/${currentUser}/unread/${activePrivatePartner}`);
+    set(unreadRef, null);
+
+    return () => unsubscribeMsgs();
+  }, [currentUser, activePrivatePartner, isConnectedToFirebase]);
+
+  // Unread badge listener
+  useEffect(() => {
+    if (!currentUser || !isConnectedToFirebase) return;
+
+    const unreadRef = ref(database, `/users/${currentUser}/unread`);
+    const unsubscribeUnread = onValue(unreadRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      setUnreadPartners(data);
+    });
+
+    return () => unsubscribeUnread();
+  }, [currentUser, isConnectedToFirebase]);
+
+  const sendPrivateMessage = () => {
+    if (!privateChatInput.trim() || !currentUser || !activePrivatePartner || !isConnectedToFirebase) return;
+
+    const chatId = [currentUser, activePrivatePartner].sort().join('_');
+    const chatRef = ref(database, `/private_chats/${chatId}`);
+    
+    const timestamp = Date.now();
+    const newMsg = {
+      sender: currentUser,
+      text: privateChatInput.trim(),
+      timestamp: timestamp
+    };
+
+    push(chatRef, newMsg);
+
+    // Update active chats for both users
+    set(ref(database, `/users/${currentUser}/private_chats/${activePrivatePartner}`), timestamp);
+    set(ref(database, `/users/${activePrivatePartner}/private_chats/${currentUser}`), timestamp);
+
+    // Unread status for partner
+    set(ref(database, `/users/${activePrivatePartner}/unread/${currentUser}`), true);
+
+    setPrivateChatInput('');
+    playFx('click');
+  };
 
   // Real-time Chat, Presence, and PvP Invites States
   const [onlineUsers, setOnlineUsers] = useState([]);
@@ -283,7 +535,8 @@ export default function App() {
       status: 'online',
       lastActive: serverTimestamp(),
       peerId: peerInstanceId,
-      rating: squadRating
+      rating: squadRating,
+      level: level // Dynamic level synced!
     };
 
     const unsubscribeConnected = onValue(connectedRef, (snap) => {
@@ -335,7 +588,7 @@ export default function App() {
       unsubscribeInvites();
       set(userStatusDatabaseRef, null); // Clear presence on unmount
     };
-  }, [currentUser, squad]);
+  }, [currentUser, squad, level]);
 
   // Scroll chat to bottom when messages update
   useEffect(() => {
@@ -350,6 +603,7 @@ export default function App() {
     const chatRef = ref(database, '/chat');
     push(chatRef, {
       sender: currentUser,
+      senderLevel: level, // Sync sender's level in message history
       text: text.trim(),
       timestamp: serverTimestamp()
     });
@@ -465,6 +719,7 @@ export default function App() {
       return;
     }
     setCoins(c => c - 100);
+    gainXp(5); // Gaining 5 XP for card pack openings!
     setIsPackOpeningAnim(true);
     setTimeout(() => {
       const weakCards = playersData.filter(p => p.type === 'Base');
@@ -699,6 +954,18 @@ export default function App() {
          return q;
       }));
 
+      // Update XP & Stats!
+      if (isWin) {
+        gainXp(50);
+        setStats(s => ({ ...s, played: s.played + 1, wins: s.wins + 1 }));
+      } else if (isDraw) {
+        gainXp(25);
+        setStats(s => ({ ...s, played: s.played + 1, draws: s.draws + 1 }));
+      } else {
+        gainXp(10);
+        setStats(s => ({ ...s, played: s.played + 1, losses: s.losses + 1 }));
+      }
+
       setMatchPhase('gameOver');
     } else {
       setSelectedPlayerCard(null);
@@ -736,6 +1003,31 @@ export default function App() {
     setSelectedPlayerCard(null);
     setSelectedStat(null);
     setCurrentAiCard(null);
+  };
+
+  const [gameAlert, setGameAlert] = useState(null); // Custom in-game dialog alert: { title, message }
+  const showAlert = (title, message) => {
+    setGameAlert({ title, message });
+  };
+
+  const handlePvpEnd = (result) => {
+    if (result === 'win') {
+      gainXp(100);
+      setStats(s => ({ ...s, played: s.played + 1, wins: s.wins + 1 }));
+      showAlert("Chiến Thắng! 🏆", "Chúc mừng! Bạn giành chiến thắng PvP và nhận được 100 Xu + 100 XP.");
+    } else if (result === 'draw') {
+      setCoins(c => c + 30);
+      gainXp(40);
+      setStats(s => ({ ...s, played: s.played + 1, draws: s.draws + 1 }));
+      showAlert("Hòa Trận! 🤝", "Tỉ số cân bằng! Bạn nhận được 30 Xu và 40 XP.");
+    } else if (result === 'lose') {
+      setCoins(c => c + 10);
+      gainXp(20);
+      setStats(s => ({ ...s, played: s.played + 1, losses: s.losses + 1 }));
+      showAlert("Thất Bại! 😤", "Đừng nản lòng! Bạn vẫn nhận được 10 Xu và 20 XP giữ tinh thần thi đấu.");
+    }
+    setGameState('lobby');
+    setActivePvpTarget(null);
   };
 
   return (
@@ -893,10 +1185,10 @@ export default function App() {
                       
                       <Trophy size={150} className="text-yellow-400 trophy-hero mb-4 drop-shadow-[0_0_40px_rgba(251,191,36,0.8)]" />
                       
-                      <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-blue-100 to-blue-400 drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] mb-2 uppercase text-center leading-none">
+                      <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-blue-100 to-blue-400 drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] mb-2 uppercase text-center leading-none pr-4">
                         World Cup
                       </h1>
-                      <h2 className="text-3xl md:text-5xl font-black italic tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 to-cyan-500 drop-shadow-[0_5px_15px_rgba(0,0,0,0.9)] mb-8 uppercase text-center">
+                      <h2 className="text-3xl md:text-5xl font-black italic tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 to-cyan-500 drop-shadow-[0_5px_15px_rgba(0,0,0,0.9)] mb-8 uppercase text-center pr-2">
                         2026 Ultimate
                       </h2>
                       
@@ -968,24 +1260,40 @@ export default function App() {
                       {/* Header Tabs */}
                       <div className="flex border-b border-white/10 bg-black/40">
                         <button 
-                          className={`flex-1 py-4 text-xs sm:text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 border-b-2 transition-all ${
+                          className={`flex-1 py-3.5 text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center justify-center gap-1.5 border-b-2 transition-all ${
                             chatTab === 'chat' 
                               ? 'border-fuchsia-500 text-fuchsia-400 bg-white/5' 
                               : 'border-transparent text-gray-400 hover:text-white'
                           }`}
                           onClick={() => { playFx('click'); setChatTab('chat'); }}
                         >
-                          <MessageSquare size={16} /> Phòng Chat
+                          <MessageSquare size={14} /> Sảnh Chat
                         </button>
                         <button 
-                          className={`flex-1 py-4 text-xs sm:text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 border-b-2 transition-all relative ${
+                          className={`flex-1 py-3.5 text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center justify-center gap-1.5 border-b-2 transition-all relative ${
+                            chatTab === 'private' 
+                              ? 'border-violet-500 text-violet-400 bg-white/5' 
+                              : 'border-transparent text-gray-400 hover:text-white'
+                          }`}
+                          onClick={() => { playFx('click'); setChatTab('private'); }}
+                        >
+                          <Mail size={14} /> Tin Nhắn
+                          {Object.keys(unreadPartners).length > 0 && (
+                            <span className="absolute top-2.5 right-4 flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                            </span>
+                          )}
+                        </button>
+                        <button 
+                          className={`flex-1 py-3.5 text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center justify-center gap-1.5 border-b-2 transition-all relative ${
                             chatTab === 'online' 
                               ? 'border-cyan-500 text-cyan-400 bg-white/5' 
                               : 'border-transparent text-gray-400 hover:text-white'
                           }`}
                           onClick={() => { playFx('click'); setChatTab('online'); }}
                         >
-                          <Users size={16} /> Trực Tuyến
+                          <Users size={14} /> Online
                           {onlineUsers.length > 0 && (
                             <span className="absolute top-2.5 right-6 flex h-2.5 w-2.5">
                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
@@ -1010,7 +1318,7 @@ export default function App() {
                                 </div>
                               )}
                               {chatMessages.length === 0 ? (
-                                <div className="flex-1 flex flex-col items-center justify-center text-gray-500 text-xs text-center gap-2 italic py-8">
+                                <div className="flex-1 flex flex-col items-center justify-center text-gray-500 text-xs text-center gap-2 py-8 italic">
                                    Hãy là người đầu tiên gửi tin nhắn! 💬
                                 </div>
                               ) : (
@@ -1024,10 +1332,18 @@ export default function App() {
                                         isMe ? 'self-end items-end' : 'self-start items-start'
                                       }`}
                                     >
-                                      <span className={`text-[9px] font-black mb-0.5 px-1 ${
-                                        isSystem ? 'text-amber-400' : isMe ? 'text-fuchsia-400' : 'text-blue-400'
-                                      }`}>
-                                        {msg.sender}
+                                      <span 
+                                        className={`text-[9px] font-black mb-0.5 px-1 ${
+                                          isSystem ? 'text-amber-400' : isMe ? 'text-fuchsia-400' : 'text-blue-400'
+                                        } ${(!isSystem && !isMe) ? 'cursor-pointer hover:underline hover:text-cyan-400' : ''}`}
+                                        onClick={() => {
+                                          if (!isSystem && !isMe) {
+                                            playFx('click');
+                                            setInspectingUser(msg.sender);
+                                          }
+                                        }}
+                                      >
+                                        {isSystem ? '' : `Lv. ${msg.senderLevel || 1} `}{msg.sender}
                                       </span>
                                       <div className={`p-2.5 rounded-2xl text-xs font-semibold leading-relaxed border ${
                                         isSystem 
@@ -1074,11 +1390,124 @@ export default function App() {
                           </div>
                         )}
 
-                        {/* TAB 2: Danh sách Online */}
+                        {/* TAB 2: Tin Nhắn Riêng (DMs) */}
+                        {chatTab === 'private' && (
+                          <div className="flex-1 flex flex-col overflow-hidden p-3 sm:p-4 animate-fade-in">
+                            {activePrivatePartner ? (
+                              <div className="flex-1 flex flex-col overflow-hidden">
+                                <div className="flex items-center justify-between border-b border-white/5 pb-2 mb-2">
+                                  <button 
+                                    className="flex items-center gap-0.5 text-[10px] font-bold text-violet-400 hover:text-violet-300 cursor-pointer"
+                                    onClick={() => setActivePrivatePartner(null)}
+                                  >
+                                    <ChevronLeft size={14} /> Trở lại
+                                  </button>
+                                  <span className="font-extrabold text-[11px] text-white truncate max-w-[120px]">Chat: {activePrivatePartner}</span>
+                                  <button 
+                                    className="text-[9px] px-2 py-0.5 bg-cyan-900/30 text-cyan-400 border border-cyan-500/20 rounded hover:bg-cyan-900/50 font-bold cursor-pointer"
+                                    onClick={() => setInspectingUser(activePrivatePartner)}
+                                  >
+                                    Hồ sơ
+                                  </button>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto flex flex-col gap-2 mb-3 pr-1 scroll-smooth hide-scrollbar">
+                                  {privateMessages.length === 0 ? (
+                                    <div className="flex-1 flex flex-col items-center justify-center text-gray-500 text-xs text-center py-8 italic">
+                                      Hãy gửi tin nhắn riêng cho {activePrivatePartner}! ✉️
+                                    </div>
+                                  ) : (
+                                    privateMessages.map((msg) => {
+                                      const isMe = msg.sender === currentUser;
+                                      return (
+                                        <div 
+                                          key={msg.id} 
+                                          className={`flex flex-col max-w-[85%] ${
+                                            isMe ? 'self-end items-end' : 'self-start items-start'
+                                          }`}
+                                        >
+                                          <div className={`p-2.5 rounded-2xl text-xs font-semibold leading-relaxed border ${
+                                            isMe 
+                                              ? 'bg-violet-950/20 border-violet-500/25 text-violet-100 rounded-tr-none' 
+                                              : 'bg-slate-900/60 border-white/10 text-gray-100 rounded-tl-none'
+                                          }`}>
+                                            {msg.text}
+                                          </div>
+                                        </div>
+                                      );
+                                    })
+                                  )}
+                                </div>
+
+                                <form 
+                                  onSubmit={(e) => {
+                                    e.preventDefault();
+                                    sendPrivateMessage();
+                                  }}
+                                  className="flex gap-2 bg-black/40 p-1.5 rounded-2xl border border-white/10"
+                                >
+                                  <input 
+                                    type="text" 
+                                    className="flex-1 bg-transparent border-0 focus:outline-none focus:ring-0 text-xs px-3 text-white"
+                                    placeholder={`Nhắn cho ${activePrivatePartner}...`}
+                                    value={privateChatInput}
+                                    onChange={(e) => setPrivateChatInput(e.target.value)}
+                                  />
+                                  <button 
+                                    type="submit" 
+                                    className="w-8 h-8 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white flex items-center justify-center transition-all cursor-pointer shrink-0"
+                                  >
+                                    <Send size={14} fill="currentColor" />
+                                  </button>
+                                </form>
+                              </div>
+                            ) : (
+                              <div className="flex-1 overflow-y-auto flex flex-col gap-2 hide-scrollbar">
+                                <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-white/5 pb-2">
+                                  Hộp thư riêng
+                                </div>
+                                {myPrivateChats.length === 0 ? (
+                                  <div className="flex-1 flex flex-col items-center justify-center text-gray-500 text-xs text-center py-12 italic">
+                                    Chưa có cuộc trò chuyện nào.
+                                    <br />
+                                    <span className="text-[9px] text-gray-600 mt-2">Mẹo: Click vào thành viên trong danh sách Online và chọn "Nhắn Tin"!</span>
+                                  </div>
+                                ) : (
+                                  myPrivateChats.map((chat) => {
+                                    const hasUnread = unreadPartners[chat.username] === true;
+                                    const isPartnerOnline = onlineUsers.some(o => o.username === chat.username);
+
+                                    return (
+                                      <div 
+                                        key={chat.username}
+                                        className="p-3 bg-black/30 rounded-2xl border border-white/5 flex items-center justify-between hover:border-violet-500/30 hover:bg-black/50 transition-all cursor-pointer"
+                                        onClick={() => {
+                                          playFx('click');
+                                          setActivePrivatePartner(chat.username);
+                                        }}
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${isPartnerOnline ? 'bg-green-500' : 'bg-gray-600'}`}></span>
+                                          <span className="font-extrabold text-xs text-white">{chat.username}</span>
+                                          {hasUnread && (
+                                            <span className="bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black animate-pulse">MỚI</span>
+                                          )}
+                                        </div>
+                                        <ChevronRight size={14} className="text-gray-500" />
+                                      </div>
+                                    );
+                                  })
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* TAB 3: Danh sách Online */}
                         {chatTab === 'online' && (
                           <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 hide-scrollbar animate-fade-in">
                             <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-white/5 pb-2 flex justify-between items-center">
-                              <span>Người Chơi Hoạt Động ({onlineUsers.length})</span>
+                              <span>HLV Trực Tuyến ({onlineUsers.length})</span>
                               <span className="flex items-center gap-1 text-[8px] bg-green-500/20 text-green-400 border border-green-500/30 px-2 py-0.5 rounded-full uppercase tracking-wider font-extrabold animate-pulse">Lobby Trực Tuyến</span>
                             </div>
 
@@ -1086,7 +1515,7 @@ export default function App() {
                               <div className="flex-1 flex flex-col items-center justify-center text-gray-500 text-xs text-center gap-3 py-12 italic leading-relaxed">
                                  ⏳ Đang chờ người chơi khác...
                                  <br />
-                                 <span className="text-[10px] text-gray-600">Mẹo: Mở game ở tab ẩn danh hoặc thiết bị khác để thử thách đấu chéo!</span>
+                                 <span className="text-[10px] text-gray-600 font-medium">Mẹo: Mở game ở tab ẩn danh hoặc thiết bị khác để thử thách đấu chéo!</span>
                               </div>
                             ) : (
                               onlineUsers.map((user) => (
@@ -1097,7 +1526,12 @@ export default function App() {
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-0.5">
                                       <span className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)] shrink-0 animate-pulse"></span>
-                                      <span className="font-extrabold text-xs text-white truncate">{user.username}</span>
+                                      <span 
+                                        className="font-extrabold text-xs text-white truncate hover:underline hover:text-cyan-400 cursor-pointer"
+                                        onClick={() => { playFx('click'); setInspectingUser(user.username); }}
+                                      >
+                                        Lv. {user.level || 1} {user.username}
+                                      </span>
                                       <span className="text-[9px] px-1.5 py-0.5 bg-cyan-900/30 text-cyan-400 border border-cyan-500/20 font-black rounded uppercase tracking-wider shrink-0">{user.rating} OVR</span>
                                     </div>
                                     <p className="text-[9px] text-gray-500 font-mono truncate">ID: {user.peerId}</p>
@@ -1179,10 +1613,9 @@ export default function App() {
           currentUser={currentUser} 
           initialJoinId={activePvpTarget}
           CardComponent={Card}
-          onExit={() => setGameState('lobby')}
+          onExit={handlePvpEnd}
           onWin={() => {
             setCoins(c => c + 100);
-            alert("Bạn nhận được 100 Xu vì giành chiến thắng PVP!");
           }}
         />
       )}
@@ -1606,6 +2039,210 @@ export default function App() {
       )}
           </div>
         </>
+      )}
+
+      {/* ================= MODALS & CELEBRATIONS ================= */}
+
+      {/* 1. INSPECT PROFILE MODAL */}
+      {inspectingUser && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
+          <div className="glass-panel w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[2rem] border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col md:flex-row relative bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/80 p-6 md:p-8 gap-6 hide-scrollbar">
+            
+            <button 
+              className="absolute top-4 right-4 text-gray-400 hover:text-white bg-black/40 hover:bg-black/80 p-2 rounded-full w-8 h-8 flex items-center justify-center transition-colors z-[160] cursor-pointer"
+              onClick={() => { playFx('click'); setInspectingUser(null); setInspectedUserData(null); }}
+            >
+              ✕
+            </button>
+
+            {loadingInspectedUser || !inspectedUserData ? (
+              <div className="flex-1 flex flex-col items-center justify-center py-24 gap-4 w-full">
+                <div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+                <div className="text-cyan-400 font-extrabold tracking-widest text-xs uppercase animate-pulse">Đang tải hồ sơ HLV...</div>
+              </div>
+            ) : (
+              <>
+                {/* Left Column: Stats & Actions */}
+                <div className="w-full md:w-80 shrink-0 flex flex-col gap-4 justify-between">
+                  <div className="flex flex-col items-center text-center">
+                    {/* Level Badge */}
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 flex items-center justify-center border-2 border-white/20 shadow-lg shadow-purple-900/50 mb-3 relative animate-pulse-subtle">
+                      <span className="text-xl font-black text-white">Lv.{inspectedUserData.level || 1}</span>
+                    </div>
+
+                    <h2 className="text-2xl font-black text-white mb-1 uppercase tracking-wider">{inspectedUserData.username}</h2>
+                    <span className="text-xs px-3 py-1 bg-cyan-900/40 text-cyan-400 border border-cyan-500/20 font-black rounded-full uppercase tracking-widest mb-4">
+                      {inspectedUserData.squad ? Math.round(inspectedUserData.squad.reduce((acc, card) => acc + Math.max(card.stats.attack, card.stats.defense, card.stats.control), 0) / 11) : 0} OVR
+                    </span>
+                    
+                    {/* XP Progress Bar */}
+                    <div className="w-full bg-black/60 rounded-full h-2.5 border border-white/5 overflow-hidden mb-6 relative">
+                      <div 
+                        className="bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-500 h-full rounded-full transition-all duration-1000"
+                        style={{ width: `${Math.min(100, ((inspectedUserData.xp || 0) / ((inspectedUserData.level || 1) * 100)) * 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  {/* Battle Stats Grid */}
+                  <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex flex-col gap-3">
+                    <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-white/5 pb-2 text-center">Thống Kê Trận Đấu</div>
+                    
+                    <div className="grid grid-cols-2 gap-3 text-center">
+                      <div className="bg-slate-900/50 border border-white/5 p-2 rounded-xl">
+                        <div className="text-[9px] text-gray-400 font-bold uppercase">Trận đã đấu</div>
+                        <div className="text-lg font-black text-white">{inspectedUserData.stats?.played || 0}</div>
+                      </div>
+                      <div className="bg-green-950/20 border border-green-500/10 p-2 rounded-xl">
+                        <div className="text-[9px] text-green-400 font-bold uppercase">Chiến Thắng</div>
+                        <div className="text-lg font-black text-green-400">{inspectedUserData.stats?.wins || 0}</div>
+                      </div>
+                      <div className="bg-yellow-950/20 border border-yellow-500/10 p-2 rounded-xl">
+                        <div className="text-[9px] text-yellow-400 font-bold uppercase">Hòa</div>
+                        <div className="text-lg font-black text-yellow-400">{inspectedUserData.stats?.draws || 0}</div>
+                      </div>
+                      <div className="bg-red-950/20 border border-red-500/10 p-2 rounded-xl">
+                        <div className="text-[9px] text-red-400 font-bold uppercase">Thất bại</div>
+                        <div className="text-lg font-black text-red-400">{inspectedUserData.stats?.losses || 0}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Interactivity Buttons */}
+                  <div className="flex flex-col gap-2 mt-4">
+                    <button 
+                      className="btn !bg-violet-600 hover:!bg-violet-500 w-full flex items-center justify-center gap-2 !py-3 font-bold text-sm tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-violet-900/30"
+                      onClick={() => {
+                        playFx('click');
+                        setActivePrivatePartner(inspectedUserData.username);
+                        setChatTab('private');
+                        setInspectingUser(null);
+                      }}
+                    >
+                      <MessageSquare size={16} /> Nhắn Tin Riêng
+                    </button>
+                    
+                    <button 
+                      className={`btn w-full flex items-center justify-center gap-2 !py-3 font-bold text-sm tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg ${
+                        squad.length < 11
+                          ? 'opacity-40 !bg-gray-700 cursor-not-allowed text-gray-400' 
+                          : 'bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white shadow-red-900/30'
+                      }`}
+                      disabled={squad.length < 11}
+                      onClick={() => {
+                        if (squad.length === 11) {
+                          const activeObj = onlineUsers.find(o => o.username === inspectedUserData.username);
+                          if (activeObj) {
+                            sendChallengeInvite(activeObj.username, activeObj.peerId);
+                            setInspectingUser(null);
+                          } else {
+                            showAlert("Ngoại Tuyến ⚪", "HLV này đã ngoại tuyến hoặc không khả dụng để thách đấu pvp trực tiếp.");
+                          }
+                        }
+                      }}
+                    >
+                      <Swords size={16} /> Gửi Lời Thách Đấu
+                    </button>
+                  </div>
+                </div>
+
+                {/* Right Column: Squad Sân Cỏ 3D */}
+                <div className="flex-1 flex flex-col relative bg-black/30 border border-white/5 p-4 rounded-3xl overflow-hidden min-h-[420px] md:min-h-0">
+                  <h3 className="text-xs font-bold text-cyan-400 tracking-widest uppercase mb-1 text-center w-full z-20">Đội Hình Ra Sân (Active Lineup)</h3>
+                  
+                  <div className="pitch-wrapper flex-1 mt-1 overflow-hidden scale-90 sm:scale-100">
+                    <div className="pitch-container !max-w-[420px] !scale-95 sm:!scale-100">
+                      <div className="pitch-lines"></div>
+                      <div className="penalty-box-top"></div>
+                      <div className="penalty-box-bottom"></div>
+                      
+                      {inspectedUserData.squad ? (
+                        inspectedUserData.squad.map((player, idx) => {
+                          const pos = PITCH_POSITIONS[idx] || { top: '50%', left: '50%' };
+                          return (
+                            <div 
+                              key={player.id || idx}
+                              className="pitch-player-slot scale-[0.8]"
+                              style={{ top: pos.top, left: pos.left, zIndex: Math.round(parseFloat(pos.top)) }}
+                            >
+                              <Card player={player} hideStats={false} />
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-400">Không có thông tin đội hình.</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 2. LEVEL UP CELEBRATION MODAL */}
+      {showLevelUpModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-fade-in">
+          <div className="glass-panel p-8 sm:p-12 rounded-[2.5rem] text-center w-full max-w-md bg-gradient-to-t from-yellow-950/30 via-slate-900 to-slate-950 border border-yellow-500/30 shadow-[0_0_80px_rgba(251,191,36,0.3)] animate-scale-in flex flex-col items-center">
+            <div className="text-7xl mb-4 animate-bounce-subtle">🏆</div>
+            
+            <h2 className="text-xs sm:text-sm font-black text-yellow-500 uppercase tracking-widest mb-2">Đạt Cấp Độ Mới</h2>
+            <h3 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-600 mb-6 drop-shadow-md">
+              HLV LÊN CẤP!
+            </h3>
+
+            <div className="flex items-center gap-6 mb-8">
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] text-gray-500 font-bold uppercase">Cấp cũ</span>
+                <span className="text-2xl font-black text-gray-400">{showLevelUpModal.oldLevel}</span>
+              </div>
+              <div className="text-2xl text-yellow-500 font-black">➔</div>
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] text-amber-400 font-bold uppercase">Cấp mới</span>
+                <span className="text-4xl font-black text-yellow-400 animate-scale-in">{showLevelUpModal.newLevel}</span>
+              </div>
+            </div>
+
+            <div className="bg-yellow-950/40 border border-yellow-500/30 px-6 py-4 rounded-2xl mb-8 flex items-center justify-center gap-3 w-full shadow-[0_0_20px_rgba(251,191,36,0.1)]">
+              <Coins className="text-yellow-400" size={24} />
+              <div className="text-left">
+                <div className="text-[9px] text-yellow-500 font-bold uppercase tracking-wider">Phần thưởng lên cấp</div>
+                <div className="text-lg font-black text-yellow-400">+{showLevelUpModal.reward} Xu</div>
+              </div>
+            </div>
+
+            <button 
+              className="btn w-full !bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-black font-black py-4 rounded-xl shadow-lg active:scale-95 transition-all cursor-pointer"
+              onClick={() => { playFx('click'); setShowLevelUpModal(null); }}
+            >
+              🤝 Tuyệt Vời! Nhận Xu
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 3. IN-GAME CUSTOM ALERT MODAL */}
+      {gameAlert && (
+        <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="glass-panel p-6 sm:p-8 rounded-[2rem] max-w-sm w-full text-center flex flex-col items-center bg-gradient-to-t from-slate-900 via-slate-950 to-slate-900 border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)] relative animate-scale-in">
+            <h3 className="text-base font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 mb-4 uppercase tracking-widest">
+              {gameAlert.title || 'Thông Báo'}
+            </h3>
+            <p className="text-xs sm:text-sm font-semibold text-gray-200 mb-6 leading-relaxed">
+              {gameAlert.message}
+            </p>
+            <button 
+              className="btn w-full !bg-cyan-600 hover:!bg-cyan-500 text-white font-bold py-3 rounded-xl transition-all active:scale-[0.98] cursor-pointer"
+              onClick={() => {
+                playFx('click');
+                setGameAlert(null);
+              }}
+            >
+              Đồng Ý
+            </button>
+          </div>
+        </div>
       )}
     </>
   );
