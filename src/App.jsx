@@ -231,6 +231,13 @@ export const Card = ({ player, onClick, isSelectable, isSelected, hideStats }) =
   );
 };
 
+const BANNERS = [
+  "/wc2026_kids_banner.png",
+  "/wc2026_banner_2.png",
+  "/wc2026_banner_3.png",
+  "/wc2026_banner_4.png"
+];
+
 // --- Main App Component ---
 export default function App() {
   const currentUser = localStorage.getItem('panini_currentUser');
@@ -279,6 +286,17 @@ export default function App() {
   const [activePvpTarget, setActivePvpTarget] = useState(pvpTarget);
   const [showPvpJoinModal, setShowPvpJoinModal] = useState(false);
   const [pvpJoinInput, setPvpJoinInput] = useState('');
+
+  const [activeBannerIdx, setActiveBannerIdx] = useState(() => {
+    return Math.floor(Math.random() * BANNERS.length);
+  });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveBannerIdx(prev => (prev + 1) % BANNERS.length);
+    }, 7000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Auth State — unified PIN system (no email/complex password)
   const [authMode, setAuthMode] = useState('play'); // 'play' only (unified)
@@ -1741,7 +1759,12 @@ export default function App() {
             {/* ── LEFT: Banner full bleed ── */}
             <div className="landing-banner-col">
               <div className="landing-banner-img">
-                <img src="/wc2026_kids_banner.png" alt="World Cup 2026 Banner" />
+                <img 
+                  key={activeBannerIdx}
+                  src={BANNERS[activeBannerIdx]} 
+                  alt="World Cup 2026 Banner" 
+                  className="banner-fade-in"
+                />
               </div>
 
               {/* Hero text overlay */}
