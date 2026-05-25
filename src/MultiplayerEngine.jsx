@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Peer } from 'peerjs';
-import { Swords, Shield, Copy, ChevronLeft, Wifi, User } from 'lucide-react';
+import { Shield, Swords, Wifi, Zap, Trophy, History, Copy, ChevronLeft, User } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import confetti from 'canvas-confetti';
 import { ENV_WEATHER, ENV_TIME, FORM_STATES, generateCardForm } from './App';
+import { MatchHistoryModal } from './MatchHistoryModal';
 
 const playFx = (type) => {
   try {
@@ -127,6 +128,8 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
   const [roundCount, setRoundCount] = useState(0); // Kept in state specifically for render-time safety
   const [copiedCode, setCopiedCode] = useState(false);
   const [pvpAlert, setPvpAlert] = useState(null); // Custom in-game dialog alert: { title, message, onClose }
+  const [matchHistory, setMatchHistory] = useState([]);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [matchEnvironment, setMatchEnvironment] = useState({ weather: ENV_WEATHER[4], time: ENV_TIME[1] });
   const [isReconnecting, setIsReconnecting] = useState(false);
 
@@ -276,6 +279,17 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     }
 
     setRoundWinner(winner);
+    setMatchHistory(prev => [...prev, {
+      myStat: currentStat,
+      myCardName: myCard.name,
+      myBonusDetails: bonusPart(myBonus, attr1.emoji, myLvlBonus, formBonus1, formResult1.state),
+      myFinalVal: myFinal,
+      opStat: currentStat,
+      opCardName: opCard.name,
+      opBonusDetails: bonusPart(opBonus, attr2.emoji, opLvlBonus, formBonus2, formResult2.state),
+      opFinalVal: opFinal,
+      result: winner === 'me' ? 'win' : winner === 'opponent' ? 'loss' : 'draw'
+    }]);
     updatePhase('result');
     roundCountRef.current += 1;
     setRoundCount(prev => prev + 1);
@@ -777,6 +791,9 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
             </h2>
             <p className="text-xl mb-8 text-gray-300">Tỉ số: <span className="font-black text-white text-2xl">{myScore} – {opponentScore}</span></p>
             <div className="flex flex-col gap-3">
+              <button className="btn w-full flex items-center justify-center gap-2 !bg-indigo-600 hover:!bg-indigo-500 !py-4 active:scale-95 transition-transform" onClick={() => setShowHistoryModal(true)}>
+                <History size={18} /> Xem Lại Diễn Biến
+              </button>
               <button className="btn !bg-gray-700 w-full !py-4 active:scale-95 transition-transform" onClick={() => onExit(myScore === opponentScore ? 'draw' : 'lose')}>Thoát</button>
               {myScore > opponentScore && (
                 <button className="btn !bg-yellow-500 text-black w-full !py-4 font-black text-lg shadow-lg shadow-yellow-500/20 active:scale-95 transition-transform" onClick={() => { onWin(); onExit('win'); }}>
@@ -785,6 +802,12 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
               )}
             </div>
           </div>
+          {showHistoryModal && (
+            <MatchHistoryModal 
+              history={matchHistory} 
+              onClose={() => setShowHistoryModal(false)} 
+            />
+          )}
         </div>
       ) : (
         <div className="flex-1 flex flex-col overflow-hidden">

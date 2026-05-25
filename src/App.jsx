@@ -1,7 +1,8 @@
 import React, { useState, useEffect, Suspense } from 'react';
-import { PackageOpen, Users, Swords, ChevronRight, CheckCircle2, Lock, Coins, Sparkles, Play, Trophy, Shield, Target, Wifi, User, ChevronLeft, Send, MessageSquare, Mail } from 'lucide-react';
+import { PackageOpen, Users, Swords, ChevronRight, CheckCircle2, Lock, Coins, Sparkles, Play, Trophy, Shield, Target, Wifi, User, ChevronLeft, Send, MessageSquare, Mail, History } from 'lucide-react';
 import playersData from './players.json';
 const MultiplayerEngine = React.lazy(() => import('./MultiplayerEngine'));
+import { MatchHistoryModal } from './MatchHistoryModal';
 import { database, isConnectedToFirebase } from './firebase';
 import { ref, set, push, onValue, onDisconnect, serverTimestamp, get, update } from 'firebase/database';
 
@@ -1384,6 +1385,8 @@ export default function App() {
   const [aiHand, setAiHand] = useState([]);
   const [matchScore, setMatchScore] = useState({ player: 0, ai: 0 });
   const [matchLogs, setMatchLogs] = useState([]);
+  const [matchHistory, setMatchHistory] = useState([]);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   
   // Current Round State
   const [selectedPlayerCard, setSelectedPlayerCard] = useState(null);
@@ -1886,6 +1889,7 @@ export default function App() {
     setAiHand(generateAITeam(difficulty));
     setMatchScore({ player: 0, ai: 0 });
     setMatchLogs([]);
+    setMatchHistory([]);
     setPlayedCardIds([]);
     setMatchPhase('playing');
     setSelectedPlayerCard(null);
@@ -2031,7 +2035,20 @@ export default function App() {
     }
     setMatchScore({ player: pScore, ai: aScore });
     setRoundResultMsg(msg);
-    setMatchLogs([...matchLogs, `Lượt ${playedCardIds.length + 1}: ${selectedPlayerCard.name} (${stat.toUpperCase()}${bonusPart(bonus1, attrBonus1, attr1.emoji, lvlBonus1, formBonus1, formResult1.state)}) vs ${aiCard.name} (${stat2Name.toUpperCase()}${bonusPart(bonus2, attrBonus2, attr2.emoji, lvlBonus2, formBonus2, formResult2.state)}) -> ${msg}`]);
+    const myBonusDetails = bonusPart(bonus1, attrBonus1, attr1.emoji, lvlBonus1, formBonus1, formResult1.state);
+    const opBonusDetails = bonusPart(bonus2, attrBonus2, attr2.emoji, lvlBonus2, formBonus2, formResult2.state);
+    setMatchLogs([...matchLogs, `Lượt ${playedCardIds.length + 1}: ${selectedPlayerCard.name} (${stat.toUpperCase()}${myBonusDetails}) vs ${aiCard.name} (${stat2Name.toUpperCase()}${opBonusDetails}) -> ${msg}`]);
+    setMatchHistory([...matchHistory, {
+      myStat: stat,
+      myCardName: selectedPlayerCard.name,
+      myBonusDetails,
+      myFinalVal: v1,
+      opStat: stat2Name,
+      opCardName: aiCard.name,
+      opBonusDetails,
+      opFinalVal: v2,
+      result: v1 > v2 ? 'win' : v1 < v2 ? 'loss' : 'draw'
+    }]);
     setMatchPhase('roundResult');
 
     // Remove cards from hands
@@ -4483,9 +4500,22 @@ export default function App() {
                     <span className="text-2xl font-bold text-yellow-400">+{lastReward} Xu</span>
                   </div>
                 )}
-                <button className="btn w-full" onClick={returnToLobby}>Trở Về Sảnh Chính</button>
+                
+                <div className="flex flex-col gap-3">
+                  <button className="btn w-full flex items-center justify-center gap-2 !bg-indigo-600 hover:!bg-indigo-500" onClick={() => setShowHistoryModal(true)}>
+                    <History size={18} /> Xem Lại Diễn Biến Trận Đấu
+                  </button>
+                  <button className="btn w-full" onClick={returnToLobby}>Trở Về Sảnh Chính</button>
+                </div>
               </div>
             </div>
+          )}
+
+          {showHistoryModal && (
+            <MatchHistoryModal 
+              history={matchHistory} 
+              onClose={() => setShowHistoryModal(false)} 
+            />
           )}
 
           {(matchPhase === 'playing' || matchPhase === 'roundResult') && (
