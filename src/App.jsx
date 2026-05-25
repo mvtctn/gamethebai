@@ -1722,7 +1722,7 @@ export default function App() {
       gainXp(50);
       setStats(s => ({ ...s, played: s.played + 1, draws: s.draws + 1 }));
       showAlert("🤝 Hòa Trận PvP!", "Cuộc chiến ngang tài ngang sức! Nhận: +40 Xu & +50 XP.");
-    } else {
+    } else if (result === 'lose') {
       setCoins(c => c + 25);
       gainXp(30);
       setStats(s => ({ ...s, played: s.played + 1, losses: s.losses + 1 }));
