@@ -1925,8 +1925,206 @@ export default function App() {
 
           </div>
         </div>
-      )}
+      )}\n\n      {/* ═══ TRANG HƯỚNG DẪN CHƠI — hiển thị cho mọi trạng thái ═══ */}
+      {gameState === 'howToPlay' && (
+        <div className="how-to-play-wrapper" style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}>
+          <div className="htp-content">
 
+            {/* Back button */}
+            <button
+              className="htp-back-btn"
+              onClick={() => setGameState(currentUser ? 'lobby' : 'lobby')}
+            >
+              ← Quay Lại
+            </button>
+
+            {/* Header */}
+            <div className="htp-header">
+              <div className="htp-eyebrow">⚽ World Cup 2026 · Ultimate Card Champions</div>
+              <h1 className="htp-title">Hướng Dẫn Chơi</h1>
+              <p className="htp-desc">
+                Sưu tầm thẻ cầu thủ, xây dựng đội hình mơ ước và chinh phục mọi đối thủ trong
+                trò chơi thẻ bài bóng đá hấp dẫn nhất mùa World Cup 2026!
+              </p>
+            </div>
+
+            {/* Steps */}
+            <div className="htp-steps">
+
+              <div className="htp-step-card">
+                <div className="htp-step-num">🎁</div>
+                <div className="htp-step-body">
+                  <h3>Bước 1 — Đăng Ký & Nhận Quà</h3>
+                  <p>
+                    Tạo tài khoản miễn phí bằng tên HLV và mã PIN tuỳ chọn. Mỗi tài khoản mới
+                    nhận ngay <strong style={{color:'#c4f000'}}>200 Xu + 3 Gói Thẻ Miễn Phí</strong> để bắt đầu hành trình!
+                  </p>
+                  <span className="htp-tip">💡 Đặt PIN để đăng nhập lại trên mọi thiết bị</span>
+                </div>
+              </div>
+
+              <div className="htp-step-card">
+                <div className="htp-step-num">📦</div>
+                <div className="htp-step-body">
+                  <h3>Bước 2 — Mở Gói Thẻ Cầu Thủ</h3>
+                  <p>
+                    Dùng Xu mở các gói thẻ để sưu tập cầu thủ. Có 4 loại gói:
+                    <strong style={{color:'#38bdf8'}}> Tiêu Chuẩn (100 xu), Cao Cấp (300 xu),
+                    Siêu Cấp (600 xu), Tối Thượng (1200 xu)</strong>.
+                    Gói càng xịn, cơ hội nhận thẻ hiếm càng cao!
+                  </p>
+                  <span className="htp-tip">🎰 Hệ thống pity đảm bảo sau 10 gói có thẻ siêu sao</span>
+                </div>
+              </div>
+
+              <div className="htp-step-card">
+                <div className="htp-step-num">⚽</div>
+                <div className="htp-step-body">
+                  <h3>Bước 3 — Xây Dựng Đội Hình 11 Người</h3>
+                  <p>
+                    Vào mục <strong style={{color:'#c4f000'}}>Đội Hình</strong> để chọn 11 cầu thủ
+                    xuất sắc nhất từ bộ sưu tập. Mỗi thẻ có 3 chỉ số:
+                    <strong style={{color:'#f472b6'}}> ATK (Tấn Công), CTRL (Kiểm Soát), DEF (Phòng Thủ)</strong>.
+                    Số cao nhất trong 3 chỉ số là OVR — chọn đội hình có OVR tổng cao nhất!
+                  </p>
+                  <span className="htp-tip">🏆 Thẻ hiếm có chỉ số cao hơn thẻ thường nhiều</span>
+                </div>
+              </div>
+
+              <div className="htp-step-card">
+                <div className="htp-step-num">🤖</div>
+                <div className="htp-step-body">
+                  <h3>Bước 4 — Cách Đấu Thẻ</h3>
+                  <p>
+                    Mỗi lượt bạn chọn 1 thẻ cầu thủ và 1 chỉ số (ATK/CTRL/DEF) để so sánh với thẻ của đối thủ.
+                    Chỉ số nào cao hơn sẽ <strong style={{color:'#4ade80'}}>THẮNG</strong> lượt đó.
+                    Đội thắng nhiều lượt nhất trong 11 thẻ giành chiến thắng!
+                  </p>
+                  <span className="htp-tip">🎯 Bonus: Thẻ Edition đặc biệt có thêm điểm cộng khi so sánh</span>
+                </div>
+              </div>
+
+              <div className="htp-step-card">
+                <div className="htp-step-num">🌐</div>
+                <div className="htp-step-body">
+                  <h3>Bước 5 — PvP Online & Tích Luỹ</h3>
+                  <p>
+                    Thách đấu bạn bè qua <strong style={{color:'#38bdf8'}}>PvP Online</strong> bằng cách chia sẻ mã phòng.
+                    Mọi trận đều nhận Xu và XP:
+                    <strong style={{color:'#c4f000'}}> Thắng nhiều hơn, Hòa vừa, Thua cũng có!</strong>
+                    Tích đủ XP để lên cấp và nhận thêm phần thưởng lớn.
+                  </p>
+                  <span className="htp-tip">⚡ Lên cấp nhận 500 Xu mỗi lần!</span>
+                </div>
+              </div>
+
+              <div className="htp-step-card">
+                <div className="htp-step-num">📊</div>
+                <div className="htp-step-body">
+                  <h3>Bước 6 — Nhiệm Vụ & Bảng Xếp Hạng</h3>
+                  <p>
+                    Hoàn thành <strong style={{color:'#f472b6'}}>Nhiệm Vụ Hàng Ngày</strong> để nhận thêm Xu và XP.
+                    Kiểm tra <strong style={{color:'#c4f000'}}>Bảng Xếp Hạng</strong> để so sánh với
+                    các HLV khác toàn server. Đạt mốc hoạt động để nhận thẻ Edition đặc biệt tự động!
+                  </p>
+                  <span className="htp-tip">🎖️ Thẻ Icon & Super Limited chỉ nhận qua mốc thành tích</span>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Feature grid */}
+            <h2 style={{
+              fontSize:'1.1rem', fontWeight:900, textTransform:'uppercase',
+              letterSpacing:'2px', color:'white', marginBottom:'1rem', textAlign:'center'
+            }}>Tính Năng Nổi Bật</h2>
+            <div className="htp-features-grid">
+              {[
+                { icon:'🃏', name:'800+ Cầu Thủ', desc:'Thẻ từ 32 đội tuyển World Cup 2026 thực tế' },
+                { icon:'💎', name:'7 Cấp Độ Hiếm', desc:'Base → Bronze → Silver → Gold → Platinum → Super → Icon' },
+                { icon:'⚔️', name:'Đấu AI', desc:'5 mức độ khó từ Amateur đến Ultimate' },
+                { icon:'🌐', name:'PvP Online', desc:'Thách đấu thời gian thực qua mã phòng' },
+                { icon:'📈', name:'Hệ Thống Cấp', desc:'30 cấp với phần thưởng đặc biệt mỗi mốc' },
+                { icon:'🎯', name:'Nhiệm Vụ', desc:'Nhiệm vụ hàng ngày và thành tích dài hạn' },
+                { icon:'💬', name:'Chat Sảnh', desc:'Chat toàn server và tin nhắn riêng tư' },
+                { icon:'🏆', name:'Bảng Xếp Hạng', desc:'Top HLV mạnh nhất toàn server theo cấp độ' },
+                { icon:'🎰', name:'Hệ Pity', desc:'Đảm bảo thẻ siêu sao sau tối đa 10 gói liên tiếp' },
+              ].map((f, i) => (
+                <div className="htp-feature-card" key={i}>
+                  <span className="htp-feature-icon">{f.icon}</span>
+                  <div className="htp-feature-name">{f.name}</div>
+                  <div className="htp-feature-desc">{f.desc}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Reward table */}
+            <div style={{
+              background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)',
+              borderRadius:'1.25rem', padding:'1.5rem', marginBottom:'2rem'
+            }}>
+              <h3 style={{
+                fontSize:'0.9rem', fontWeight:900, textTransform:'uppercase',
+                letterSpacing:'2px', color:'white', marginBottom:'1rem', textAlign:'center'
+              }}>💰 Bảng Phần Thưởng Trận Đấu</h3>
+              <div style={{overflowX:'auto'}}>
+                <table style={{width:'100%', borderCollapse:'collapse', fontSize:'0.8rem'}}>
+                  <thead>
+                    <tr style={{borderBottom:'1px solid rgba(255,255,255,0.1)'}}>
+                      <th style={{padding:'0.6rem 1rem', textAlign:'left', color:'rgba(255,255,255,0.5)', fontWeight:700, textTransform:'uppercase', letterSpacing:'1px'}}>Kết Quả</th>
+                      <th style={{padding:'0.6rem 1rem', textAlign:'center', color:'rgba(255,255,255,0.5)', fontWeight:700, textTransform:'uppercase', letterSpacing:'1px'}}>Xu</th>
+                      <th style={{padding:'0.6rem 1rem', textAlign:'center', color:'rgba(255,255,255,0.5)', fontWeight:700, textTransform:'uppercase', letterSpacing:'1px'}}>XP</th>
+                      <th style={{padding:'0.6rem 1rem', textAlign:'center', color:'rgba(255,255,255,0.5)', fontWeight:700, textTransform:'uppercase', letterSpacing:'1px'}}>Ghi Chú</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { res:'🏆 Thắng AI (Easy)', xu:'+40', xp:'+60 XP', note:'Amateur/Easy' },
+                      { res:'🏆 Thắng AI (Medium)', xu:'+60', xp:'+60 XP', note:'Professional/Medium' },
+                      { res:'🏆 Thắng AI (Hard)', xu:'+100', xp:'+60 XP', note:'World Class/Hard' },
+                      { res:'🏆 Thắng AI (Legend)', xu:'+150', xp:'+60 XP', note:'Legendary' },
+                      { res:'🏆 Thắng AI (Ultimate)', xu:'+220', xp:'+60 XP', note:'Khó nhất' },
+                      { res:'🤝 Hòa AI', xu:'+20~75', xp:'+30 XP', note:'Theo độ khó' },
+                      { res:'😤 Thua AI', xu:'+12~40', xp:'+15 XP', note:'Vẫn có thưởng!' },
+                      { res:'🌐 Thắng PvP', xu:'+120', xp:'+120 XP', note:'Vs người thật' },
+                      { res:'🌐 Hòa PvP', xu:'+40', xp:'+50 XP', note:'Vs người thật' },
+                      { res:'🌐 Thua PvP', xu:'+25', xp:'+30 XP', note:'Vẫn có thưởng!' },
+                    ].map((row, i) => (
+                      <tr key={i} style={{borderBottom:'1px solid rgba(255,255,255,0.05)', transition:'background 0.2s'}}
+                        onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.04)'}
+                        onMouseLeave={e => e.currentTarget.style.background='transparent'}
+                      >
+                        <td style={{padding:'0.6rem 1rem', color:'white', fontWeight:600}}>{row.res}</td>
+                        <td style={{padding:'0.6rem 1rem', textAlign:'center', color:'#c4f000', fontWeight:800}}>{row.xu}</td>
+                        <td style={{padding:'0.6rem 1rem', textAlign:'center', color:'#38bdf8', fontWeight:700}}>{row.xp}</td>
+                        <td style={{padding:'0.6rem 1rem', textAlign:'center', color:'rgba(255,255,255,0.4)', fontSize:'0.72rem'}}>{row.note}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* CTA */}
+            <div className="htp-cta-box">
+              <h3>🚀 Sẵn Sàng Chiến Chưa?</h3>
+              <p>Tạo tài khoản ngay hôm nay, nhận 200 Xu + 3 gói thẻ miễn phí và bắt đầu hành trình chinh phục World Cup 2026!</p>
+              <button
+                className="htp-cta-btn"
+                onClick={() => {
+                  setGameState('lobby');
+                  if (!currentUser) {
+                    // scroll to login - just go back to landing
+                  }
+                }}
+              >
+                ⚡ {currentUser ? 'Về Trang Chủ' : 'Đăng Ký Ngay'}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
       {currentUser && (
         <>
