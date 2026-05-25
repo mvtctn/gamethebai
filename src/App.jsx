@@ -2387,7 +2387,7 @@ export default function App() {
                     <span className="text-xl font-black text-white">Lv.{inspectedUserData.level || 1}</span>
                   </div>
 
-                  <h2 className="text-2xl font-black text-white mb-1 uppercase tracking-wider">{inspectedUserData.username}</h2>
+                  <h2 className="text-2xl font-black text-white mb-1 uppercase tracking-wider">{inspectingUser}</h2>
                   <span className="text-xs px-3 py-1 bg-cyan-900/40 text-cyan-400 border border-cyan-500/20 font-black rounded-full uppercase tracking-widest mb-4">
                     {inspectedUserData.squad ? Math.round(inspectedUserData.squad.reduce((acc, card) => acc + Math.max(card.stats.attack, card.stats.defense, card.stats.control), 0) / 11) : 0} OVR
                   </span>
@@ -2431,7 +2431,7 @@ export default function App() {
                     className="btn !bg-violet-600 hover:!bg-violet-500 w-full flex items-center justify-center gap-2 !py-3 font-bold text-sm tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-violet-900/30"
                     onClick={() => {
                       playFx('click');
-                      setActivePrivatePartner(inspectedUserData.username);
+                      setActivePrivatePartner(inspectingUser);
                       setChatTab('private');
                       setInspectingUser(null);
                     }}
@@ -2448,7 +2448,7 @@ export default function App() {
                     disabled={squad.length < 11}
                     onClick={() => {
                       if (squad.length === 11) {
-                        const activeObj = onlineUsers.find(o => o.username === inspectedUserData.username);
+                        const activeObj = onlineUsers.find(o => o.username === inspectingUser);
                         if (activeObj) {
                           sendChallengeInvite(activeObj.username, activeObj.peerId);
                           setInspectingUser(null);
