@@ -1940,15 +1940,14 @@ export default function App() {
                 </div>
               </div>
             </div>
-
           </div>
         </div>
-      )}\n\n      {/* ═══ TRANG HƯỚNG DẪN CHƠI — hiển thị cho mọi trạng thái ═══ */}
+      )}
+
+      {/* ═══ TRANG HƯỚNG DẪN CHƠI — hiển thị cho mọi trạng thái ═══ */}
       {gameState === 'howToPlay' && (
         <div className="how-to-play-wrapper" style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}>
           <div className="htp-content">
-
-            {/* Back button */}
             <button
               className="htp-back-btn"
               onClick={() => setGameState(currentUser ? 'lobby' : 'lobby')}
