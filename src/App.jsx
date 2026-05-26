@@ -51,6 +51,28 @@ const getPlayerTier = (lvl) => {
   return tier || TIERS[0];
 };
 
+const getAvatarGradient = (username) => {
+  if (!username) return 'linear-gradient(135deg, #6b7280, #374151)';
+  if (username === 'HỆ THỐNG 📣') {
+    return 'linear-gradient(135deg, #f59e0b, #d97706)';
+  }
+  let hash = 0;
+  for (let i = 0; i < username.length; i++) {
+    hash = username.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const colors = [
+    'linear-gradient(135deg, #3b82f6, #4f46e5)',
+    'linear-gradient(135deg, #a855f7, #ec4899)',
+    'linear-gradient(135deg, #10b981, #0d9488)',
+    'linear-gradient(135deg, #f43f5e, #f97316)',
+    'linear-gradient(135deg, #06b6d4, #2563eb)',
+    'linear-gradient(135deg, #d946ef, #9333ea)',
+    'linear-gradient(135deg, #f59e0b, #eab308)',
+  ];
+  const index = Math.abs(hash) % colors.length;
+  return colors[index];
+};
+
 const LEVEL_MILESTONES = [
   { level: 2, coins: 200, packs: 0, desc: 'Tiền thưởng thăng cấp 2 khởi đầu' },
   { level: 3, coins: 300, packs: 0, desc: 'Tiền thưởng thăng cấp 3' },
@@ -2860,44 +2882,67 @@ export default function App() {
                                   return (
                                     <div 
                                       key={msg.id} 
-                                      className={`flex flex-col max-w-[85%] ${
-                                        isMe ? 'self-end items-end' : 'self-start items-start'
+                                      className={`flex items-start gap-2.5 max-w-[85%] ${
+                                        isMe ? 'self-end flex-row-reverse' : 'self-start'
                                       }`}
                                     >
-                                      <span 
-                                        className={`text-[9px] font-black mb-0.5 px-1 flex items-center flex-wrap gap-1.5 ${
-                                          isSystem ? 'text-amber-400' : isMe ? 'text-fuchsia-400' : 'text-blue-400'
-                                        } ${(!isSystem && !isMe) ? 'cursor-pointer hover:underline hover:text-cyan-400' : ''}`}
-                                        onClick={() => {
-                                          if (!isSystem && !isMe) {
+                                      {/* Clickable Avatar */}
+                                      {isSystem ? (
+                                        <div 
+                                          className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[10px] bg-gradient-to-br from-amber-500 to-yellow-600 border border-amber-500/30 shadow-md select-none animate-scale-in"
+                                        >
+                                          📣
+                                        </div>
+                                      ) : (
+                                        <div 
+                                          className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[10px] font-black text-white border border-white/10 shadow-md cursor-pointer transition-all hover:scale-105 active:scale-95 select-none animate-scale-in"
+                                          style={{ background: getAvatarGradient(msg.sender) }}
+                                          onClick={() => {
                                             playFx('click');
                                             setInspectingUser(msg.sender);
-                                          }
-                                        }}
-                                      >
-                                        {isSystem ? msg.sender : (
-                                          <>
-                                            <span>{msg.sender}</span>
-                                            <span className="text-[8px] bg-white/10 text-gray-300 px-1.5 py-0.2 rounded border border-white/10">Lv.{msg.senderLevel || 1}</span>
-                                            {(() => {
-                                              const tier = getPlayerTier(msg.senderLevel || 1);
-                                              return (
-                                                <span className={`text-[8px] font-extrabold px-1.5 py-0.2 rounded border shrink-0 ${tier.color} ${tier.glow}`}>
-                                                  {tier.icon} {tier.name.split(' ')[1] || tier.name}
-                                                </span>
-                                              );
-                                            })()}
-                                          </>
-                                        )}
-                                      </span>
-                                      <div className={`p-2.5 rounded-2xl text-xs font-semibold leading-relaxed border ${
-                                        isSystem 
-                                          ? 'bg-amber-950/30 border-amber-500/30 text-amber-300' 
-                                          : isMe 
-                                          ? 'bg-fuchsia-950/20 border-fuchsia-500/25 text-fuchsia-100 rounded-tr-none' 
-                                          : 'bg-slate-900/60 border-white/10 text-gray-100 rounded-tl-none'
-                                      }`}>
-                                        {msg.text}
+                                          }}
+                                          title={`Xem hồ sơ ${msg.sender}`}
+                                        >
+                                          {msg.sender.charAt(0).toUpperCase()}
+                                        </div>
+                                      )}
+
+                                      <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                                        <span 
+                                          className={`text-[9px] font-black mb-0.5 px-1 flex items-center flex-wrap gap-1.5 ${
+                                            isSystem ? 'text-amber-400' : isMe ? 'text-fuchsia-400' : 'text-blue-400'
+                                          } ${(!isSystem && !isMe) ? 'cursor-pointer hover:underline hover:text-cyan-400' : ''}`}
+                                          onClick={() => {
+                                            if (!isSystem && !isMe) {
+                                              playFx('click');
+                                              setInspectingUser(msg.sender);
+                                            }
+                                          }}
+                                        >
+                                          {isSystem ? msg.sender : (
+                                            <>
+                                              <span>{msg.sender}</span>
+                                              <span className="text-[8px] bg-white/10 text-gray-300 px-1.5 py-0.2 rounded border border-white/10">Lv.{msg.senderLevel || 1}</span>
+                                              {(() => {
+                                                const tier = getPlayerTier(msg.senderLevel || 1);
+                                                return (
+                                                  <span className={`text-[8px] font-extrabold px-1.5 py-0.2 rounded border shrink-0 ${tier.color} ${tier.glow}`}>
+                                                    {tier.icon} {tier.name.split(' ')[1] || tier.name}
+                                                  </span>
+                                                );
+                                              })()}
+                                            </>
+                                          )}
+                                        </span>
+                                        <div className={`p-2.5 rounded-2xl text-xs font-semibold leading-relaxed border ${
+                                          isSystem 
+                                            ? 'bg-amber-950/30 border-amber-500/30 text-amber-300' 
+                                            : isMe 
+                                            ? 'bg-fuchsia-950/20 border-fuchsia-500/25 text-fuchsia-100 rounded-tr-none' 
+                                            : 'bg-slate-900/60 border-white/10 text-gray-100 rounded-tl-none'
+                                        }`}>
+                                          {msg.text}
+                                        </div>
                                       </div>
                                     </div>
                                   );
@@ -2967,10 +3012,22 @@ export default function App() {
                                       return (
                                         <div 
                                           key={msg.id} 
-                                          className={`flex flex-col max-w-[85%] ${
-                                            isMe ? 'self-end items-end' : 'self-start items-start'
+                                          className={`flex items-start gap-2.5 max-w-[85%] ${
+                                            isMe ? 'self-end flex-row-reverse' : 'self-start'
                                           }`}
                                         >
+                                          {/* Clickable DM Avatar */}
+                                          <div 
+                                            className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[10px] font-black text-white border border-white/10 shadow-md cursor-pointer transition-all hover:scale-105 active:scale-95 select-none animate-scale-in"
+                                            style={{ background: getAvatarGradient(msg.sender) }}
+                                            onClick={() => {
+                                              playFx('click');
+                                              setInspectingUser(msg.sender);
+                                            }}
+                                            title={`Xem hồ sơ ${msg.sender}`}
+                                          >
+                                            {msg.sender.charAt(0).toUpperCase()}
+                                          </div>
                                           <div className={`p-2.5 rounded-2xl text-xs font-semibold leading-relaxed border ${
                                             isMe 
                                               ? 'bg-violet-950/20 border-violet-500/25 text-violet-100 rounded-tr-none' 
