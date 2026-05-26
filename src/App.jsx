@@ -228,7 +228,10 @@ export const ENV_WEATHER = [
   { key: 'Rainy', name: 'Mưa Tầm Tã 🌧️', desc: 'Giảm phong độ Tốc độ ⚡, tăng phong độ Sức mạnh 💪' },
   { key: 'Snowy', name: 'Tuyết Rơi ❄️', desc: 'Giảm mạnh Tốc độ ⚡, tăng phong độ Sức mạnh 💪' },
   { key: 'Windy', name: 'Gió Thổi Mạnh 🌬️', desc: 'Giảm phong độ Kỹ thuật 🌀' },
-  { key: 'Balanced', name: 'Lặng Gió 🍃', desc: 'Phong độ ổn định cho mọi hệ' }
+  { key: 'Balanced', name: 'Lặng Gió 🍃', desc: 'Phong độ ổn định cho mọi hệ' },
+  { key: 'DesertStorm', name: 'Bão Cát Sa Mạc 🏜️', desc: 'Phong độ Tốc độ ⚡ và Kỹ thuật 🌀 sa sút, Sức mạnh 💪 đột biến tăng cực mạnh (+4 OVR)' },
+  { key: 'DenseFog', name: 'Sương Mù Dày Đặc 🌫️', desc: 'Phong độ Tốc độ ⚡ và Sức mạnh 💪 giảm mạnh, Kỹ thuật 🌀 thăng hoa tăng mạnh (+3 OVR)' },
+  { key: 'Blizzard', name: 'Mưa Tuyết Băng Giá 🌨️', desc: 'Phong độ Tốc độ ⚡ giảm thê thảm (-6 OVR), Sức mạnh 💪 được tăng nhẹ (+2 OVR)' }
 ];
 
 export const ENV_TIME = [
@@ -262,6 +265,15 @@ export const generateCardForm = (card, opponentCard, env, rng = Math.random) => 
       if (attr === 'power') { weights[0] += 0.15; weights[1] += 0.15; }
     } else if (env.weather === 'Windy') {
       if (attr === 'tech') { weights[3] += 0.20; weights[4] += 0.10; }
+    } else if (env.weather === 'DesertStorm') {
+      if (attr === 'speed' || attr === 'tech') { weights[3] += 0.25; weights[4] += 0.15; }
+      if (attr === 'power') { weights[0] += 0.30; weights[1] += 0.15; }
+    } else if (env.weather === 'DenseFog') {
+      if (attr === 'speed' || attr === 'power') { weights[3] += 0.20; weights[4] += 0.10; }
+      if (attr === 'tech') { weights[0] += 0.25; weights[1] += 0.15; }
+    } else if (env.weather === 'Blizzard') {
+      if (attr === 'speed') { weights[3] += 0.40; weights[4] += 0.20; }
+      if (attr === 'power') { weights[0] += 0.15; weights[1] += 0.10; }
     }
 
     if (env.time === 'Night') {
@@ -301,6 +313,42 @@ export const generateCardForm = (card, opponentCard, env, rng = Math.random) => 
   }
 
   return { state, bonus };
+};
+
+// --- Tactical Synergy & Chemistry Helpers ---
+export const getNationEmoji = (nation) => {
+  if (!nation) return '🏳️';
+  const mapping = {
+    'ar': '🇦🇷', 'fr': '🇫🇷', 'no': '🇳🇴', 'gb-eng': '🏴\u200d󠁢󠁥󠁮󠁧󠁿', 'eg': '🇪🇬', 
+    'pt': '🇵🇹', 'br': '🇧🇷', 'be': '🇧🇪', 'hr': '🇭🇷', 'sn': '🇸🇳', 
+    'dz': '🇩🇿', 'gb-sct': '🏴\u200d󠁢󠁳󠁣󠁴󠁿', 'ca': '🇨🇦', 'ma': '🇲🇦', 'co': '🇨🇴', 
+    'us': '🇺🇸', 'mx': '🇲🇽', 'cr': '🇨🇷', 'dk': '🇩🇰', 'ch': '🇨🇭', 
+    'gb-wls': '🏴\u200d󠁢󠁷󠁬󠁳󠁿', 'it': '🇮🇹', 'de': '🇩🇪', 'es': '🇪🇸', 'nl': '🇳🇱',
+    'uy': '🇺🇾', 'se': '🇸🇪', 'pl': '🇵🇱', 'kr': '🇰🇷', 'jp': '🇯🇵'
+  };
+  return mapping[nation.toLowerCase()] || '🏳️';
+};
+
+export const getSquadChemistry = (squad) => {
+  if (!squad || squad.length === 0) return {};
+  const nationCounts = {};
+  squad.forEach(p => {
+    if (p && p.nation) {
+      const nat = p.nation.toLowerCase();
+      nationCounts[nat] = (nationCounts[nat] || 0) + 1;
+    }
+  });
+  return nationCounts;
+};
+
+export const getPlayerChemistryBoost = (player, squad) => {
+  if (!player || !squad || squad.length === 0) return 0;
+  const nationCounts = getSquadChemistry(squad);
+  const count = nationCounts[player.nation ? player.nation.toLowerCase() : ''] || 0;
+  if (count >= 8) return 6;
+  if (count >= 5) return 4;
+  if (count >= 3) return 2;
+  return 0;
 };
 
 // --- Card Component ---
@@ -1405,10 +1453,12 @@ export default function App() {
   const [matchPhase, setMatchPhase] = useState('setup'); // setup, playing, roundResult, gameOver
   const [playerHand, setPlayerHand] = useState([]);
   const [aiHand, setAiHand] = useState([]);
+  const [aiSquad, setAiSquad] = useState([]);
   const [matchScore, setMatchScore] = useState({ player: 0, ai: 0 });
   const [matchLogs, setMatchLogs] = useState([]);
   const [matchHistory, setMatchHistory] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [playerStatChoiceHistory, setPlayerStatChoiceHistory] = useState([]);
   
   // Current Round State
   const [selectedPlayerCard, setSelectedPlayerCard] = useState(null);
@@ -1883,7 +1933,38 @@ export default function App() {
     });
 
     const safePool = filteredPool.length >= 11 ? filteredPool : pool;
-    const shuffled = safePool.sort(() => 0.5 - Math.random());
+    
+    // AI Nation Chemistry Stacking for Higher Difficulties
+    const shouldStackNation = diff !== 'Easy' && diff !== 'Amateur' && (diff !== 'Medium' && diff !== 'Professional' ? true : Math.random() < 0.5);
+    let chosenNation = '';
+    
+    if (shouldStackNation) {
+      const nationFrequencies = {};
+      safePool.forEach(p => {
+        if (p.nation) {
+          const nat = p.nation.toLowerCase();
+          nationFrequencies[nat] = (nationFrequencies[nat] || 0) + 1;
+        }
+      });
+      const viableNations = Object.keys(nationFrequencies).filter(nat => nationFrequencies[nat] >= 6);
+      if (viableNations.length > 0) {
+        chosenNation = viableNations[Math.floor(Math.random() * viableNations.length)];
+      }
+    }
+
+    let shuffled;
+    if (chosenNation) {
+      const nationPlayers = safePool.filter(p => p.nation && p.nation.toLowerCase() === chosenNation).sort(() => 0.5 - Math.random());
+      const otherPlayers = safePool.filter(p => !p.nation || p.nation.toLowerCase() !== chosenNation).sort(() => 0.5 - Math.random());
+      
+      const nationCount = Math.min(8, nationPlayers.length);
+      const selectedNation = nationPlayers.slice(0, nationCount);
+      const selectedOthers = otherPlayers.slice(0, 11 - nationCount);
+      
+      shuffled = [...selectedNation, ...selectedOthers].sort(() => 0.5 - Math.random());
+    } else {
+      shuffled = safePool.sort(() => 0.5 - Math.random());
+    }
     
     // Deep clone the shuffled cards so we don't mutate the original playersData pool!
     const aiSelectedTeam = shuffled.slice(0, 11).map(card => {
@@ -1908,11 +1989,14 @@ export default function App() {
     setMatchEnvironment({ weather, time });
 
     setPlayerHand([...squad]);
-    setAiHand(generateAITeam(difficulty));
+    const aiTeam = generateAITeam(difficulty);
+    setAiHand(aiTeam);
+    setAiSquad(aiTeam);
     setMatchScore({ player: 0, ai: 0 });
     setMatchLogs([]);
     setMatchHistory([]);
     setPlayedCardIds([]);
+    setPlayerStatChoiceHistory([]);
     setMatchPhase('playing');
     setSelectedPlayerCard(null);
     setSelectedStat(null);
@@ -1921,6 +2005,7 @@ export default function App() {
 
   const playRound = (stat) => {
     setSelectedStat(stat);
+    setPlayerStatChoiceHistory([...playerStatChoiceHistory, stat]);
     
     // AI picks a card based on difficulty level
     let aiIndex = 0;
@@ -1936,10 +2021,11 @@ export default function App() {
       else targetStat = 'control';
 
       const lvlBonus1 = ((selectedPlayerCard.level || 1) - 1) * 2;
-      const playerVal = selectedPlayerCard.stats[stat] + lvlBonus1;
+      const chemBonus1 = getPlayerChemistryBoost(selectedPlayerCard, squad);
+      const capBonus1 = (squad.length > 0 && selectedPlayerCard.id === squad[0].id) ? 3 : 0;
+      const playerVal = selectedPlayerCard.stats[stat] + lvlBonus1 + chemBonus1 + capBonus1;
 
       // Smart AI Card Selection logic
-      // We want to find a card in aiHand that wins, draws, or minimizes loss
       const aiCardsWithIndex = aiHand.map((card, idx) => ({ card, idx }));
       
       // Separate cards into winning, drawing, and losing groups
@@ -1961,17 +2047,33 @@ export default function App() {
       }
 
       if (isSmart) {
-        if (winners.length > 0) {
-          // A smart AI chooses the lowest winning card to conserve its super cards!
+        const bluffRand = Math.random();
+        const canBluff = (difficulty === 'Legendary' || difficulty === 'Ultimate');
+
+        if (canBluff && winners.length > 0 && bluffRand < 0.15) {
+          // Bluff / Sacrifice: Play the weakest card overall to conserve resources!
+          if (losers.length > 0) {
+            losers.sort((a, b) => a.card.stats[targetStat] - b.card.stats[targetStat]);
+            aiIndex = losers[0].idx;
+          } else {
+            winners.sort((a, b) => a.card.stats[targetStat] - b.card.stats[targetStat]);
+            aiIndex = winners[0].idx;
+          }
+        } else if (canBluff && winners.length > 0 && bluffRand >= 0.85) {
+          // Overkill: Play the absolutely strongest card to crush the player's selection!
+          winners.sort((a, b) => b.card.stats[targetStat] - a.card.stats[targetStat]);
+          aiIndex = winners[0].idx;
+        } else if (winners.length > 0) {
+          // Normal smart play: lowest winning card to conserve cards
           winners.sort((a, b) => a.card.stats[targetStat] - b.card.stats[targetStat]);
           aiIndex = winners[0].idx;
         } else if (drawers.length > 0) {
-          // If it can't win, try to draw
+          // Draw
           aiIndex = drawers[Math.floor(Math.random() * drawers.length)].idx;
         } else {
-          // If it must lose, play the card with the lowest stat in this category to conserve strong cards!
+          // Sacrificial play
           losers.sort((a, b) => a.card.stats[targetStat] - b.card.stats[targetStat]);
-          aiIndex = losers[0].idx; // Sacrificial play
+          aiIndex = losers[0].idx;
         }
       } else {
         // Normal random choice
@@ -1982,12 +2084,18 @@ export default function App() {
     const aiCard = aiHand[aiIndex];
     setCurrentAiCard(aiCard);
 
-    // Compare logic:
-    // If player picks Attack, compare with AI's Defense
-    // If player picks Defense, compare with AI's Attack
-    // If player picks Control, compare with AI's Control
+    // Compare logic
     const lvlBonus1 = ((selectedPlayerCard.level || 1) - 1) * 2;
     const lvlBonus2 = ((aiCard.level || 1) - 1) * 2;
+    
+    // Squad Chemistry Boost
+    const chemBonus1 = getPlayerChemistryBoost(selectedPlayerCard, squad);
+    const chemBonus2 = getPlayerChemistryBoost(aiCard, aiSquad);
+
+    // Captain Boost (+3 OVR)
+    const capBonus1 = (squad.length > 0 && selectedPlayerCard.id === squad[0].id) ? 3 : 0;
+    const capBonus2 = (aiSquad.length > 0 && aiCard.id === aiSquad[0].id) ? 3 : 0;
+
     let baseV1 = selectedPlayerCard.stats[stat] + lvlBonus1;
     let baseV2 = 0;
     let stat2Name = '';
@@ -2003,17 +2111,17 @@ export default function App() {
       stat2Name = 'control';
     }
 
-    // Generate Form/Condition based on weather, elements, underdog logic
+    // Environment Form
     const formResult1 = generateCardForm(selectedPlayerCard, aiCard, matchEnvironment);
     const formResult2 = generateCardForm(aiCard, selectedPlayerCard, matchEnvironment);
     const formBonus1 = formResult1.bonus;
     const formBonus2 = formResult2.bonus;
 
-    // Apply card rarity priority bonus
+    // Card rarity boost
     const bonus1 = getCardTypeBonus(selectedPlayerCard.type);
     const bonus2 = getCardTypeBonus(aiCard.type);
 
-    // Apply attribute system element advantage (Speed ⚡, Tech 🌀, Power 💪)
+    // Attribute System counter bonus (+5 OVR)
     const attr1 = getPlayerAttr(selectedPlayerCard);
     const attr2 = getPlayerAttr(aiCard);
     let attrBonus1 = 0;
@@ -2025,10 +2133,11 @@ export default function App() {
       attrBonus2 = 5;
     }
 
-    const v1 = baseV1 + bonus1 + attrBonus1 + formBonus1;
-    const v2 = baseV2 + bonus2 + attrBonus2 + formBonus2;
+    // Final OVR value calculations
+    const v1 = baseV1 + bonus1 + attrBonus1 + formBonus1 + chemBonus1 + capBonus1;
+    const v2 = baseV2 + bonus2 + attrBonus2 + formBonus2 + chemBonus2 + capBonus2;
 
-    const bonusPart = (b, ab, emoji, lb, fb, fs) => {
+    const bonusPart = (b, ab, emoji, lb, fb, fs, chem, cap) => {
       let parts = [];
       if (lb > 0) parts.push(`+${lb} Lv`);
       if (b > 0) parts.push(`+${b} Rarity`);
@@ -2039,6 +2148,8 @@ export default function App() {
       } else {
         parts.push(`+0 Phong độ ➡️`);
       }
+      if (chem > 0) parts.push(`+${chem} Duyên 🤝`);
+      if (cap > 0) parts.push(`+${cap} Đội trưởng 👑`);
       return parts.length > 0 ? ` [${parts.join(' & ')}]` : '';
     };
 
@@ -2046,19 +2157,22 @@ export default function App() {
     let aScore = matchScore.ai;
     let msg = '';
 
+    const myBonusDetails = bonusPart(bonus1, attrBonus1, attr1.emoji, lvlBonus1, formBonus1, formResult1.state, chemBonus1, capBonus1);
+    const opBonusDetails = bonusPart(bonus2, attrBonus2, attr2.emoji, lvlBonus2, formBonus2, formResult2.state, chemBonus2, capBonus2);
+
     if (v1 > v2) {
       pScore++;
-      msg = `THẮNG! ${baseV1}${bonusPart(bonus1, attrBonus1, attr1.emoji, lvlBonus1, formBonus1, formResult1.state)} > ${baseV2}${bonusPart(bonus2, attrBonus2, attr2.emoji, lvlBonus2, formBonus2, formResult2.state)}`;
+      msg = `THẮNG! ${v1}${myBonusDetails} > ${v2}${opBonusDetails}`;
     } else if (v2 > v1) {
       aScore++;
-      msg = `THUA! ${baseV1}${bonusPart(bonus1, attrBonus1, attr1.emoji, lvlBonus1, formBonus1, formResult1.state)} < ${baseV2}${bonusPart(bonus2, attrBonus2, attr2.emoji, lvlBonus2, formBonus2, formResult2.state)}`;
+      msg = `THUA! ${v1}${myBonusDetails} < ${v2}${opBonusDetails}`;
     } else {
-      msg = `HÒA! ${baseV1}${bonusPart(bonus1, attrBonus1, attr1.emoji, lvlBonus1, formBonus1, formResult1.state)} = ${baseV2}${bonusPart(bonus2, attrBonus2, attr2.emoji, lvlBonus2, formBonus2, formResult2.state)}`;
+      msg = `HÒA! ${v1}${myBonusDetails} = ${v2}${opBonusDetails}`;
     }
+    
     setMatchScore({ player: pScore, ai: aScore });
     setRoundResultMsg(msg);
-    const myBonusDetails = bonusPart(bonus1, attrBonus1, attr1.emoji, lvlBonus1, formBonus1, formResult1.state);
-    const opBonusDetails = bonusPart(bonus2, attrBonus2, attr2.emoji, lvlBonus2, formBonus2, formResult2.state);
+    
     setMatchLogs([...matchLogs, `Lượt ${playedCardIds.length + 1}: ${selectedPlayerCard.name} (${stat.toUpperCase()}${myBonusDetails}) vs ${aiCard.name} (${stat2Name.toUpperCase()}${opBonusDetails}) -> ${msg}`]);
     setMatchHistory([...matchHistory, {
       myStat: stat,
@@ -4740,6 +4854,9 @@ export default function App() {
                         
                         if (isPlayed) return null; // Ẩn thẻ đã đánh
                         
+                        const chemBoost = getPlayerChemistryBoost(player, squad);
+                        const isCap = squad.length > 0 && player.id === squad[0].id;
+                        
                         return (
                           <div 
                             key={player.id}
@@ -4764,6 +4881,20 @@ export default function App() {
                             }}
                           >
                             <Card player={player} hideStats={false} />
+                            
+                            {/* Badges overlay on the pitch */}
+                            <div className="absolute -top-3 -right-3 z-30 flex flex-col gap-1 pointer-events-none select-none">
+                              {isCap && (
+                                <span className="bg-gradient-to-r from-yellow-500 to-amber-600 text-slate-950 text-[9px] font-black px-1.5 py-0.5 rounded-full border border-yellow-400/50 shadow-md flex items-center gap-0.5">
+                                  👑 C
+                                </span>
+                              )}
+                              {chemBoost > 0 && (
+                                <span className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full border border-cyan-400/50 shadow-md flex items-center gap-0.5">
+                                  🤝 +{chemBoost}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         )
                       })}

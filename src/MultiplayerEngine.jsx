@@ -3,7 +3,7 @@ import { Peer } from 'peerjs';
 import { Shield, Swords, Wifi, Zap, Trophy, History, Copy, ChevronLeft, User } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import confetti from 'canvas-confetti';
-import { ENV_WEATHER, ENV_TIME, FORM_STATES, generateCardForm } from './App';
+import { ENV_WEATHER, ENV_TIME, FORM_STATES, generateCardForm, getSquadChemistry, getPlayerChemistryBoost } from './App';
 import { MatchHistoryModal } from './MatchHistoryModal';
 
 const playFx = (type) => {
@@ -132,6 +132,8 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [matchEnvironment, setMatchEnvironment] = useState({ weather: ENV_WEATHER[4], time: ENV_TIME[1] });
   const [isReconnecting, setIsReconnecting] = useState(false);
+  const [opponentSquad, setOpponentSquad] = useState([]);
+  const opponentSquadRef = useRef([]);
 
   const myScoreRef = useRef(0);
   const opponentScoreRef = useRef(0);
@@ -235,15 +237,23 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     const formBonus1 = formResult1.bonus;
     const formBonus2 = formResult2.bonus;
 
+    // Squad Chemistry Boost
+    const chemBonus1 = getPlayerChemistryBoost(myCard, squad);
+    const chemBonus2 = getPlayerChemistryBoost(opCard, opponentSquadRef.current);
+
+    // Captain Boost (+3 OVR)
+    const capBonus1 = (squad.length > 0 && myCard.id === squad[0].id) ? 3 : 0;
+    const capBonus2 = (opponentSquadRef.current.length > 0 && opCard.id === opponentSquadRef.current[0].id) ? 3 : 0;
+
     let winner;
     const myLvlBonus = ((myCard.level || 1) - 1) * 2;
     const opLvlBonus = ((opCard.level || 1) - 1) * 2;
     const myVal = myCard.stats[currentStat] + myLvlBonus;
     const opVal = opCard.stats[currentStat] + opLvlBonus;
-    const myFinal = myVal + myBonus + formBonus1;
-    const opFinal = opVal + opBonus + formBonus2;
+    const myFinal = myVal + myBonus + formBonus1 + chemBonus1 + capBonus1;
+    const opFinal = opVal + opBonus + formBonus2 + chemBonus2 + capBonus2;
 
-    const bonusPart = (b, emoji, lb, fb, fs) => {
+    const bonusPart = (b, emoji, lb, fb, fs, chem, cap) => {
       let parts = [];
       if (lb > 0) parts.push(`+${lb} Lv`);
       if (b > 0) parts.push(`+${b} Khắc chế`);
@@ -253,13 +263,18 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       } else {
         parts.push(`+0 Phong độ ➡️`);
       }
+      if (chem > 0) parts.push(`+${chem} Duyên 🤝`);
+      if (cap > 0) parts.push(`+${cap} Đội trưởng 👑`);
       return parts.length > 0 ? ` [${parts.join(' & ')}]` : '';
     };
+
+    const myBonusDetails = bonusPart(myBonus, attr1.emoji, myLvlBonus, formBonus1, formResult1.state, chemBonus1, capBonus1);
+    const opBonusDetails = bonusPart(opBonus, attr2.emoji, opLvlBonus, formBonus2, formResult2.state, chemBonus2, capBonus2);
 
     if (myFinal > opFinal) {
       winner = 'me';
       setMyScore(s => s + 1);
-      setRoundResultMsg(`BẠN THẮNG VÒNG NÀY! 🎉 (${myVal}${bonusPart(myBonus, attr1.emoji, myLvlBonus, formBonus1, formResult1.state)} > ${opVal}${bonusPart(opBonus, attr2.emoji, opLvlBonus, formBonus2, formResult2.state)})`);
+      setRoundResultMsg(`BẠN THẮNG VÒNG NÀY! 🎉 (${myFinal}${myBonusDetails} > ${opFinal}${opBonusDetails})`);
       playFx('winPoint');
       confetti({
         particleCount: 150,
@@ -270,11 +285,11 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     } else if (opFinal > myFinal) {
       winner = 'opponent';
       setOpponentScore(s => s + 1);
-      setRoundResultMsg(`BẠN THUA VÒNG NÀY! 😤 (${myVal}${bonusPart(myBonus, attr1.emoji, myLvlBonus, formBonus1, formResult1.state)} < ${opVal}${bonusPart(opBonus, attr2.emoji, opLvlBonus, formBonus2, formResult2.state)})`);
+      setRoundResultMsg(`BẠN THUA VÒNG NÀY! 😤 (${myFinal}${myBonusDetails} < ${opFinal}${opBonusDetails})`);
       playFx('losePoint');
     } else {
       winner = 'draw';
-      setRoundResultMsg(`HÒA! ⚖️ (${myVal}${bonusPart(myBonus, attr1.emoji, myLvlBonus, formBonus1, formResult1.state)} = ${opVal}${bonusPart(opBonus, attr2.emoji, opLvlBonus, formBonus2, formResult2.state)})`);
+      setRoundResultMsg(`HÒA! ⚖️ (${myFinal}${myBonusDetails} = ${opFinal}${opBonusDetails})`);
       playFx('drawPoint');
     }
 
@@ -282,11 +297,11 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     setMatchHistory(prev => [...prev, {
       myStat: currentStat,
       myCardName: myCard.name,
-      myBonusDetails: bonusPart(myBonus, attr1.emoji, myLvlBonus, formBonus1, formResult1.state),
+      myBonusDetails,
       myFinalVal: myFinal,
       opStat: currentStat,
       opCardName: opCard.name,
-      opBonusDetails: bonusPart(opBonus, attr2.emoji, opLvlBonus, formBonus2, formResult2.state),
+      opBonusDetails,
       opFinalVal: opFinal,
       result: winner === 'me' ? 'win' : winner === 'opponent' ? 'loss' : 'draw'
     }]);
@@ -332,6 +347,10 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
   const handleNetworkData = useCallback((data) => {
     if (data.type === 'ready') {
       console.log('[PVP] Guest connected and ready! Initializing first round...');
+      if (data.squad) {
+        setOpponentSquad(data.squad);
+        opponentSquadRef.current = data.squad;
+      }
       const stats = ['attack', 'control', 'defense'];
       const firstStat = stats[Math.floor(Math.random() * stats.length)];
       
@@ -345,10 +364,14 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       updateActiveStat(firstStat);
       updatePhase('select_card');
       setTimeout(() => {
-        sendData({ type: 'start_round', stat: firstStat, roundIndex: 0, weatherIdx, timeIdx, seed: roundSeed });
+        sendData({ type: 'start_round', stat: firstStat, roundIndex: 0, weatherIdx, timeIdx, seed: roundSeed, squad: squad });
       }, 300);
     }
     else if (data.type === 'start_round') {
+      if (data.squad) {
+        setOpponentSquad(data.squad);
+        opponentSquadRef.current = data.squad;
+      }
       // Synchronize environment if provided
       if (data.weatherIdx !== undefined && data.timeIdx !== undefined) {
         setMatchEnvironment({ weather: ENV_WEATHER[data.weatherIdx], time: ENV_TIME[data.timeIdx] });
@@ -388,6 +411,10 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     }
     else if (data.type === 'sync_session') {
       console.log('[PVP] Re-connected and restoring match session state...');
+      if (data.squad) {
+        setOpponentSquad(data.squad);
+        opponentSquadRef.current = data.squad;
+      }
       setMyScore(data.opponentScore);
       setOpponentScore(data.myScore);
       setRoundCount(data.roundIndex);
@@ -405,7 +432,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     else if (data.type === 'pong') {
       window.lastPvpPong = Date.now();
     }
-  }, [calculateRoundResult, sendData]);
+  }, [calculateRoundResult, sendData, squad]);
 
   const setupConnectionHandlers = useCallback((conn) => {
     conn.on('data', (data) => {
@@ -482,7 +509,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
             setupConnectionHandlers(conn);
             // GUEST sends ready signal once open!
             setTimeout(() => {
-              conn.send({ type: 'ready' });
+              conn.send({ type: 'ready', squad: squad });
             }, 500);
           });
         } else {
@@ -593,7 +620,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       setupConnectionHandlers(conn);
       // GUEST sends ready signal on manual connect
       setTimeout(() => {
-        conn.send({ type: 'ready' });
+        conn.send({ type: 'ready', squad: squad });
       }, 500);
     });
   };
@@ -971,17 +998,36 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
             </div>
             <div className="overflow-x-auto hide-scrollbar" style={{ height: 'clamp(88px, 17vw, 140px)' }}>
               <div className="flex flex-row items-center h-full px-3 py-2 gap-2 min-w-max">
-                {myDeck.map((player, idx) => (
-                  <div key={player.id}
-                    className={`h-full aspect-[5/7] shrink-0 rounded-xl overflow-hidden transition-all duration-200 select-none ${
-                      canSelect
-                        ? 'cursor-pointer active:scale-90 hover:-translate-y-3 hover:shadow-2xl hover:shadow-cyan-500/20 hover:ring-2 hover:ring-cyan-400/80'
-                        : 'opacity-30 grayscale cursor-not-allowed'}`}
-                    style={{ zIndex: myDeck.length - idx }}
-                    onClick={() => canSelect && handleCardSelect(player)}>
-                    <CardComponent player={player} />
-                  </div>
-                ))}
+                {myDeck.map((player, idx) => {
+                  const isCap = squad.length > 0 && player.id === squad[0].id;
+                  const chemBoost = getPlayerChemistryBoost(player, squad);
+                  
+                  return (
+                    <div key={player.id}
+                      className={`h-full aspect-[5/7] shrink-0 rounded-xl overflow-hidden transition-all duration-200 select-none relative ${
+                        canSelect
+                          ? 'cursor-pointer active:scale-90 hover:-translate-y-3 hover:shadow-2xl hover:shadow-cyan-500/20 hover:ring-2 hover:ring-cyan-400/80'
+                          : 'opacity-30 grayscale cursor-not-allowed'}`}
+                      style={{ zIndex: myDeck.length - idx }}
+                      onClick={() => canSelect && handleCardSelect(player)}>
+                      <CardComponent player={player} />
+                      
+                      {/* Badges overlay on the card in hand */}
+                      <div className="absolute top-1 right-1 z-30 flex flex-col gap-0.5 pointer-events-none select-none">
+                        {isCap && (
+                          <span className="bg-gradient-to-r from-yellow-500 to-amber-600 text-slate-950 text-[7px] font-black px-1.5 py-0.2 rounded-full border border-yellow-400/50 shadow-md">
+                            👑
+                          </span>
+                        )}
+                        {chemBoost > 0 && (
+                          <span className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-[7px] font-black px-1.5 py-0.2 rounded-full border border-cyan-400/50 shadow-md">
+                            🤝
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
