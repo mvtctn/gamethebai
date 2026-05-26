@@ -879,6 +879,13 @@ export default function App() {
     return saved ? JSON.parse(saved) : { lastClaimed: 0, streak: 0 };
   });
 
+  const alreadyClaimedToday = React.useMemo(() => {
+    if (!checkInState.lastClaimed) return false;
+    const lastDate = new Date(checkInState.lastClaimed).toDateString();
+    const nowDate = new Date().toDateString();
+    return lastDate === nowDate;
+  }, [checkInState.lastClaimed]);
+
   const [equippedTitle, setEquippedTitle] = useState(() => {
     if (!currentUser) return "";
     return localStorage.getItem(`panini_${currentUser}_equippedTitle`) || "";
@@ -6061,10 +6068,6 @@ export default function App() {
       {/* 2.0 DAILY CHECK-IN MODAL */}
       {showCheckInModal && (() => {
         const streak = checkInState.streak || 0;
-        const lastClaimed = checkInState.lastClaimed || 0;
-        const lastDate = new Date(lastClaimed).toDateString();
-        const nowDate = new Date(Date.now()).toDateString();
-        const alreadyClaimedToday = lastClaimed > 0 && lastDate === nowDate;
 
         return (
           <div className="fixed inset-0 z-[220] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in" onClick={() => setShowCheckInModal(false)}>
