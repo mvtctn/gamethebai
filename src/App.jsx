@@ -6150,7 +6150,70 @@ export default function App() {
 
               {/* Round Result Overlay */}
               {matchPhase === 'roundResult' && (
-                <div className="fixed inset-0 z-[90] flex flex-col items-center justify-end pointer-events-none p-6">
+                <div className="fixed inset-0 z-[90] flex flex-col items-center justify-between pointer-events-none p-6 pt-24 pb-8">
+                  {/* Floating Round Result Card */}
+                  {matchHistory.length > 0 && (() => {
+                    const lastRound = matchHistory[matchHistory.length - 1];
+                    const isWin = lastRound.result === 'win';
+                    const isLoss = lastRound.result === 'loss';
+                    
+                    const borderColor = isWin ? 'border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.35)]' : 
+                                      isLoss ? 'border-rose-500/50 shadow-[0_0_30px_rgba(244,63,94,0.35)]' : 
+                                      'border-amber-500/50 shadow-[0_0_30px_rgba(245,158,11,0.35)]';
+                                      
+                    const badgeBg = isWin ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/30' : 
+                                    isLoss ? 'bg-rose-950/80 text-rose-400 border-rose-500/30' : 
+                                    'bg-amber-950/80 text-amber-400 border-amber-500/30';
+                                    
+                    const resultText = isWin ? 'CHIẾN THẮNG LƯỢT ĐẤU! 🏆' : 
+                                       isLoss ? 'THẤT BẠI LƯỢT ĐẤU! 💔' : 
+                                       'HÒA LƯỢT ĐẤU! 🤝';
+
+                    return (
+                      <div className={`w-full max-w-xl glass-panel p-4 sm:p-5 rounded-3xl bg-slate-950/90 border backdrop-blur-md flex flex-col items-center gap-3 animate-scale-in pointer-events-auto transition-all ${borderColor}`}>
+                        {/* Result Badge */}
+                        <div className={`px-4 py-1.5 rounded-full border text-[10px] sm:text-xs font-black tracking-widest uppercase ${badgeBg} shadow-inner`}>
+                          {resultText}
+                        </div>
+                        
+                        {/* Comparison Info */}
+                        <div className="w-full flex items-center justify-between gap-4 mt-1">
+                          {/* Player Side */}
+                          <div className="flex-1 flex flex-col items-center text-center">
+                            <span className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-0.5">Bạn</span>
+                            <span className="text-xs sm:text-sm font-black text-white line-clamp-1">{lastRound.myCardName}</span>
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <span className="text-xl sm:text-2xl font-black text-blue-400">{lastRound.myFinalVal}</span>
+                              <span className="text-[9px] font-black text-blue-500 bg-blue-950/60 px-1.5 py-0.5 rounded border border-blue-800/40 uppercase">{lastRound.myStat}</span>
+                            </div>
+                            <span className="text-[9px] text-gray-400 mt-1 italic leading-tight max-w-[155px] break-words">{lastRound.myBonusDetails || "Không có boost"}</span>
+                          </div>
+                          
+                          {/* VS / Comparison Sign */}
+                          <div className="flex flex-col items-center justify-center shrink-0">
+                            <span className={`text-2xl sm:text-3xl font-black italic drop-shadow-md ${
+                              isWin ? 'text-emerald-400 animate-pulse' : isLoss ? 'text-rose-400 animate-pulse' : 'text-amber-400 animate-pulse'
+                            }`}>
+                              {isWin ? '＞' : isLoss ? '＜' : '＝'}
+                            </span>
+                            <span className="text-[9px] text-amber-400 font-black mt-1.5 bg-black/50 px-2 py-0.5 rounded-full border border-amber-500/20 shadow">Tỉ số: {matchScore.player} - {matchScore.ai}</span>
+                          </div>
+                          
+                          {/* AI Side */}
+                          <div className="flex-1 flex flex-col items-center text-center">
+                            <span className="text-[10px] text-red-400 font-bold uppercase tracking-widest mb-0.5">Đối thủ (AI)</span>
+                            <span className="text-xs sm:text-sm font-black text-white line-clamp-1">{lastRound.opCardName}</span>
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <span className="text-xl sm:text-2xl font-black text-red-400">{lastRound.opFinalVal}</span>
+                              <span className="text-[9px] font-black text-red-500 bg-red-950/60 px-1.5 py-0.5 rounded border border-red-800/40 uppercase">{lastRound.opStat}</span>
+                            </div>
+                            <span className="text-[9px] text-gray-400 mt-1 italic leading-tight max-w-[155px] break-words">{lastRound.opBonusDetails || "Không có boost"}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   {playedCardIds.length >= 11 ? (
                     <button
                       className="mb-8 px-8 py-3 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 font-black tracking-widest uppercase rounded-full shadow-[0_0_30px_rgba(251,191,36,0.5)] transition-all hover:scale-105 pointer-events-auto cursor-pointer animate-bounce-subtle"
@@ -6165,7 +6228,7 @@ export default function App() {
                   ) : (
                     <div className="mb-8 text-amber-400 text-[10px] sm:text-xs font-bold tracking-widest uppercase animate-pulse bg-black/85 px-6 py-2.5 rounded-full border border-amber-500/30 shadow-lg pointer-events-auto cursor-pointer">
                        Chạm vào bất kỳ đâu để tiếp tục ⚽
-                    </div>
+                     </div>
                   )}
                 </div>
               )}
