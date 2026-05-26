@@ -5003,8 +5003,8 @@ export default function App() {
               {/* RIGHT FEED PANEL (7/12 cols): Composer and post feed timeline */}
               <div className="lg:col-span-7 flex flex-col gap-6 h-full max-h-[85vh] overflow-y-auto pr-1 hide-scrollbar">
                 
-                {/* 1. Composer (Only for the wall owner) */}
-                {userWallTarget === currentUser && (
+                {/* 1. Composer (Only for the wall owner, when not on global feed tab) */}
+                {userWallTarget === currentUser && socialWallTab !== 'global' && (
                   <div className="glass-panel rounded-[2rem] p-5 border border-white/10 shadow-xl bg-slate-950/40 backdrop-blur-md flex gap-3.5">
                     <div 
                       className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center font-black border border-white/10 select-none text-sm"
