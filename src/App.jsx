@@ -6080,116 +6080,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Card Details & Upgrade Modal */}
-          {selectedUpgradeCard && (() => {
-            const cardInCollection = collection.find(c => c.id === selectedUpgradeCard.id);
-            const inSquad = squad.some(s => s.id === selectedUpgradeCard.id);
-            const lvl = cardInCollection ? (cardInCollection.level || 1) : 1;
-            const upgradeCost = lvl * 150;
-            const isMaxLvl = lvl >= 10;
-            return (
-              <div 
-                className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in"
-                onClick={() => setSelectedUpgradeCard(null)}
-              >
-                <div 
-                  className="glass-panel p-6 sm:p-8 rounded-[2.5rem] max-w-lg w-full flex flex-col md:flex-row items-center gap-6 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950/80 shadow-[0_0_80px_rgba(30,58,138,0.5)] relative border border-white/10"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button 
-                    className="absolute top-4 right-4 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full w-8 h-8 flex items-center justify-center transition-colors border border-white/10 z-50 cursor-pointer"
-                    onClick={() => setSelectedUpgradeCard(null)}
-                  >
-                    ✕
-                  </button>
-
-                  {/* Left Column: Big Card Visual */}
-                  <div className="w-44 sm:w-56 shrink-0 drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)] relative group">
-                    <Card player={cardInCollection || selectedUpgradeCard} hideStats={false} />
-                  </div>
-
-                  {/* Right Column: Level Up Controls */}
-                  <div className="flex-1 flex flex-col justify-between w-full h-full text-left">
-                    <div>
-                      <span className="text-[10px] sm:text-xs font-black uppercase text-cyan-400 tracking-widest block mb-1">HỒ SƠ CẦU THỦ</span>
-                      <h3 className="text-xl sm:text-2xl font-black italic uppercase tracking-wide text-white mb-2 leading-none">{selectedUpgradeCard.name}</h3>
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        <span className="text-[10px] font-bold px-2 py-0.5 bg-white/10 rounded-full text-white/80 border border-white/10">{selectedUpgradeCard.type}</span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 bg-yellow-500/20 text-yellow-400 rounded-full border border-yellow-500/30">Cấp Độ {lvl}</span>
-                      </div>
-
-                      <div className="bg-black/40 border border-white/5 rounded-2xl p-4 mb-4">
-                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Chỉ số thuộc tính (+2/Lv):</h4>
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-2">
-                            <div className="text-[9px] font-extrabold text-red-400 tracking-wider">ATK</div>
-                            <div className="text-base sm:text-lg font-black text-white">{selectedUpgradeCard.stats.attack + (lvl - 1) * 2}</div>
-                          </div>
-                          <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-2">
-                            <div className="text-[9px] font-extrabold text-green-400 tracking-wider">CTRL</div>
-                            <div className="text-base sm:text-lg font-black text-white">{selectedUpgradeCard.stats.control + (lvl - 1) * 2}</div>
-                          </div>
-                          <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-2">
-                            <div className="text-[9px] font-extrabold text-blue-400 tracking-wider">DEF</div>
-                            <div className="text-base sm:text-lg font-black text-white">{selectedUpgradeCard.stats.defense + (lvl - 1) * 2}</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2 mt-2">
-                      <button
-                        className={`w-full py-3 px-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all cursor-pointer flex justify-between items-center ${
-                          isMaxLvl ? 'bg-gray-800 text-gray-500 border border-gray-700 cursor-not-allowed' :
-                          coins >= upgradeCost ? 'bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-slate-950 font-black shadow-lg shadow-yellow-950/20 hover:scale-[1.02]' :
-                          'bg-red-950/40 text-red-400 border border-red-500/20 cursor-not-allowed'
-                        }`}
-                        disabled={isMaxLvl}
-                        onClick={() => {
-                          playFx('click');
-                          upgradeCard(selectedUpgradeCard.id);
-                        }}
-                      >
-                        <span>{isMaxLvl ? "ĐÃ ĐẠT CẤP ĐỘ MAX" : `⚡ CƯỜNG HÓA (+2 CHỈ SỐ)`}</span>
-                        {!isMaxLvl && (
-                          <span className="text-[10px] font-bold px-2 py-1 bg-black/20 rounded-lg text-white">
-                            🪙 {upgradeCost} Xu
-                          </span>
-                        )}
-                      </button>
-
-                      <button
-                        className={`w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-widest transition-all cursor-pointer border ${
-                          inSquad ? 'bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20' :
-                          squad.length >= 11 ? 'bg-gray-800 border-gray-700 text-gray-500 cursor-not-allowed' :
-                          'bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20'
-                        }`}
-                        onClick={() => {
-                          playFx('click');
-                          if (inSquad) {
-                            setSquad(squad.filter(s => s.id !== selectedUpgradeCard.id));
-                            localStorage.setItem(`panini_${currentUser}_squad`, JSON.stringify(squad.filter(s => s.id !== selectedUpgradeCard.id)));
-                            setSelectedUpgradeCard(null);
-                          } else {
-                            if (squad.length < 11) {
-                              const cardToInsert = cardInCollection || selectedUpgradeCard;
-                              setSquad([...squad, cardToInsert]);
-                              localStorage.setItem(`panini_${currentUser}_squad`, JSON.stringify([...squad, cardToInsert]));
-                              setSelectedUpgradeCard(null);
-                            } else {
-                              showAlert("🚫 Đội Hình Đầy!", "Đội hình chính đã đủ 11 cầu thủ!");
-                            }
-                          }
-                        }}
-                      >
-                        {inSquad ? "❌ Rút Khỏi Đội Hình" : squad.length >= 11 ? "🚫 Đội Hình Chính Đầy (11/11)" : "⚽ Đưa Vào Đội Hình Chính"}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
         </div>
       )}
 
@@ -6656,6 +6546,117 @@ export default function App() {
       )}
 
       {/* ================= MODALS & CELEBRATIONS ================= */}
+
+      {/* 1. CARD DETAILS & UPGRADE MODAL (GLOBAL) */}
+      {selectedUpgradeCard && (() => {
+        const cardInCollection = collection.find(c => c.id === selectedUpgradeCard.id);
+        const inSquad = squad.some(s => s.id === selectedUpgradeCard.id);
+        const lvl = cardInCollection ? (cardInCollection.level || 1) : 1;
+        const upgradeCost = lvl * 150;
+        const isMaxLvl = lvl >= 10;
+        return (
+          <div 
+            className="fixed inset-0 z-[190] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in"
+            onClick={() => setSelectedUpgradeCard(null)}
+          >
+            <div 
+              className="glass-panel p-6 sm:p-8 rounded-[2.5rem] max-w-lg w-full flex flex-col md:flex-row items-center gap-6 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950/80 shadow-[0_0_80px_rgba(30,58,138,0.5)] relative border border-white/10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button 
+                className="absolute top-4 right-4 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full w-8 h-8 flex items-center justify-center transition-colors border border-white/10 z-50 cursor-pointer"
+                onClick={() => setSelectedUpgradeCard(null)}
+              >
+                ✕
+              </button>
+
+              {/* Left Column: Big Card Visual */}
+              <div className="w-44 sm:w-56 shrink-0 drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)] relative group">
+                <Card player={cardInCollection || selectedUpgradeCard} hideStats={false} />
+              </div>
+
+              {/* Right Column: Level Up Controls */}
+              <div className="flex-1 flex flex-col justify-between w-full h-full text-left">
+                <div>
+                  <span className="text-[10px] sm:text-xs font-black uppercase text-cyan-400 tracking-widest block mb-1">HỒ SƠ CẦU THỦ</span>
+                  <h3 className="text-xl sm:text-2xl font-black italic uppercase tracking-wide text-white mb-2 leading-none">{selectedUpgradeCard.name}</h3>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <span className="text-[10px] font-bold px-2 py-0.5 bg-white/10 rounded-full text-white/80 border border-white/10">{selectedUpgradeCard.type}</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 bg-yellow-500/20 text-yellow-400 rounded-full border border-yellow-500/30">Cấp Độ {lvl}</span>
+                  </div>
+
+                  <div className="bg-black/40 border border-white/5 rounded-2xl p-4 mb-4">
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Chỉ số thuộc tính (+2/Lv):</h4>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-2">
+                         <div className="text-[9px] font-extrabold text-red-400 tracking-wider">ATK</div>
+                         <div className="text-base sm:text-lg font-black text-white">{selectedUpgradeCard.stats.attack + (lvl - 1) * 2}</div>
+                      </div>
+                      <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-2">
+                         <div className="text-[9px] font-extrabold text-green-400 tracking-wider">CTRL</div>
+                         <div className="text-base sm:text-lg font-black text-white">{selectedUpgradeCard.stats.control + (lvl - 1) * 2}</div>
+                      </div>
+                      <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-2">
+                         <div className="text-[9px] font-extrabold text-blue-400 tracking-wider">DEF</div>
+                         <div className="text-base sm:text-lg font-black text-white">{selectedUpgradeCard.stats.defense + (lvl - 1) * 2}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2 mt-2">
+                  <button
+                    className={`w-full py-3 px-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all cursor-pointer flex justify-between items-center ${
+                      isMaxLvl ? 'bg-gray-800 text-gray-500 border border-gray-700 cursor-not-allowed' :
+                      coins >= upgradeCost ? 'bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-slate-950 font-black shadow-lg shadow-yellow-950/20 hover:scale-[1.02]' :
+                      'bg-red-950/40 text-red-400 border border-red-500/20 cursor-not-allowed'
+                    }`}
+                    disabled={isMaxLvl}
+                    onClick={() => {
+                      playFx('click');
+                      upgradeCard(selectedUpgradeCard.id);
+                    }}
+                  >
+                    <span>{isMaxLvl ? "ĐÃ ĐẠT CẤP ĐỘ MAX" : `⚡ CƯỜNG HÓA (+2 CHỈ SỐ)`}</span>
+                    {!isMaxLvl && (
+                      <span className="text-[10px] font-bold px-2 py-1 bg-black/20 rounded-lg text-white">
+                        🪙 {upgradeCost} Xu
+                      </span>
+                    )}
+                  </button>
+
+                  <button
+                    className={`w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-widest transition-all cursor-pointer border ${
+                      inSquad ? 'bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20' :
+                      squad.length >= 11 ? 'bg-gray-800 border-gray-700 text-gray-500 cursor-not-allowed' :
+                      'bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20'
+                    }`}
+                    onClick={() => {
+                      playFx('click');
+                      if (inSquad) {
+                        setSquad(squad.filter(s => s.id !== selectedUpgradeCard.id));
+                        localStorage.setItem(`panini_${currentUser}_squad`, JSON.stringify(squad.filter(s => s.id !== selectedUpgradeCard.id)));
+                        setSelectedUpgradeCard(null);
+                      } else {
+                        if (squad.length < 11) {
+                          const cardToInsert = cardInCollection || selectedUpgradeCard;
+                          setSquad([...squad, cardToInsert]);
+                          localStorage.setItem(`panini_${currentUser}_squad`, JSON.stringify([...squad, cardToInsert]));
+                          setSelectedUpgradeCard(null);
+                        } else {
+                          showAlert("🚫 Đội Hình Đầy!", "Đội hình chính đã đủ 11 cầu thủ!");
+                        }
+                      }
+                    }}
+                  >
+                    {inSquad ? "❌ Rút Khỏi Đội Hình" : squad.length >= 11 ? "🚫 Đội Hình Chính Đầy (11/11)" : "⚽ Đưa Vào Đội Hình Chính"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* 2. LEVEL UP CELEBRATION MODAL */}
       {showLevelUpModal && (
