@@ -829,6 +829,11 @@ export default function App() {
   const [loadingWall, setLoadingWall] = useState(false);
   const [loadingGlobalPosts, setLoadingGlobalPosts] = useState(false);
 
+  // HLV Social Wall Search & Mention states
+  const [socialSearchQuery, setSocialSearchQuery] = useState("");
+  const [showMentionDropdown, setShowMentionDropdown] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState("");
+
   // Private Chat States
   const [activePrivatePartner, setActivePrivatePartner] = useState(null);
   const [privateMessages, setPrivateMessages] = useState([]);
@@ -1355,6 +1360,88 @@ export default function App() {
     });
     
     showAlert("Nhận Quà Thành Công 🎁", `Chúc mừng! Bạn đã nhận được ${m.coins ? `${m.coins} Xu` : ''}${m.coins && m.packs ? ' + ' : ''}${m.packs ? `${m.packs} Gói Thẻ Miễn Phí` : ''} từ mốc Cấp Độ ${m.level}.`);
+  };
+
+  // --- HLV Social Wall Helpers (Search, Emojis, Autocomplete Tags) ---
+  const renderPostText = (text) => {
+    if (!text) return "";
+    const mentionRegex = /@([a-zA-Z0-9_]+)/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+    
+    while ((match = mentionRegex.exec(text)) !== null) {
+      const matchIndex = match.index;
+      const username = match[1];
+      
+      if (matchIndex > lastIndex) {
+        parts.push(text.substring(lastIndex, matchIndex));
+      }
+      
+      parts.push(
+        <span 
+          key={matchIndex} 
+          className="text-cyan-400 font-extrabold cursor-pointer hover:underline hover:text-cyan-300 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            playFx('click');
+            setUserWallTarget(username);
+            setSocialWallTab('owner');
+            setTimeout(() => {
+              const el = document.getElementById('social-wall-panel');
+              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+          }}
+        >
+          @{username}
+        </span>
+      );
+      
+      lastIndex = mentionRegex.lastIndex;
+    }
+    
+    if (lastIndex < text.length) {
+      parts.push(text.substring(lastIndex));
+    }
+    
+    return parts.length > 0 ? parts : text;
+  };
+
+  const handleComposerChange = (e) => {
+    const val = e.target.value;
+    setNewPostText(val);
+    
+    const lastWord = val.split(/[\s\n]+/).pop();
+    if (lastWord && lastWord.startsWith('@')) {
+      setMentionQuery(lastWord.slice(1));
+      setShowMentionDropdown(true);
+    } else {
+      setShowMentionDropdown(false);
+    }
+  };
+
+  const getAutocompleteSuggestions = () => {
+    const uniqueUsernames = new Set();
+    onlineUsers.forEach(u => u.username && uniqueUsernames.add(u.username));
+    leaderboardData.forEach(u => u.username && uniqueUsernames.add(u.username));
+    
+    const list = Array.from(uniqueUsernames).filter(name => name !== currentUser);
+    if (!mentionQuery) return list.slice(0, 5);
+    return list.filter(name => name.toLowerCase().includes(mentionQuery.toLowerCase())).slice(0, 5);
+  };
+
+  const insertMention = (username) => {
+    playFx('click');
+    const words = newPostText.split(/[\s\n]+/);
+    words.pop(); // Remove the typed mention fragment
+    words.push(`@${username}`);
+    setNewPostText(words.join(' ') + ' ');
+    setShowMentionDropdown(false);
+  };
+
+  const insertEmoji = (emoji) => {
+    playFx('click');
+    setNewPostText(prev => prev + emoji);
   };
 
 
@@ -4607,6 +4694,140 @@ export default function App() {
                     </div>
                   </div>
                 </div>
+
+                {/* HLV Search & Discovery Directory */}
+                <div className="glass-panel rounded-[2rem] border border-white/10 p-5 shadow-2xl bg-slate-950/40 backdrop-blur-md flex flex-col gap-4">
+                  <div>
+                    <h4 className="text-xs font-black text-cyan-400 uppercase tracking-widest flex items-center gap-1.5">
+                      <span>🔍</span> Tìm Kiếm & Khám Phá HLV
+                    </h4>
+                    <p className="text-[10px] text-gray-500 font-bold mt-1">Tìm kiếm bạn bè, xem đội hình, chỉ số & thách đấu</p>
+                  </div>
+
+                  {/* Search Input */}
+                  <div className="relative w-full">
+                    <input 
+                      type="text" 
+                      placeholder="Nhập tên HLV cần tìm..." 
+                      value={socialSearchQuery}
+                      onChange={(e) => setSocialSearchQuery(e.target.value)}
+                      className="w-full bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-xl px-3 py-2.5 pl-9 text-xs font-semibold placeholder-gray-500 focus:outline-none transition-colors text-white"
+                    />
+                    <span className="absolute left-3 top-[11px] text-[10px] text-gray-500 pointer-events-none">🔍</span>
+                    {socialSearchQuery && (
+                      <button 
+                        onClick={() => setSocialSearchQuery("")}
+                        className="absolute right-3 top-[10px] text-gray-500 hover:text-white text-xs font-bold transition-colors"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Search Results / Active Directory */}
+                  <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1 hide-scrollbar">
+                    {(() => {
+                      const allCoachesMap = new Map();
+                      
+                      leaderboardData.forEach(u => {
+                        if (u.username) {
+                          allCoachesMap.set(u.username, {
+                            username: u.username,
+                            level: u.level || 1,
+                            ovr: u.ovr || 0,
+                            isOnline: false
+                          });
+                        }
+                      });
+
+                      onlineUsers.forEach(u => {
+                        if (u.username) {
+                          allCoachesMap.set(u.username, {
+                            username: u.username,
+                            level: u.level || 1,
+                            ovr: u.rating || 0,
+                            isOnline: true
+                          });
+                        }
+                      });
+
+                      let coachesList = Array.from(allCoachesMap.values())
+                        .filter(c => c.username !== currentUser);
+
+                      if (socialSearchQuery.trim()) {
+                        coachesList = coachesList.filter(c => 
+                          c.username.toLowerCase().includes(socialSearchQuery.toLowerCase().trim())
+                        );
+                      } else {
+                        coachesList.sort((a, b) => {
+                          if (a.isOnline !== b.isOnline) return b.isOnline ? 1 : -1;
+                          return b.level - a.level;
+                        });
+                        coachesList = coachesList.slice(0, 4);
+                      }
+
+                      if (coachesList.length === 0) {
+                        return (
+                          <div className="text-center py-6 text-gray-500 text-[10px] italic font-semibold">
+                            Không tìm thấy HLV nào khớp 📭
+                          </div>
+                        );
+                      }
+
+                      return coachesList.map(coach => {
+                        const tier = getPlayerTier(coach.level);
+                        return (
+                          <div 
+                            key={coach.username}
+                            onClick={() => {
+                              playFx('click');
+                              setUserWallTarget(coach.username);
+                              setSocialWallTab('owner');
+                              setTimeout(() => {
+                                const el = document.getElementById('social-wall-panel');
+                                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                              }, 100);
+                            }}
+                            className={`p-2.5 rounded-xl border flex items-center justify-between gap-3 hover:scale-[1.01] hover:border-cyan-500/30 hover:bg-cyan-950/10 cursor-pointer transition-all duration-200 ${
+                              userWallTarget === coach.username 
+                                ? 'bg-cyan-950/20 border-cyan-500/40 ring-1 ring-cyan-500/20' 
+                                : 'bg-black/20 border-white/5'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div 
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-white shrink-0 border border-white/10"
+                                style={{ background: getAvatarGradient(coach.username) }}
+                              >
+                                {coach.username.charAt(0).toUpperCase()}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-extrabold text-xs text-white truncate">{coach.username}</span>
+                                  <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${
+                                    coach.isOnline 
+                                      ? 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)] animate-pulse' 
+                                      : 'bg-gray-600'
+                                  }`}></span>
+                                </div>
+                                <div className="flex items-center gap-1 mt-0.5">
+                                  <span className="text-[8px] text-gray-400 font-bold">Cấp {coach.level}</span>
+                                  <span className={`text-[7px] font-black uppercase px-1 rounded border shrink-0 ${tier.color}`}>
+                                    {tier.icon} {tier.name}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="text-right shrink-0">
+                              <span className="text-[9px] bg-cyan-900/30 text-cyan-400 border border-cyan-500/10 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">{coach.ovr || 80} OVR</span>
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                </div>
               </div>
 
               {/* RIGHT FEED PANEL (7/12 cols): Composer and post feed timeline */}
@@ -4625,12 +4846,49 @@ export default function App() {
                     <div className="flex-1 flex flex-col gap-3">
                       <textarea
                         value={newPostText}
-                        onChange={(e) => setNewPostText(e.target.value)}
+                        onChange={handleComposerChange}
                         placeholder="Hãy chia sẻ suy nghĩ, đội hình lý tưởng hay kinh nghiệm trận mạc bóng đá của bạn... ⚽"
                         maxLength={280}
                         rows={3}
                         className="w-full bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-2xl p-3 text-xs font-semibold placeholder-gray-500 focus:outline-none resize-none transition-colors leading-relaxed text-white"
                       />
+
+                      {/* Mention Autocomplete Dropdown */}
+                      {showMentionDropdown && (
+                        <div className="relative">
+                          <div className="absolute top-0 left-0 z-[60] bg-slate-900/95 border border-white/10 rounded-xl p-1.5 flex flex-col gap-1 w-48 shadow-2xl backdrop-blur-md animate-fade-in">
+                            <div className="text-[8px] font-black text-gray-500 uppercase tracking-widest px-1.5 py-0.5 border-b border-white/5">Nhắc tên HLV:</div>
+                            {getAutocompleteSuggestions().map(name => (
+                              <button
+                                key={name}
+                                type="button"
+                                onClick={() => insertMention(name)}
+                                className="w-full text-left px-2 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:text-white hover:bg-white/5 transition-all flex items-center gap-1.5 cursor-pointer"
+                              >
+                                👤 @{name}
+                              </button>
+                            ))}
+                            {getAutocompleteSuggestions().length === 0 && (
+                              <span className="text-[9px] text-gray-500 italic px-2 py-1">Không tìm thấy HLV nào</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Emoji & Quick Toolbar */}
+                      <div className="flex items-center gap-1.5 flex-wrap py-1 border-t border-white/5">
+                        <span className="text-[9px] text-gray-500 font-bold uppercase mr-1">Sinh động:</span>
+                        {['⚽', '🏆', '👑', '🔥', '🎯', '🤝', '💬', '🚀', '🌟', '👏'].map(emoji => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onClick={() => insertEmoji(emoji)}
+                            className="w-6 h-6 rounded-md hover:bg-white/10 text-xs flex items-center justify-center transition-all hover:scale-110 cursor-pointer"
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
                       
                       <div className="flex items-center justify-between">
                         <span className={`text-[10px] font-bold tracking-widest ${
@@ -4665,14 +4923,52 @@ export default function App() {
                       {currentUser.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 flex flex-col gap-3">
-                      <textarea
+                       <textarea
                         value={newPostText}
-                        onChange={(e) => setNewPostText(e.target.value)}
+                        onChange={handleComposerChange}
                         placeholder="Chia sẻ với cộng đồng HLV toàn cầu... ⚽🌍"
                         maxLength={280}
                         rows={3}
                         className="w-full bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-2xl p-3 text-xs font-semibold placeholder-gray-500 focus:outline-none resize-none transition-colors leading-relaxed text-white"
                       />
+
+                      {/* Mention Autocomplete Dropdown */}
+                      {showMentionDropdown && (
+                        <div className="relative">
+                          <div className="absolute top-0 left-0 z-[60] bg-slate-900/95 border border-white/10 rounded-xl p-1.5 flex flex-col gap-1 w-48 shadow-2xl backdrop-blur-md animate-fade-in">
+                            <div className="text-[8px] font-black text-gray-500 uppercase tracking-widest px-1.5 py-0.5 border-b border-white/5">Nhắc tên HLV:</div>
+                            {getAutocompleteSuggestions().map(name => (
+                              <button
+                                key={name}
+                                type="button"
+                                onClick={() => insertMention(name)}
+                                className="w-full text-left px-2 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:text-white hover:bg-white/5 transition-all flex items-center gap-1.5 cursor-pointer"
+                              >
+                                👤 @{name}
+                              </button>
+                            ))}
+                            {getAutocompleteSuggestions().length === 0 && (
+                              <span className="text-[9px] text-gray-500 italic px-2 py-1">Không tìm thấy HLV nào</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Emoji & Quick Toolbar */}
+                      <div className="flex items-center gap-1.5 flex-wrap py-1 border-t border-white/5">
+                        <span className="text-[9px] text-gray-500 font-bold uppercase mr-1">Sinh động:</span>
+                        {['⚽', '🏆', '👑', '🔥', '🎯', '🤝', '💬', '🚀', '🌟', '👏'].map(emoji => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onClick={() => insertEmoji(emoji)}
+                            className="w-6 h-6 rounded-md hover:bg-white/10 text-xs flex items-center justify-center transition-all hover:scale-110 cursor-pointer"
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                      
                       <div className="flex items-center justify-between">
                         <span className={`text-[10px] font-bold tracking-widest ${ newPostText.length > 250 ? 'text-red-400' : newPostText.length > 200 ? 'text-yellow-400' : 'text-gray-500' }`}>{newPostText.length} / 280</span>
                         <button
@@ -4746,7 +5042,7 @@ export default function App() {
                           </div>
 
                           <p className="text-xs sm:text-sm text-gray-100 font-medium leading-relaxed whitespace-pre-wrap px-1">
-                            {post.content}
+                            {renderPostText(post.content)}
                           </p>
 
                           <div className="flex items-center gap-6 border-t border-b border-white/5 py-2 px-1">
@@ -4776,7 +5072,7 @@ export default function App() {
                                       <span className="text-[8px] bg-white/10 text-gray-400 px-1 rounded border border-white/10 font-bold">Lv.{comm.authorLevel || 1}</span>
                                       <span className="text-[8px] text-gray-500 font-bold font-mono ml-auto">{getRelativeTime(comm.timestamp)}</span>
                                     </div>
-                                    <p className="text-[11px] text-gray-300 font-semibold leading-relaxed mt-1 whitespace-pre-wrap">{comm.content}</p>
+                                    <p className="text-[11px] text-gray-300 font-semibold leading-relaxed mt-1 whitespace-pre-wrap">{renderPostText(comm.content)}</p>
                                   </div>
                                 </div>
                               ))}
