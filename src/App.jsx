@@ -2553,7 +2553,7 @@ export default function App() {
 
     let pScore = matchScore.player;
     let aScore = matchScore.ai;
-    let msg = '';
+    let msg;
 
     const myBonusDetails = bonusPart(bonus1, attrBonus1, attr1.emoji, lvlBonus1, formBonus1, formResult1.state, chemBonus1, capBonus1);
     const opBonusDetails = bonusPart(bonus2, attrBonus2, attr2.emoji, lvlBonus2, formBonus2, formResult2.state, chemBonus2, capBonus2);
@@ -2621,7 +2621,7 @@ export default function App() {
       }));
 
       // Update XP & Stats — thua vẫn nhận XP để khuyến khích chơi
-      let xpEarned = 0;
+      let xpEarned;
       if (isWin) {
         xpEarned = 60;
         gainXp(xpEarned);
@@ -4744,7 +4744,6 @@ export default function App() {
                         const isMe = user.username === currentUser;
                         const rank = index + 1;
                         const tier = getPlayerTier(user.level);
-                        const isTop3 = rank <= 3;
                         
                         return (
                           <tr 
