@@ -821,9 +821,12 @@ export default function App() {
   const [userWallTarget, setUserWallTarget] = useState(null);
   const [userWallData, setUserWallData] = useState(null);
   const [userWallPosts, setUserWallPosts] = useState([]);
+  const [globalPosts, setGlobalPosts] = useState([]);
+  const [socialWallTab, setSocialWallTab] = useState('global'); // 'global' | 'owner'
   const [newPostText, setNewPostText] = useState("");
   const [commentInputs, setCommentInputs] = useState({});
   const [loadingWall, setLoadingWall] = useState(false);
+  const [loadingGlobalPosts, setLoadingGlobalPosts] = useState(false);
 
   // Private Chat States
   const [activePrivatePartner, setActivePrivatePartner] = useState(null);
@@ -1354,7 +1357,7 @@ export default function App() {
   };
 
 
-  // Create new Post
+  // Create new Post — always writes to /global_posts for universal feed
   const handleCreatePost = async () => {
     if (!newPostText.trim()) return;
     if (newPostText.length > 280) {
@@ -1374,6 +1377,11 @@ export default function App() {
 
     if (isConnectedToFirebase) {
       try {
+        // Write to /global_posts for the global feed
+        const globalRef = ref(database, `/global_posts`);
+        const newGlobalRef = push(globalRef);
+        await set(newGlobalRef, postData);
+        // Also keep legacy per-user wall path in sync
         const postsRef = ref(database, `/user_walls/${currentUser}/posts`);
         const newPostRef = push(postsRef);
         await set(newPostRef, postData);
@@ -1383,28 +1391,25 @@ export default function App() {
         showAlert("❌ Thất bại", "Không thể gửi bài viết lên server.");
       }
     } else {
-      const localWalls = localStorage.getItem('thebongda_local_user_walls');
-      const wallsData = localWalls ? JSON.parse(localWalls) : {};
-      if (!wallsData[currentUser]) wallsData[currentUser] = { posts: {} };
-      if (!wallsData[currentUser].posts) wallsData[currentUser].posts = {};
-      
+      // Offline: save to local global posts
       const fakeId = 'local_post_' + Date.now();
-      wallsData[currentUser].posts[fakeId] = postData;
-      localStorage.setItem('thebongda_local_user_walls', JSON.stringify(wallsData));
+      const localGlobal = localStorage.getItem('thebongda_local_global_posts');
+      const globalData = localGlobal ? JSON.parse(localGlobal) : {};
+      globalData[fakeId] = postData;
+      localStorage.setItem('thebongda_local_global_posts', JSON.stringify(globalData));
       
-      const list = Object.keys(wallsData[currentUser].posts).map(key => ({
-        id: key,
-        ...wallsData[currentUser].posts[key]
-      })).sort((a, b) => b.timestamp - a.timestamp);
-      setUserWallPosts(list);
+      const list = Object.values(globalData).sort((a, b) => b.timestamp - a.timestamp);
+      setGlobalPosts(list.map((p, i) => ({ ...p, id: Object.keys(globalData)[i] })));
+      setUserWallPosts(list.filter(p => p.author === currentUser).map((p, i) => ({ ...p, id: Object.keys(globalData).filter(k => globalData[k].author === currentUser)[i] })));
       setNewPostText("");
     }
   };
 
-  // Like / Unlike Post
+  // Like / Unlike Post — operates on global_posts
   const handleLikePost = async (postId) => {
     playFx('click');
-    const post = userWallPosts.find(p => p.id === postId);
+    // Search across global and per-user feed
+    const post = globalPosts.find(p => p.id === postId) || userWallPosts.find(p => p.id === postId);
     if (!post) return;
 
     const likes = post.likes || {};
@@ -1418,24 +1423,28 @@ export default function App() {
 
     if (isConnectedToFirebase) {
       try {
-        const likeRef = ref(database, `/user_walls/${userWallTarget}/posts/${postId}/likes`);
-        await set(likeRef, updatedLikes);
+        // Update global_posts
+        const globalLikeRef = ref(database, `/global_posts/${postId}/likes`);
+        await set(globalLikeRef, updatedLikes);
+        // Also update legacy per-user path if applicable
+        const likeRef = ref(database, `/user_walls/${post.author}/posts/${postId}/likes`);
+        set(likeRef, updatedLikes).catch(() => {});
       } catch (err) {
         console.error("Error liking post:", err);
       }
     } else {
-      const localWalls = localStorage.getItem('thebongda_local_user_walls');
-      const wallsData = localWalls ? JSON.parse(localWalls) : {};
-      if (wallsData[userWallTarget] && wallsData[userWallTarget].posts && wallsData[userWallTarget].posts[postId]) {
-        wallsData[userWallTarget].posts[postId].likes = updatedLikes;
-        localStorage.setItem('thebongda_local_user_walls', JSON.stringify(wallsData));
-        
+      const localGlobal = localStorage.getItem('thebongda_local_global_posts');
+      const globalData = localGlobal ? JSON.parse(localGlobal) : {};
+      if (globalData[postId]) {
+        globalData[postId].likes = updatedLikes;
+        localStorage.setItem('thebongda_local_global_posts', JSON.stringify(globalData));
+        setGlobalPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: updatedLikes } : p));
         setUserWallPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: updatedLikes } : p));
       }
     }
   };
 
-  // Create new Comment under a Post
+  // Create new Comment under a Post — operates on global_posts
   const handleCreateComment = async (postId) => {
     const commentText = commentInputs[postId] || "";
     if (!commentText.trim()) return;
@@ -1454,31 +1463,37 @@ export default function App() {
 
     if (isConnectedToFirebase) {
       try {
-        const commentsRef = ref(database, `/user_walls/${userWallTarget}/posts/${postId}/comments`);
-        const newCommentRef = push(commentsRef);
-        await set(newCommentRef, commentData);
+        // Write to global_posts
+        const globalCommentsRef = ref(database, `/global_posts/${postId}/comments`);
+        const newGlobalCommentRef = push(globalCommentsRef);
+        await set(newGlobalCommentRef, commentData);
+        // Also keep per-user wall in sync
+        const post = globalPosts.find(p => p.id === postId) || userWallPosts.find(p => p.id === postId);
+        if (post) {
+          const commentsRef = ref(database, `/user_walls/${post.author}/posts/${postId}/comments`);
+          push(commentsRef, commentData).catch(() => {});
+        }
         setCommentInputs(prev => ({ ...prev, [postId]: "" }));
       } catch (err) {
         console.error("Error creating comment:", err);
       }
     } else {
-      const localWalls = localStorage.getItem('thebongda_local_user_walls');
-      const wallsData = localWalls ? JSON.parse(localWalls) : {};
-      if (wallsData[userWallTarget] && wallsData[userWallTarget].posts && wallsData[userWallTarget].posts[postId]) {
-        if (!wallsData[userWallTarget].posts[postId].comments) {
-          wallsData[userWallTarget].posts[postId].comments = {};
-        }
+      const localGlobal = localStorage.getItem('thebongda_local_global_posts');
+      const globalData = localGlobal ? JSON.parse(localGlobal) : {};
+      if (globalData[postId]) {
+        if (!globalData[postId].comments) globalData[postId].comments = {};
         const commentId = 'local_comment_' + Date.now();
-        wallsData[userWallTarget].posts[postId].comments[commentId] = commentData;
-        localStorage.setItem('thebongda_local_user_walls', JSON.stringify(wallsData));
-        
+        globalData[postId].comments[commentId] = commentData;
+        localStorage.setItem('thebongda_local_global_posts', JSON.stringify(globalData));
+        setGlobalPosts(prev => prev.map(p => {
+          if (p.id === postId) {
+            return { ...p, comments: { ...(p.comments || {}), [commentId]: commentData } };
+          }
+          return p;
+        }));
         setUserWallPosts(prev => prev.map(p => {
           if (p.id === postId) {
-            const comments = p.comments || {};
-            return {
-              ...p,
-              comments: { ...comments, [commentId]: commentData }
-            };
+            return { ...p, comments: { ...(p.comments || {}), [commentId]: commentData } };
           }
           return p;
         }));
@@ -1666,7 +1681,31 @@ export default function App() {
     };
   }, [currentUser, squad, level, userCreatedAt]);
 
-  // User Wall (X/Twitter) Data Loading Effect (Firebase + LocalStorage fallback)
+  // Global Posts Feed (all HLV posts for the Explore tab)
+  useEffect(() => {
+    if (!isConnectedToFirebase) {
+      const localGlobal = localStorage.getItem('thebongda_local_global_posts');
+      const globalData = localGlobal ? JSON.parse(localGlobal) : {};
+      const list = Object.keys(globalData).map(key => ({ id: key, ...globalData[key] })).sort((a, b) => b.timestamp - a.timestamp);
+      setGlobalPosts(list);
+      return;
+    }
+    setLoadingGlobalPosts(true);
+    const globalPostsRef = ref(database, '/global_posts');
+    const unsubGlobal = onValue(globalPostsRef, (snapshot) => {
+      const val = snapshot.val();
+      if (val) {
+        const list = Object.keys(val).map(key => ({ id: key, ...val[key] })).sort((a, b) => b.timestamp - a.timestamp);
+        setGlobalPosts(list.slice(0, 100)); // cap at 100 most recent
+      } else {
+        setGlobalPosts([]);
+      }
+      setLoadingGlobalPosts(false);
+    }, () => setLoadingGlobalPosts(false));
+    return () => unsubGlobal();
+  }, [isConnectedToFirebase]);
+
+  // User Wall (X/Twitter) Data Loading Effect — per-owner posts
   useEffect(() => {
     if (!userWallTarget) {
       setUserWallData(null);
@@ -1686,7 +1725,7 @@ export default function App() {
         console.error("Error fetching wall user info:", error);
       });
 
-      // 2. Fetch posts in real-time
+      // 2. Per-owner posts from /user_walls (for the HLV tab filter)
       const postsRef = ref(database, `/user_walls/${userWallTarget}/posts`);
       const unsubscribePosts = onValue(postsRef, (snapshot) => {
         const postsVal = snapshot.val();
@@ -1697,7 +1736,8 @@ export default function App() {
           })).sort((a, b) => b.timestamp - a.timestamp);
           setUserWallPosts(list);
         } else {
-          setUserWallPosts([]);
+          // Fallback: filter from global posts
+          setUserWallPosts(globalPosts.filter(p => p.author === userWallTarget));
         }
         setLoadingWall(false);
       }, (error) => {
@@ -1710,42 +1750,26 @@ export default function App() {
         unsubscribePosts();
       };
     } else {
-      // Offline mode: load from LocalStorage
-      const localWalls = localStorage.getItem('thebongda_local_user_walls');
-      const wallsData = localWalls ? JSON.parse(localWalls) : {};
-      const wall = wallsData[userWallTarget] || {};
-      
+      // Offline: build profile and per-user posts from local data
       let offlineProfile = null;
       if (userWallTarget === currentUser) {
-        offlineProfile = {
-          level,
-          xp,
-          stats,
-          squad
-        };
+        offlineProfile = { level, xp, stats, squad };
       } else {
         const matchingOnline = onlineUsers.find(u => u.username === userWallTarget);
         offlineProfile = matchingOnline ? {
-          level: matchingOnline.level || 1,
-          xp: 0,
-          stats: { played: 0, wins: 0, draws: 0, losses: 0 },
-          squad: []
-        } : {
-          level: 1,
-          xp: 0,
-          stats: { played: 0, wins: 0, draws: 0, losses: 0 },
-          squad: []
-        };
+          level: matchingOnline.level || 1, xp: 0,
+          stats: { played: 0, wins: 0, draws: 0, losses: 0 }, squad: []
+        } : { level: 1, xp: 0, stats: { played: 0, wins: 0, draws: 0, losses: 0 }, squad: [] };
       }
-
       setUserWallData(offlineProfile);
-      
-      const postsList = wall.posts ? Object.keys(wall.posts).map(key => ({
-        id: key,
-        ...wall.posts[key]
-      })).sort((a, b) => b.timestamp - a.timestamp) : [];
-      
-      setUserWallPosts(postsList);
+      // Filter from local global posts
+      const localGlobal = localStorage.getItem('thebongda_local_global_posts');
+      const globalData = localGlobal ? JSON.parse(localGlobal) : {};
+      const filtered = Object.keys(globalData)
+        .map(k => ({ id: k, ...globalData[k] }))
+        .filter(p => p.author === userWallTarget)
+        .sort((a, b) => b.timestamp - a.timestamp);
+      setUserWallPosts(filtered);
       setLoadingWall(false);
     }
   }, [userWallTarget, isConnectedToFirebase, currentUser, level, xp, stats, squad, onlineUsers]);
@@ -2306,16 +2330,6 @@ export default function App() {
     }, 1200);
   };
 
-  const toggleSquad = (player) => {
-    if (squad.find(p => p.id === player.id)) {
-      setSquad(squad.filter(p => p.id !== player.id));
-    } else {
-      if (squad.length < 11) {
-        setSquad([...squad, player]);
-      }
-    }
-  };
-
   const generateAITeam = (diff) => {
     const pool = [...playersData];
     const filteredPool = pool.filter(p => {
@@ -2495,8 +2509,8 @@ export default function App() {
     const capBonus2 = (aiSquad.length > 0 && aiCard.id === aiSquad[0].id) ? 3 : 0;
 
     let baseV1 = selectedPlayerCard.stats[stat] + lvlBonus1;
-    let baseV2 = 0;
-    let stat2Name = '';
+    let baseV2;
+    let stat2Name;
 
     if (stat === 'attack') {
       baseV2 = aiCard.stats.defense + lvlBonus2;
@@ -2674,7 +2688,7 @@ export default function App() {
     }
   }, [matchPhase, roundResultMsg, matchScore.player, matchScore.ai]);
 
-  // Auto-hide round result overlay after 3 seconds in AI Match
+  // Auto-hide round result overlay after 6 seconds in AI Match
   useEffect(() => {
     if (gameState === 'matchEngine' && matchPhase === 'roundResult' && playedCardIds.length < 11) {
       const timer = setTimeout(() => {
@@ -2682,10 +2696,20 @@ export default function App() {
         setSelectedPlayerCard(null);
         setSelectedStat(null);
         setCurrentAiCard(null);
-      }, 3000);
+      }, 6000);
       return () => clearTimeout(timer);
     }
   }, [gameState, matchPhase, playedCardIds.length]);
+
+  const dismissRoundResult = () => {
+    if (matchPhase === 'roundResult' && playedCardIds.length < 11) {
+      playFx('click');
+      setMatchPhase('playing');
+      setSelectedPlayerCard(null);
+      setSelectedStat(null);
+      setCurrentAiCard(null);
+    }
+  };
 
   const returnToLobby = () => {
     setGameState('lobby');
@@ -3200,7 +3224,7 @@ export default function App() {
           {/* User Header Profile */}
           <div className="absolute top-4 right-4 z-50 flex items-center gap-3 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
             <button 
-              onClick={() => { playFx('click'); setGameState('userWall'); setUserWallTarget(currentUser); }} 
+              onClick={() => { playFx('click'); setGameState('userWall'); setUserWallTarget(currentUser); setSocialWallTab('global'); }} 
               className="text-xs text-cyan-400 hover:text-cyan-300 font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer select-none transition-all hover:scale-105 active:scale-95"
               title="Xem Tường nhà cá nhân"
             >
@@ -3818,84 +3842,294 @@ export default function App() {
         </div>
       )}
 
+      {/* ============== SETTINGS PAGE ============== */}
+      {gameState === 'settings' && (
+        <div className="w-full max-w-3xl mx-auto flex flex-col items-center mt-2 sm:mt-8 animate-fade-in px-2 sm:px-4">
+          {/* Header */}
+          <div className="flex flex-wrap items-center justify-between w-full gap-y-3 mb-8">
+            <div className="flex items-center gap-2">
+              <button
+                className="btn !bg-gray-800 hover:!bg-gray-700 transition-colors flex items-center gap-2 text-xs font-black uppercase tracking-wider !py-2 rounded-full border border-white/10"
+                onClick={() => { playFx('click'); setGameState('profile'); }}
+              >
+                ← Hồ Sơ
+              </button>
+              <button
+                className="btn !bg-slate-800 hover:!bg-slate-700 transition-colors flex items-center gap-2 text-xs font-black uppercase tracking-wider !py-2 rounded-full border border-white/10"
+                onClick={() => { playFx('click'); setGameState('lobby'); }}
+              >
+                🏠 Sảnh
+              </button>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400 uppercase tracking-widest text-center">
+              ⚙️ Cài Đặt HLV
+            </h2>
+            <div className="flex items-center gap-2 bg-black/40 px-4 py-2 rounded-full border border-yellow-500/30">
+              <Coins className="text-yellow-400" size={14} />
+              <span className="font-bold text-yellow-400 text-xs">{coins} Xu</span>
+            </div>
+          </div>
+
+          {/* Settings Content */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+
+            {/* Recovery Email Card */}
+            <div className="glass-panel rounded-3xl p-7 border border-purple-500/20 shadow-2xl bg-gradient-to-b from-purple-950/20 to-slate-900/60 flex flex-col gap-5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-[40px] pointer-events-none"></div>
+              <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg">
+                  <Mail size={18} className="text-white" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-white uppercase tracking-wider">Bảo Mật Tài Khoản</h4>
+                  <p className="text-[10px] text-gray-400 font-semibold mt-0.5">Email khôi phục khi quên mật khẩu</p>
+                </div>
+              </div>
+              <form onSubmit={handleUpdateEmail} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Email Khôi Phục</label>
+                  <input
+                    type="email"
+                    className="bg-black/50 border border-white/10 px-4 py-3 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors w-full font-medium"
+                    placeholder="your@email.com"
+                    value={profileEmailInput}
+                    onChange={(e) => setProfileEmailInput(e.target.value)}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="btn !bg-gradient-to-r !from-cyan-600 !to-blue-600 hover:!from-cyan-500 hover:!to-blue-500 !py-2.5 text-xs font-black tracking-widest uppercase rounded-xl transition-all cursor-pointer shadow-lg shadow-cyan-900/20"
+                >
+                  💾 Lưu Email
+                </button>
+              </form>
+              {email && (
+                <div className="text-[10px] text-emerald-400 font-bold flex items-center gap-1.5 bg-emerald-950/30 border border-emerald-500/20 px-3 py-2 rounded-xl">
+                  <CheckCircle2 size={12} /> Email hiện tại: {email}
+                </div>
+              )}
+            </div>
+
+            {/* Change Password Card */}
+            <div className="glass-panel rounded-3xl p-7 border border-indigo-500/20 shadow-2xl bg-gradient-to-b from-indigo-950/20 to-slate-900/60 flex flex-col gap-5 relative overflow-hidden">
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-[40px] pointer-events-none"></div>
+              <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                  <Lock size={18} className="text-white" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-white uppercase tracking-wider">Đổi Mật Khẩu</h4>
+                  <p className="text-[10px] text-gray-400 font-semibold mt-0.5">Bảo vệ tài khoản HLV của bạn</p>
+                </div>
+              </div>
+              <form onSubmit={handleUpdatePassword} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Mật Khẩu Hiện Tại</label>
+                  <input
+                    type="password"
+                    className="bg-black/50 border border-white/10 px-4 py-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors w-full"
+                    value={profileOldPassword}
+                    onChange={(e) => setProfileOldPassword(e.target.value)}
+                    placeholder="••••••••"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Mật Khẩu Mới</label>
+                  <input
+                    type="password"
+                    className="bg-black/50 border border-white/10 px-4 py-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors w-full"
+                    value={profileNewPassword}
+                    onChange={(e) => setProfileNewPassword(e.target.value)}
+                    placeholder="••••••••"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Xác Nhận Mật Khẩu Mới</label>
+                  <input
+                    type="password"
+                    className="bg-black/50 border border-white/10 px-4 py-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors w-full"
+                    value={profileConfirmPassword}
+                    onChange={(e) => setProfileConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="btn !bg-gradient-to-r !from-purple-600 !to-indigo-600 hover:!from-purple-500 hover:!to-indigo-500 !py-2.5 text-xs font-black tracking-widest uppercase rounded-xl transition-all cursor-pointer shadow-lg shadow-purple-900/20"
+                >
+                  🔒 Đổi Mật Khẩu
+                </button>
+              </form>
+            </div>
+
+            {/* Referral Panel — full width */}
+            <div className="md:col-span-2 glass-panel rounded-3xl p-7 border border-amber-500/20 shadow-2xl bg-gradient-to-b from-amber-950/10 to-slate-900/40 flex flex-col gap-5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-amber-500/5 rounded-full blur-[50px] pointer-events-none"></div>
+              <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center shadow-lg">
+                  <Sparkles size={18} className="text-slate-900" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-white uppercase tracking-wider">🎁 Giới Thiệu Bạn Bè</h4>
+                  <p className="text-[10px] text-gray-400 font-semibold mt-0.5">Mời bạn bè – nhận phần thưởng hấp dẫn</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Referral Code */}
+                <div className="bg-black/50 border border-amber-500/30 rounded-2xl p-4 text-center relative overflow-hidden cursor-pointer group" onClick={() => { navigator.clipboard.writeText(currentUser); showAlert('📋 Đã Sao Chép!', 'Hãy gửi mã cho bạn bè!'); }}>
+                  <div className="text-[9px] text-amber-400 font-bold uppercase tracking-widest mb-1">Mã Giới Thiệu Của Bạn</div>
+                  <div className="text-lg font-black text-white group-hover:text-amber-300 transition-colors">{currentUser} 📋</div>
+                  <div className="text-[9px] text-gray-500 mt-1">Click để copy</div>
+                </div>
+                {/* Submit referral */}
+                {!referredBy ? (
+                  <div className="bg-slate-950/40 border border-white/5 p-4 rounded-2xl flex flex-col gap-2">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Nhập Mã Bạn Bè</label>
+                    <div className="flex gap-2">
+                      <input type="text" placeholder="Tên HLV giới thiệu..." className="bg-black/50 border border-white/10 px-3 py-2 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 flex-1" value={refCodeInput} onChange={(e) => setRefCodeInput(e.target.value)} />
+                      <button type="button" className="btn !bg-cyan-600 hover:!bg-cyan-500 !py-2 !px-3 text-xs font-black rounded-xl cursor-pointer" onClick={() => { if (refCodeInput.trim()) { submitReferralCode(refCodeInput); setRefCodeInput(''); } }}>Nhập</button>
+                    </div>
+                    <div className="text-[9px] text-gray-500">+50 Xu cho tài khoản mới &lt; Cấp 5</div>
+                  </div>
+                ) : (
+                  <div className="bg-emerald-950/20 border border-emerald-500/20 p-4 rounded-2xl text-center flex items-center justify-center">
+                    <span className="text-[11px] font-bold text-emerald-400">✓ Đã nhập mã từ HLV: <span className="underline font-black">{referredBy}</span></span>
+                  </div>
+                )}
+              </div>
+              {/* Friends list */}
+              <div>
+                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">HLV Đã Mời ({referrals.length})</div>
+                <div className="flex flex-col gap-2 max-h-32 overflow-y-auto pr-1">
+                  {referrals.map(refItem => {
+                    const canClaim = refItem.level >= 5 && !refItem.claimed;
+                    return (
+                      <div key={refItem.username} className="flex justify-between items-center bg-black/40 border border-white/5 p-2.5 rounded-xl text-xs">
+                        <div>
+                          <div className="font-extrabold text-white">{refItem.username}</div>
+                          <div className="text-[9px] text-gray-500 uppercase tracking-wider">Level {refItem.level} {refItem.level >= 5 ? '🎯 Hoàn Thành' : '⏳ Cần Cấp 5'}</div>
+                        </div>
+                        {refItem.claimed ? (
+                          <span className="text-[9px] bg-white/5 text-gray-500 px-2 py-1 rounded-full font-black border border-white/5">ĐÃ NHẬN 🎁</span>
+                        ) : canClaim ? (
+                          <button type="button" className="btn !bg-yellow-500 text-black font-black text-[9px] px-2.5 py-1 rounded-full animate-bounce" onClick={() => claimReferralReward(refItem.username)}>Nhận 🎁</button>
+                        ) : (
+                          <span className="text-[9px] text-gray-400 font-black">Chờ Cấp 5</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* ============== PROFILE PAGE (2-column, no settings) ============== */}
       {gameState === 'profile' && (
         <div className="w-full max-w-6xl mx-auto flex flex-col items-center mt-2 sm:mt-8 animate-fade-in px-1 sm:px-4">
           {/* Header */}
           <div className="flex flex-wrap items-center justify-between w-full gap-y-4 mb-8">
-            <button className="btn !bg-gray-700 hover:!bg-gray-600 transition-colors flex items-center gap-2" onClick={() => setGameState('lobby')}>
+            <button className="btn !bg-gray-700 hover:!bg-gray-600 transition-colors flex items-center gap-2 text-xs font-black uppercase tracking-wider !py-2 rounded-full border border-white/10" onClick={() => { playFx('click'); setGameState('lobby'); }}>
               ← Về Sảnh
             </button>
             <h2 className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 uppercase tracking-widest text-center order-last sm:order-none w-full sm:w-auto mt-2 sm:mt-0">
-              Hồ Sơ HLV & Cài Đặt ⚙️
+              👤 Hồ Sơ HLV
             </h2>
-            <div className="flex items-center gap-2 bg-black/40 px-4 py-2 rounded-full border border-yellow-500/30">
-              <Coins className="text-yellow-400" size={16} />
-              <span className="font-bold text-yellow-400 text-sm">{coins} Xu</span>
-            </div>
+            <button
+              className="btn !bg-indigo-700 hover:!bg-indigo-600 transition-colors flex items-center gap-2 text-xs font-black uppercase tracking-wider !py-2 rounded-full border border-indigo-500/30 shadow-lg shadow-indigo-900/30"
+              onClick={() => { playFx('click'); setGameState('settings'); }}
+            >
+              ⚙️ Cài Đặt
+            </button>
           </div>
 
-          {/* Three-Column Dashboard */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full items-stretch">
-            
-            {/* COLUMN 1 (4/12): HLV Info & Stats */}
-            <div className="lg:col-span-4 flex flex-col gap-6">
-              {/* Profile Card */}
-              <div className="glass-panel rounded-3xl p-6 border border-white/10 flex flex-col items-center text-center shadow-2xl relative overflow-hidden bg-gradient-to-b from-indigo-950/20 to-slate-900/60">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 rounded-full blur-[30px] pointer-events-none"></div>
-                
-                {/* Level Circle */}
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-400 via-indigo-500 to-purple-600 flex items-center justify-center border-2 border-white/20 shadow-lg mb-3 animate-pulse-subtle">
-                  <span className="text-2xl font-black text-white">Lv.{level}</span>
+          {/* TWO-COLUMN Dashboard: Profile Info (5/12) + 3D Pitch (7/12) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full items-start">
+
+            {/* COLUMN LEFT (5/12): HLV Info, Tier, Stats */}
+            <div className="lg:col-span-5 flex flex-col gap-6">
+
+              {/* === Profile Card === */}
+              <div className="glass-panel rounded-3xl overflow-hidden border border-white/10 shadow-2xl relative bg-slate-950/40 backdrop-blur-md">
+                {/* Cover Banner */}
+                <div className="h-28 sm:h-36 bg-gradient-to-r from-cyan-900 via-indigo-950 to-purple-950 relative overflow-hidden flex items-center justify-center">
+                  <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_white_1px,_transparent_1px)] bg-[size:10px_10px]"></div>
+                  <div className="absolute -top-10 -left-10 w-40 h-40 bg-cyan-400/20 rounded-full blur-[50px]"></div>
+                  <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-purple-500/20 rounded-full blur-[50px]"></div>
+                  <span className="text-white/10 font-black italic tracking-tighter text-4xl sm:text-6xl uppercase select-none pointer-events-none transform -rotate-6">THE BONG DA</span>
                 </div>
-                
-                <h3 className="text-2xl font-black text-white uppercase mb-1">{currentUser}</h3>
-                
-                <div className="flex items-center gap-2 mb-4">
-                  {(() => {
-                    const tier = getPlayerTier(level);
-                    return (
-                      <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full border ${tier.color} ${tier.glow}`}>
-                        {tier.icon} {tier.name}
+                <div className="px-6 pb-6 pt-1 flex flex-col items-center text-center relative">
+                  {/* Avatar overlapping banner */}
+                  <div
+                    className="w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center border-4 border-slate-950 shadow-2xl relative z-10 -mt-12 sm:-mt-14"
+                    style={{ background: getAvatarGradient(currentUser), boxShadow: '0 0 30px rgba(244,63,94,0.35)' }}
+                  >
+                    <span className="text-4xl sm:text-5xl font-black text-white">{currentUser.charAt(0).toUpperCase()}</span>
+                    <span className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-500 to-amber-600 text-slate-950 text-[11px] font-black px-2 py-0.5 rounded-full border-2 border-slate-950 shadow-md">Lv.{level}</span>
+                  </div>
+
+                  <h3 className="text-2xl font-black text-white uppercase mt-3 tracking-wider flex items-center gap-2">
+                    {currentUser}
+                    <span className="text-[9px] bg-fuchsia-950/40 text-fuchsia-400 border border-fuchsia-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider font-extrabold">BẠN</span>
+                  </h3>
+
+                  {/* Tier & OVR badges */}
+                  <div className="flex items-center gap-2 mt-2 flex-wrap justify-center">
+                    {(() => {
+                      const tier = getPlayerTier(level);
+                      return (
+                        <span className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-full border ${tier.color} ${tier.glow}`}>
+                          {tier.icon} {tier.name}
+                        </span>
+                      );
+                    })()}
+                    <span className="text-[10px] px-3 py-1.5 bg-cyan-900/30 text-cyan-400 border border-cyan-500/20 font-black rounded-full uppercase tracking-wider">
+                      🔥 {squad.length === 11 ? Math.round(squad.reduce((acc, card) => acc + Math.max(card.stats.attack, card.stats.defense, card.stats.control), 0) / 11) : 0} OVR
+                    </span>
+                    {equippedTitle && (
+                      <span className="text-[10px] px-3 py-1.5 bg-amber-950/30 text-amber-400 border border-amber-500/20 font-black rounded-full">
+                        {equippedTitle}
                       </span>
-                    );
-                  })()}
-                  <span className="text-xs px-2.5 py-0.5 bg-cyan-900/30 text-cyan-400 border border-cyan-500/20 font-black rounded-full uppercase tracking-wider">
-                    {squad ? Math.round(squad.reduce((acc, card) => acc + Math.max(card.stats.attack, card.stats.defense, card.stats.control), 0) / 11) : 0} OVR
-                  </span>
-                </div>
+                    )}
+                  </div>
 
-                {/* XP Bar */}
-                <div className="w-full bg-black/60 rounded-full h-3 border border-white/5 overflow-hidden mb-1 relative">
-                  <div 
-                    className="bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-500 h-full rounded-full transition-all duration-1000"
-                    style={{ width: `${Math.min(100, (xp / (level * 100)) * 100)}%` }}
-                  ></div>
-                </div>
-                <div className="text-[10px] text-gray-500 font-semibold mb-6">{xp} / {level * 100} XP</div>
-
-                {/* Free packs & coins quick info */}
-                <div className="w-full grid grid-cols-2 gap-3 border-t border-white/10 pt-4 mt-2">
-                  <div className="bg-black/30 p-2.5 rounded-xl border border-white/5">
-                    <div className="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Tiền sở hữu</div>
-                    <div className="text-sm font-black text-yellow-400 flex items-center justify-center gap-1">
-                      <Coins size={12} /> {coins} Xu
+                  {/* XP Progress */}
+                  <div className="w-full mt-4 mb-2">
+                    <div className="flex justify-between text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 px-1">
+                      <span>Cấp Độ HLV</span>
+                      <span>{xp} / {level * 100} XP</span>
+                    </div>
+                    <div className="w-full bg-black/60 rounded-full h-2.5 border border-white/5 overflow-hidden relative">
+                      <div
+                        className="bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-500 h-full rounded-full transition-all duration-1000"
+                        style={{ width: `${Math.min(100, (xp / (level * 100)) * 100)}%` }}
+                      ></div>
                     </div>
                   </div>
-                  <div className="bg-black/30 p-2.5 rounded-xl border border-white/5">
-                    <div className="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Gói quà tích lũy</div>
-                    <div className="text-sm font-black text-fuchsia-400">
-                      🎁 {freePacks} Gói
+
+                  {/* Coins & Packs */}
+                  <div className="w-full grid grid-cols-2 gap-3 border-t border-white/8 pt-4 mt-2">
+                    <div className="bg-black/30 p-3 rounded-xl border border-white/5">
+                      <div className="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1">Ví Xu</div>
+                      <div className="text-base font-black text-yellow-400 flex items-center justify-center gap-1"><Coins size={13} /> {coins}</div>
+                    </div>
+                    <div className="bg-black/30 p-3 rounded-xl border border-white/5">
+                      <div className="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1">Gói Quà</div>
+                      <div className="text-base font-black text-fuchsia-400">🎁 {freePacks}</div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Battle Stats */}
+              {/* === Battle Stats === */}
               <div className="glass-panel rounded-3xl p-6 border border-white/10 shadow-2xl bg-gradient-to-b from-indigo-950/10 to-slate-900/40">
-                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 border-b border-white/5 pb-2 text-center">Thống Kê Chiến Đấu</h4>
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 border-b border-white/5 pb-2 text-center">⚔️ Thống Kê Chiến Đấu</h4>
                 <div className="grid grid-cols-2 gap-3 text-center">
                   <div className="bg-slate-900/60 border border-white/5 p-3 rounded-xl">
-                    <div className="text-[9px] text-gray-400 font-semibold uppercase mb-1">Tổng Số Trận</div>
+                    <div className="text-[9px] text-gray-400 font-semibold uppercase mb-1">Tổng Trận</div>
                     <div className="text-2xl font-black text-white">{stats?.played || 0}</div>
                   </div>
                   <div className="bg-green-950/20 border border-green-500/10 p-3 rounded-xl">
@@ -3911,264 +4145,128 @@ export default function App() {
                     <div className="text-2xl font-black text-red-400">{stats?.losses || 0}</div>
                   </div>
                 </div>
-                
-                {/* Win rate indicator */}
                 <div className="mt-4 bg-black/40 border border-white/5 rounded-xl p-3 flex justify-between items-center text-xs">
                   <span className="text-gray-400 font-semibold">Tỉ lệ thắng:</span>
-                  <span className="font-black text-emerald-400">
-                    {stats?.played > 0 ? Math.round((stats.wins / stats.played) * 100) : 0}%
-                  </span>
+                  <span className="font-black text-emerald-400">{stats?.played > 0 ? Math.round((stats.wins / stats.played) * 100) : 0}%</span>
                 </div>
+              </div>
+
+              {/* Quick action buttons */}
+              <div className="flex flex-col gap-3">
+                <button
+                  className="btn !bg-gradient-to-r !from-fuchsia-600 !to-indigo-600 hover:!from-fuchsia-500 hover:!to-indigo-500 w-full !py-3 font-black text-sm tracking-wider rounded-xl shadow-lg shadow-fuchsia-900/30 cursor-pointer"
+                  onClick={() => { playFx('click'); setGameState('userWall'); setUserWallTarget(currentUser); setSocialWallTab('owner'); }}
+                >
+                  🐦 Xem Tường X Của Tôi
+                </button>
+                <button
+                  className="btn !bg-gradient-to-r !from-amber-600 !to-yellow-600 hover:!from-amber-500 hover:!to-yellow-500 w-full !py-3 font-black text-sm tracking-wider rounded-xl shadow-lg shadow-amber-900/30 cursor-pointer"
+                  onClick={() => { playFx('click'); setGameState('quests'); }}
+                >
+                  📋 Nhiệm Vụ & Thành Tích
+                </button>
               </div>
             </div>
 
-            {/* COLUMN 2 (4/12): 3D Pitch Lineup View */}
-            <div className="lg:col-span-4 flex flex-col gap-6">
-              <div className="glass-panel rounded-3xl p-6 border border-white/10 shadow-2xl flex flex-col items-center justify-between h-full bg-gradient-to-b from-slate-950/50 via-slate-900/40 to-slate-950/50">
-                <div className="text-center w-full mb-3">
-                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-white/5 pb-2">Đội Hình HLV 3D</h4>
-                  <div className="text-[10px] text-cyan-400 font-black uppercase mt-1">Sân thi đấu 11 cầu thủ hiện tại</div>
+            {/* COLUMN RIGHT (7/12): 3D Pitch — full height, spacious */}
+            <div className="lg:col-span-7 flex flex-col gap-6">
+              <div className="glass-panel rounded-3xl p-6 border border-white/10 shadow-2xl flex flex-col items-center h-full bg-gradient-to-b from-slate-950/50 via-slate-900/40 to-slate-950/50 min-h-[500px]">
+                <div className="text-center w-full mb-4">
+                  <h4 className="text-sm font-black text-gray-300 uppercase tracking-widest border-b border-white/5 pb-3 flex items-center justify-center gap-2">
+                    🏟️ Đội Hình HLV 3D Sân Thi Đấu
+                  </h4>
+                  <div className="text-[10px] text-cyan-400 font-black uppercase mt-2">
+                    {squad.length === 11 ? `OVR Trung Bình: ${Math.round(squad.reduce((acc, card) => acc + Math.max(card.stats.attack, card.stats.defense, card.stats.control), 0) / 11)}` : `Cần thêm ${11 - squad.length} cầu thủ`}
+                  </div>
                 </div>
-                
-                {/* Miniature Pitch container */}
-                <div className="w-full flex-1 min-h-[360px] flex items-center justify-center relative py-4">
-                  <div className="pitch-3d-mini w-full max-w-[280px] aspect-[2/3] bg-gradient-to-b from-green-950/30 to-emerald-900/30 border border-emerald-500/30 rounded-2xl relative shadow-[inset_0_0_30px_rgba(16,185,129,0.2)] overflow-hidden">
-                    {/* Pitch line markings */}
+
+                {/* Large Pitch */}
+                <div className="w-full flex-1 flex items-center justify-center relative py-2">
+                  <div className="pitch-3d-mini w-full max-w-sm sm:max-w-md aspect-[2/3] bg-gradient-to-b from-green-950/40 to-emerald-900/40 border-2 border-emerald-500/30 rounded-3xl relative shadow-[inset_0_0_50px_rgba(16,185,129,0.25)] overflow-hidden">
+                    {/* Pitch markings */}
                     <div className="absolute top-1/2 left-0 w-full h-[1px] bg-emerald-500/20"></div>
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full border border-emerald-500/20"></div>
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-10 border border-t-0 border-emerald-500/20"></div>
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-10 border border-b-0 border-emerald-500/20"></div>
-                    
-                    {/* Render active squad players */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full border border-emerald-500/20"></div>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-emerald-500/30"></div>
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-14 border border-t-0 border-emerald-500/20"></div>
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-28 h-14 border border-b-0 border-emerald-500/20"></div>
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-14 h-8 border border-t-0 border-emerald-500/15"></div>
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-14 h-8 border border-b-0 border-emerald-500/15"></div>
+
+                    {/* Squad players */}
                     {squad.map((player, idx) => {
                       const pos = PITCH_POSITIONS[idx] || { top: '50%', left: '50%' };
+                      const ovr = Math.max(player.stats.attack, player.stats.defense, player.stats.control);
                       return (
-                        <div 
-                          key={player.id} 
-                          className="absolute w-8 h-8 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group/mini"
+                        <div
+                          key={player.id}
+                          className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group/mini cursor-default"
                           style={{ top: pos.top, left: pos.left, zIndex: 10 }}
                         >
-                          {/* Mini Card Dot */}
-                          <div 
-                            className={`w-3.5 h-3.5 rounded-full border border-white/80 shadow-md flex items-center justify-center text-[6px] font-black text-slate-900 ${
-                              player.type === 'Golden Baller' 
-                                ? 'bg-gradient-to-br from-yellow-400 to-amber-500' 
-                                : player.type === 'Icon' 
-                                ? 'bg-gradient-to-br from-fuchsia-400 to-purple-600' 
-                                : 'bg-gradient-to-br from-blue-400 to-cyan-500'
+                          <div
+                            className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 border-white/80 shadow-lg flex items-center justify-center text-[8px] font-black text-slate-900 ${
+                              player.type === 'Golden Baller' ? 'bg-gradient-to-br from-yellow-400 to-amber-500'
+                              : player.type === 'Icon' ? 'bg-gradient-to-br from-fuchsia-400 to-purple-600'
+                              : player.type === 'Platinum Edition' ? 'bg-gradient-to-br from-cyan-400 to-sky-500'
+                              : 'bg-gradient-to-br from-blue-400 to-cyan-500'
                             }`}
                             title={player.name}
                           >
                             ⭐
                           </div>
-                          
-                          {/* Permanent name tag */}
-                          <div className="absolute top-5 bg-black/70 px-1.5 py-0.5 rounded text-[7px] font-bold text-white whitespace-nowrap border border-white/10 pointer-events-none shadow-md mt-0.5 z-20">
-                            {player.name.split(' ').pop()} ({Math.max(player.stats.attack, player.stats.defense, player.stats.control)})
+                          <div className="bg-black/80 px-1.5 py-0.5 rounded text-[8px] font-bold text-white whitespace-nowrap border border-white/10 shadow-md mt-0.5">
+                            {player.name.split(' ').pop()} {ovr}
                           </div>
                         </div>
                       );
                     })}
+
+                    {squad.length === 0 && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                        <div className="text-3xl mb-2">⚽</div>
+                        <div className="text-xs text-gray-400 font-bold">Chưa có đội hình</div>
+                        <div className="text-[10px] text-gray-500">Hãy xây dựng đội ngay!</div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <button className="w-full btn !bg-indigo-600 hover:!bg-indigo-500 !py-2.5 text-xs font-black tracking-widest uppercase rounded-xl transition-all cursor-pointer shadow-lg shadow-indigo-950/30" onClick={() => setGameState('teamBuilder')}>
-                  Chỉnh Sửa Đội Hình 🛠️
+                <button
+                  className="w-full btn !bg-gradient-to-r !from-indigo-600 !to-blue-600 hover:!from-indigo-500 hover:!to-blue-500 !py-3 text-sm font-black tracking-widest uppercase rounded-xl transition-all cursor-pointer shadow-lg shadow-indigo-950/30 mt-4"
+                  onClick={() => { playFx('click'); setGameState('teamBuilder'); }}
+                >
+                  🛠️ Chỉnh Sửa Đội Hình
                 </button>
               </div>
-            </div>
 
-            {/* COLUMN 3 (4/12): Account & Settings */}
-            <div className="lg:col-span-4 flex flex-col gap-6">
-              {/* Recovery Email Card */}
-              <div className="glass-panel rounded-3xl p-6 border border-white/10 shadow-2xl bg-gradient-to-b from-indigo-950/10 to-slate-900/40">
-                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 border-b border-white/5 pb-2 text-center">Cài Đặt Bảo Mật HLV</h4>
-                
-                <form onSubmit={handleUpdateEmail} className="flex flex-col gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Email Khôi Phục Tài Khoản</label>
-                    <input 
-                      type="email" 
-                      className="bg-black/50 border border-white/15 px-4 py-2.5 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors w-full font-medium"
-                      placeholder="Nhập email của bạn..."
-                      value={profileEmailInput}
-                      onChange={(e) => setProfileEmailInput(e.target.value)}
-                    />
-                  </div>
-                  <button 
-                    type="submit" 
-                    className="btn !bg-cyan-600 hover:!bg-cyan-500 !py-2 text-xs font-black tracking-widest uppercase rounded-xl transition-all cursor-pointer shadow-md shadow-cyan-900/20"
-                  >
-                    Lưu Email 📧
-                  </button>
-                </form>
-              </div>
-
-              {/* Change Password Card */}
-              <div className="glass-panel rounded-3xl p-6 border border-white/10 shadow-2xl bg-gradient-to-b from-indigo-950/10 to-slate-900/40 flex-1">
-                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 border-b border-white/5 pb-2 text-center">Đổi Mật Khẩu HLV</h4>
-                
-                <form onSubmit={handleUpdatePassword} className="flex flex-col gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Mật Khẩu Hiện Tại</label>
-                    <input 
-                      type="password" 
-                      className="bg-black/50 border border-white/15 px-4 py-2.5 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500 transition-colors w-full"
-                      value={profileOldPassword}
-                      onChange={(e) => setProfileOldPassword(e.target.value)}
-                      placeholder="••••••••"
-                    />
-                  </div>
-                  
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Mật Khẩu Mới</label>
-                    <input 
-                      type="password" 
-                      className="bg-black/50 border border-white/15 px-4 py-2.5 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500 transition-colors w-full"
-                      value={profileNewPassword}
-                      onChange={(e) => setProfileNewPassword(e.target.value)}
-                      placeholder="••••••••"
-                    />
-                  </div>
-                  
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Xác Nhận Mật Khẩu Mới</label>
-                    <input 
-                      type="password" 
-                      className="bg-black/50 border border-white/15 px-4 py-2.5 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500 transition-colors w-full"
-                      value={profileConfirmPassword}
-                      onChange={(e) => setProfileConfirmPassword(e.target.value)}
-                      placeholder="••••••••"
-                    />
-                  </div>
-                  
-                  <button 
-                    type="submit" 
-                    className="btn !bg-purple-600 hover:!bg-purple-500 !py-2.5 text-xs font-black tracking-widest uppercase rounded-xl transition-all cursor-pointer shadow-md shadow-purple-900/20 mt-2"
-                  >
-                    Đổi Mật Khẩu 🔒
-                  </button>
-                </form>
-              </div>
-
-              {/* Referral Panel */}
-              <div className="glass-panel rounded-3xl p-6 border border-white/10 shadow-2xl bg-gradient-to-b from-indigo-950/10 to-slate-900/40 mt-6">
-                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 border-b border-white/5 pb-2 text-center flex items-center justify-center gap-1.5">
-                  🎁 GIỚI THIỆU BẠN BÈ (REFERRAL)
-                </h4>
-                
-                {/* Your Referral Code */}
-                <div className="bg-black/50 border border-amber-500/30 rounded-2xl p-3 text-center mb-4 relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/5 rounded-full blur-xl"></div>
-                  <div className="text-[9px] text-amber-400 font-bold uppercase tracking-widest mb-1">Mã Giới Thiệu Của Bạn</div>
-                  <div 
-                    className="text-lg font-black text-white cursor-pointer select-all tracking-wider hover:text-amber-300 transition-colors"
-                    onClick={() => {
-                      navigator.clipboard.writeText(currentUser);
-                      showAlert("📋 Đã Sao Chép!", "Đã copy mã giới thiệu của bạn! Hãy gửi cho bạn bè để cùng nhận quà nhé!");
-                    }}
-                    title="Click để copy mã nhanh"
-                  >
-                    {currentUser} 📋
-                  </div>
+              {/* Active Quests mini panel */}
+              <div className="glass-panel rounded-3xl p-6 border border-white/10 shadow-xl bg-gradient-to-r from-slate-900/50 to-indigo-950/10">
+                <div className="flex justify-between items-center mb-4 border-b border-white/5 pb-2">
+                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">📋 Nhiệm Vụ Đang Chạy</h4>
+                  <button className="text-[10px] text-cyan-400 hover:underline uppercase font-bold tracking-widest cursor-pointer" onClick={() => { playFx('click'); setGameState('quests'); }}>Tất cả ➔</button>
                 </div>
-
-                {/* Submit Friend's Referral Code */}
-                {!referredBy ? (
-                  <div className="bg-slate-950/40 border border-white/5 p-3 rounded-2xl mb-4 text-left">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Nhập Mã Của Bạn Bè</label>
-                    <div className="flex gap-2">
-                      <input 
-                        type="text" 
-                        placeholder="Nhập tên HLV giới thiệu..."
-                        className="bg-black/50 border border-white/15 px-3 py-1.5 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 flex-1 font-semibold"
-                        value={refCodeInput}
-                        onChange={(e) => setRefCodeInput(e.target.value)}
-                      />
-                      <button 
-                        type="button"
-                        className="btn !bg-cyan-600 hover:!bg-cyan-500 !py-1.5 !px-4 text-xs font-black uppercase rounded-xl transition-all cursor-pointer"
-                        onClick={() => {
-                          if (refCodeInput.trim()) {
-                            submitReferralCode(refCodeInput);
-                            setRefCodeInput('');
-                          }
-                        }}
-                      >
-                        Nhập
-                      </button>
-                    </div>
-                    <div className="text-[8px] text-gray-500 font-semibold mt-1">Nhận ngay +50 Xu (Chỉ dành cho tài khoản mới dưới Level 5)</div>
-                  </div>
-                ) : (
-                  <div className="bg-emerald-950/20 border border-emerald-500/20 p-3 rounded-2xl mb-4 text-center">
-                    <span className="text-[10px] font-bold text-emerald-400">
-                      ✓ Đã nhập mã giới thiệu từ HLV: <span className="underline font-black">{referredBy}</span>
-                    </span>
-                  </div>
-                )}
-
-                {/* Invite New Friend Input */}
-                <div className="bg-slate-950/40 border border-white/5 p-3 rounded-2xl mb-4 text-left">
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Mời Bạn Mới Thi Đấu</label>
-                  <div className="flex gap-2">
-                    <input 
-                      type="text" 
-                      placeholder="Nhập tên HLV bạn muốn mời..."
-                      className="bg-black/50 border border-white/15 px-3 py-1.5 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 flex-1 font-semibold"
-                      value={inviteInput}
-                      onChange={(e) => setInviteInput(e.target.value)}
-                    />
-                    <button 
-                      type="button"
-                      className="btn !bg-purple-600 hover:!bg-purple-500 !py-1.5 !px-4 text-xs font-black uppercase rounded-xl transition-all cursor-pointer"
-                      onClick={() => {
-                        if (inviteInput.trim()) {
-                          addReferralFriend(inviteInput);
-                        }
-                      }}
-                    >
-                      Thêm
-                    </button>
-                  </div>
-                </div>
-
-                {/* Friend Invitation List */}
-                <div className="w-full">
-                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 text-left">HLV Bạn Đã Mời ({referrals.length})</div>
-                  <div className="flex flex-col gap-2 max-h-[140px] overflow-y-auto pr-1">
-                    {referrals.map(ref => {
-                      const canClaim = ref.level >= 5 && !ref.claimed;
-                      return (
-                        <div key={ref.username} className="flex justify-between items-center bg-black/40 border border-white/5 p-2 rounded-xl text-xs">
-                          <div className="text-left">
-                            <div className="font-extrabold text-white">{ref.username}</div>
-                            <div className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">
-                              Level {ref.level} {ref.level >= 5 ? '🎯 Hoàn Thành' : '⏳ Cần cày Cấp 5'}
-                            </div>
-                          </div>
-                          {ref.claimed ? (
-                            <span className="text-[9px] bg-white/5 text-gray-500 px-2 py-1 rounded-full font-black border border-white/5">ĐÃ NHẬN 🎁</span>
-                          ) : canClaim ? (
-                            <button 
-                              type="button"
-                              className="btn !bg-yellow-500 text-black font-black text-[9px] px-2.5 py-1 rounded-full animate-bounce"
-                              onClick={() => claimReferralReward(ref.username)}
-                            >
-                              Nhận Quà 🎁
-                            </button>
-                          ) : (
-                            <span className="text-[9px] text-gray-400 font-black">Chờ Cấp 5</span>
-                          )}
+                <div className="flex flex-col gap-2">
+                  {quests.filter(q => !q.isClaimed).slice(0, 3).map(q => (
+                    <div key={q.id} className="p-3 bg-black/30 rounded-2xl border border-white/5 flex items-center justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <h5 className="font-extrabold text-xs text-white truncate mb-1">{q.title}</h5>
+                        <div className="w-full h-1 bg-gray-800 rounded-full overflow-hidden">
+                          <div className="h-full bg-cyan-500 transition-all" style={{ width: `${Math.min(100, (q.progress/q.target)*100)}%` }}></div>
                         </div>
-                      );
-                    })}
-                  </div>
+                        <div className="text-[9px] text-gray-500 mt-0.5">{q.progress}/{q.target}</div>
+                      </div>
+                      <div className="text-yellow-400 text-[10px] font-black shrink-0">+{q.reward}Xu</div>
+                    </div>
+                  ))}
+                  {quests.filter(q => !q.isClaimed).length === 0 && (
+                    <div className="text-center text-xs text-gray-500 py-3">🎉 Đã hoàn thành tất cả nhiệm vụ!</div>
+                  )}
                 </div>
               </div>
             </div>
-            
+
           </div>
+
+
 
           {/* Active Quests Showcase (Bottom full-width row) */}
           <div className="w-full mt-8 glass-panel rounded-[2rem] p-6 border border-white/10 shadow-2xl bg-gradient-to-r from-slate-900/50 to-indigo-950/10 animate-fade-in">
@@ -4290,31 +4388,74 @@ export default function App() {
         </div>
       )}
 
+      {/* ============== USER WALL / X SOCIAL NETWORK ============== */}
       {gameState === 'userWall' && (
         <div className="w-full max-w-5xl mx-auto flex flex-col mt-2 sm:mt-8 animate-fade-in px-2 sm:px-4 text-white">
-          {/* Header Action Row */}
-          <div className="flex items-center justify-between w-full mb-6">
-            <button 
-              className="btn !bg-slate-800 hover:!bg-slate-700 transition-colors flex items-center gap-2 cursor-pointer text-xs font-black uppercase tracking-wider !py-2.5 rounded-full border border-white/10" 
-              onClick={() => { playFx('click'); setGameState('lobby'); setUserWallTarget(null); }}
-            >
-              ← Về Sảnh
-            </button>
+          {/* Header */}
+          <div className="flex items-center justify-between w-full mb-4">
+            <div className="flex items-center gap-2">
+              <button
+                className="btn !bg-slate-800 hover:!bg-slate-700 transition-colors flex items-center gap-2 cursor-pointer text-xs font-black uppercase tracking-wider !py-2.5 rounded-full border border-white/10"
+                onClick={() => { playFx('click'); setGameState('lobby'); setUserWallTarget(null); }}
+              >
+                ← Sảnh
+              </button>
+              {userWallTarget && userWallTarget !== currentUser && (
+                <button
+                  className="btn !bg-indigo-800 hover:!bg-indigo-700 transition-colors flex items-center gap-2 cursor-pointer text-xs font-black uppercase tracking-wider !py-2.5 rounded-full border border-indigo-500/30"
+                  onClick={() => { playFx('click'); setUserWallTarget(currentUser); setSocialWallTab('owner'); }}
+                >
+                  👤 Tường Của Tôi
+                </button>
+              )}
+            </div>
             <h2 className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 uppercase tracking-widest text-center">
-              Tường HLV 🐦
+              🐦 Mạng Xã Hội HLV
             </h2>
-            <div className="w-[100px] sm:w-[120px]"></div>
+            <button
+              className="btn !bg-gradient-to-r !from-cyan-700 !to-indigo-700 hover:!from-cyan-600 hover:!to-indigo-600 text-xs font-black uppercase tracking-wider !py-2.5 rounded-full border border-cyan-500/30 shadow-md cursor-pointer"
+              onClick={() => { playFx('click'); setUserWallTarget(currentUser); setSocialWallTab('global'); }}
+            >
+              🌍 Khám Phá
+            </button>
           </div>
 
-          {loadingWall ? (
+          {/* TAB FILTER — X-style */}
+          {userWallTarget && (
+            <div className="flex gap-0 w-full max-w-md mx-auto mb-6 bg-black/40 rounded-2xl p-1 border border-white/5">
+              <button
+                onClick={() => { playFx('click'); setSocialWallTab('global'); }}
+                className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  socialWallTab === 'global'
+                    ? 'bg-gradient-to-r from-cyan-600 to-indigo-600 text-white shadow-lg shadow-cyan-900/30'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                🌍 Khám Phá
+              </button>
+              <button
+                onClick={() => { playFx('click'); setSocialWallTab('owner'); }}
+                className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  socialWallTab === 'owner'
+                    ? 'bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white shadow-lg shadow-fuchsia-900/30'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                👤 {userWallTarget === currentUser ? 'Của Tôi' : userWallTarget}
+              </button>
+            </div>
+          )}
+
+          {(loadingWall || loadingGlobalPosts) ? (
             <div className="glass-panel w-full rounded-[2rem] p-20 flex flex-col items-center justify-center gap-4">
               <div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
-              <div className="text-cyan-400 font-extrabold tracking-widest text-xs uppercase animate-pulse">Đang tải Tường HLV...</div>
+              <div className="text-cyan-400 font-extrabold tracking-widest text-xs uppercase animate-pulse">Đang tải dữ liệu mạng xã hội...</div>
             </div>
-          ) : !userWallData ? (
+          ) : !userWallTarget ? (
             <div className="glass-panel w-full rounded-[2rem] p-20 flex flex-col items-center justify-center text-center gap-4 border border-white/10">
-              <div className="text-red-400 text-lg font-black uppercase mb-2">Không tìm thấy thông tin HLV ❌</div>
-              <p className="text-gray-400 text-sm max-w-xs">Dữ liệu HLV này chưa sẵn sàng hoặc HLV chưa tạo tài khoản trực tuyến.</p>
+              <div className="text-4xl mb-3">🐦</div>
+              <div className="text-cyan-400 text-lg font-black uppercase mb-2">Mạng Xã Hội HLV</div>
+              <p className="text-gray-400 text-sm max-w-xs">Chọn một HLV để xem tường cá nhân hoặc nhấn Khám Phá để xem feed toàn cầu.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full items-stretch">
@@ -4512,43 +4653,91 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 2. Timeline Feed */}
+                {/* 2. Composer for global tab (everyone can post globally) */}
+                {socialWallTab === 'global' && (
+                  <div className="glass-panel rounded-[2rem] p-5 border border-white/10 shadow-xl bg-slate-950/40 backdrop-blur-md flex gap-3.5">
+                    <div
+                      className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center font-black border border-white/10 select-none text-sm"
+                      style={{ background: getAvatarGradient(currentUser) }}
+                    >
+                      {currentUser.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 flex flex-col gap-3">
+                      <textarea
+                        value={newPostText}
+                        onChange={(e) => setNewPostText(e.target.value)}
+                        placeholder="Chia sẻ với cộng đồng HLV toàn cầu... ⚽🌍"
+                        maxLength={280}
+                        rows={3}
+                        className="w-full bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-2xl p-3 text-xs font-semibold placeholder-gray-500 focus:outline-none resize-none transition-colors leading-relaxed text-white"
+                      />
+                      <div className="flex items-center justify-between">
+                        <span className={`text-[10px] font-bold tracking-widest ${ newPostText.length > 250 ? 'text-red-400' : newPostText.length > 200 ? 'text-yellow-400' : 'text-gray-500' }`}>{newPostText.length} / 280</span>
+                        <button
+                          onClick={handleCreatePost}
+                          disabled={!newPostText.trim() || newPostText.length > 280}
+                          className={`btn !py-2 !px-5 text-xs font-black uppercase tracking-wider rounded-full shadow-lg transition-all active:scale-95 cursor-pointer ${ !newPostText.trim() || newPostText.length > 280 ? 'opacity-40 !bg-gray-800 cursor-not-allowed text-gray-500 shadow-none' : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-cyan-900/30' }`}
+                        >
+                          🌍 Đăng Toàn Cầu
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 2b. Timeline Feed */}
                 <div className="flex flex-col gap-4">
                   <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-white/5 pb-2 px-2 flex justify-between items-center">
-                    <span>Dòng hoạt động bài đăng</span>
-                    <span>{userWallPosts.length} bài viết</span>
+                    {socialWallTab === 'global' ? (
+                      <><span>🌍 Khám Phá — Feed Toàn Cầu</span><span>{globalPosts.length} bài</span></>
+                    ) : (
+                      <><span>👤 Bài Đăng Của {userWallTarget}</span><span>{userWallPosts.length} bài</span></>
+                    )}
                   </div>
 
-                  {userWallPosts.length === 0 ? (
-                    <div className="glass-panel rounded-[2rem] p-12 text-center border border-white/5 bg-slate-900/10">
-                      <div className="text-3xl mb-2">📭</div>
-                      <div className="text-xs text-gray-400 font-bold uppercase mb-1">Chưa có bài viết nào</div>
-                      <p className="text-[10px] text-gray-500 font-medium">HLV này vẫn chưa đăng tải chia sẻ gì lên dòng thời gian.</p>
-                    </div>
-                  ) : (
-                    userWallPosts.map((post) => {
+                  {(() => {
+                    const displayPosts = socialWallTab === 'global' ? globalPosts : userWallPosts;
+                    if (displayPosts.length === 0) return (
+                      <div className="glass-panel rounded-[2rem] p-12 text-center border border-white/5 bg-slate-900/10">
+                        <div className="text-3xl mb-2">{socialWallTab === 'global' ? '🌍' : '📭'}</div>
+                        <div className="text-xs text-gray-400 font-bold uppercase mb-1">{socialWallTab === 'global' ? 'Feed toàn cầu chưa có bài viết' : 'HLV chưa đăng bài nào'}</div>
+                        <p className="text-[10px] text-gray-500 font-medium">{socialWallTab === 'global' ? 'Hãy là người đầu tiên chia sẻ với cộng đồng!' : 'Hãy chuyển sang tab Khám Phá để xem feed toàn cầu.'}</p>
+                      </div>
+                    );
+                    return displayPosts.map((post) => {
                       const likesCount = post.likes ? Object.keys(post.likes).length : 0;
                       const hasLiked = post.likes ? !!post.likes[currentUser] : false;
-                      const commentsList = post.comments 
+                      const commentsList = post.comments
                         ? Object.keys(post.comments).map(k => ({ id: k, ...post.comments[k] })).sort((a,b) => a.timestamp - b.timestamp)
                         : [];
-                      
+                      const isMyPost = post.author === currentUser;
+
                       return (
-                        <div 
-                          key={post.id} 
-                          className="glass-panel rounded-3xl p-5 border border-white/5 bg-slate-950/20 backdrop-blur-sm flex flex-col gap-4 hover:border-white/10 transition-all duration-300 shadow-sm"
+                        <div
+                          key={post.id}
+                          className={`glass-panel rounded-3xl p-5 flex flex-col gap-4 hover:border-white/15 transition-all duration-300 shadow-sm ${
+                            isMyPost ? 'border border-cyan-500/20 bg-cyan-950/10' : 'border border-white/5 bg-slate-950/20'
+                          }`}
                         >
                           <div className="flex items-center gap-3">
-                            <div 
-                              className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-xs font-black border border-white/5 select-none"
+                            <button
+                              className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-sm font-black border border-white/5 select-none cursor-pointer hover:opacity-80 transition-opacity"
                               style={{ background: getAvatarGradient(post.author) }}
+                              onClick={() => { if (post.author !== userWallTarget) { setUserWallTarget(post.author); setSocialWallTab('owner'); } }}
+                              title={`Xem tường của ${post.author}`}
                             >
                               {post.author.charAt(0).toUpperCase()}
-                            </div>
+                            </button>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1.5">
-                                <span className="font-extrabold text-sm text-white truncate">{post.author}</span>
-                                <span className="text-[9px] bg-white/10 text-gray-400 px-1.5 py-0.2 rounded border border-white/10 font-bold shrink-0">Lv.{post.authorLevel || 1}</span>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <button
+                                  className="font-extrabold text-sm text-white hover:text-cyan-400 transition-colors cursor-pointer"
+                                  onClick={() => { setUserWallTarget(post.author); setSocialWallTab('owner'); }}
+                                >
+                                  {post.author}
+                                </button>
+                                <span className="text-[9px] bg-white/10 text-gray-400 px-1.5 py-0.5 rounded border border-white/10 font-bold shrink-0">Lv.{post.authorLevel || 1}</span>
+                                {isMyPost && <span className="text-[9px] bg-cyan-950/40 text-cyan-400 border border-cyan-500/20 px-1.5 py-0.5 rounded font-extrabold">Bạn</span>}
                               </div>
                               <span className="text-[9px] text-gray-500 font-bold font-mono block mt-0.5">{getRelativeTime(post.timestamp)}</span>
                             </div>
@@ -4559,16 +4748,13 @@ export default function App() {
                           </p>
 
                           <div className="flex items-center gap-6 border-t border-b border-white/5 py-2 px-1">
-                            <button 
+                            <button
                               onClick={() => handleLikePost(post.id)}
-                              className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-75 hover:opacity-80 cursor-pointer ${
-                                hasLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-400'
-                              }`}
+                              className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-75 hover:opacity-80 cursor-pointer ${ hasLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-400' }`}
                             >
                               <span className="text-base select-none">{hasLiked ? '❤️' : '🤍'}</span>
                               <span className="text-[11px] font-extrabold">{likesCount} Thích</span>
                             </button>
-
                             <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500">
                               <span className="text-base select-none">💬</span>
                               <span className="text-[11px] font-extrabold">{commentsList.length} Bình luận</span>
@@ -4576,67 +4762,51 @@ export default function App() {
                           </div>
 
                           {commentsList.length > 0 && (
-                            <div className="flex flex-col gap-3 pl-3 sm:pl-4 border-l border-white/5 mt-1">
+                            <div className="flex flex-col gap-2 pl-3 sm:pl-4 border-l-2 border-white/5 mt-1">
                               {commentsList.map((comm) => (
                                 <div key={comm.id} className="flex gap-2.5 items-start text-xs bg-black/10 p-2.5 rounded-xl border border-white/5 animate-fade-in">
-                                  <div 
-                                    className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[9px] font-black border border-white/5 select-none"
-                                    style={{ background: getAvatarGradient(comm.author) }}
-                                  >
+                                  <div className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[9px] font-black border border-white/5 select-none" style={{ background: getAvatarGradient(comm.author) }}>
                                     {comm.author.charAt(0).toUpperCase()}
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-1.5 flex-wrap">
-                                      <span className="font-extrabold text-[11px] text-white truncate">{comm.author}</span>
-                                      <span className="text-[8px] bg-white/10 text-gray-400 px-1 py-0.1 rounded border border-white/10 font-bold shrink-0">Lv.{comm.authorLevel || 1}</span>
+                                      <span className="font-extrabold text-[11px] text-white">{comm.author}</span>
+                                      <span className="text-[8px] bg-white/10 text-gray-400 px-1 rounded border border-white/10 font-bold">Lv.{comm.authorLevel || 1}</span>
                                       <span className="text-[8px] text-gray-500 font-bold font-mono ml-auto">{getRelativeTime(comm.timestamp)}</span>
                                     </div>
-                                    <p className="text-[11px] text-gray-300 font-semibold leading-relaxed mt-1 whitespace-pre-wrap">
-                                      {comm.content}
-                                    </p>
+                                    <p className="text-[11px] text-gray-300 font-semibold leading-relaxed mt-1 whitespace-pre-wrap">{comm.content}</p>
                                   </div>
                                 </div>
                               ))}
                             </div>
                           )}
 
-                          <div className="flex gap-3 items-center mt-2 border-t border-white/5 pt-3">
-                            <div 
-                              className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[10px] font-black border border-white/5 select-none"
-                              style={{ background: getAvatarGradient(currentUser) }}
-                            >
+                          <div className="flex gap-3 items-center mt-1 border-t border-white/5 pt-3">
+                            <div className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[10px] font-black border border-white/5 select-none" style={{ background: getAvatarGradient(currentUser) }}>
                               {currentUser.charAt(0).toUpperCase()}
                             </div>
-                            
-                            <form 
-                              onSubmit={(e) => { e.preventDefault(); handleCreateComment(post.id); }}
-                              className="flex-1 flex gap-2"
-                            >
+                            <form onSubmit={(e) => { e.preventDefault(); handleCreateComment(post.id); }} className="flex-1 flex gap-2">
                               <input
                                 type="text"
                                 value={commentInputs[post.id] || ""}
                                 onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))}
-                                placeholder="Viết phản hồi bình luận ngắn... ✍️"
+                                placeholder="Bình luận ngắn... ✍️"
                                 maxLength={200}
                                 className="flex-1 bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-full px-3 py-1.5 text-xs font-semibold focus:outline-none placeholder-gray-500 transition-colors text-white"
                               />
                               <button
                                 type="submit"
                                 disabled={!(commentInputs[post.id] || "").trim()}
-                                className={`btn !py-1.5 !px-4 text-[10px] font-black uppercase tracking-wider rounded-full shrink-0 cursor-pointer ${
-                                  !(commentInputs[post.id] || "").trim()
-                                    ? 'opacity-40 !bg-gray-800 text-gray-500'
-                                    : 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-md'
-                                }`}
+                                className={`btn !py-1.5 !px-4 text-[10px] font-black uppercase tracking-wider rounded-full shrink-0 cursor-pointer ${ !(commentInputs[post.id] || "").trim() ? 'opacity-40 !bg-gray-800 text-gray-500' : 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-md' }`}
                               >
-                                Gửi 💬
+                                Gửi
                               </button>
                             </form>
                           </div>
                         </div>
                       );
-                    })
-                  )}
+                    });
+                  })()}
                 </div>
               </div>
 
@@ -5515,7 +5685,12 @@ export default function App() {
       )}
 
       {gameState === 'matchEngine' && (
-        <div className="w-full h-[100dvh] flex flex-col overflow-hidden bg-black/50 animate-fade-in relative z-10">
+        <div 
+          className={`w-full h-[100dvh] flex flex-col overflow-hidden bg-black/50 animate-fade-in relative z-10 ${
+            matchPhase === 'roundResult' && playedCardIds.length < 11 ? 'cursor-pointer' : ''
+          }`}
+          onClick={dismissRoundResult}
+        >
           
           {matchPhase === 'setup' && (
             <div className="flex-1 flex flex-col items-center justify-center p-4 overflow-y-auto hide-scrollbar z-20">
@@ -5677,28 +5852,21 @@ export default function App() {
 
               {/* Round Result Overlay */}
               {matchPhase === 'roundResult' && (
-                <div className="fixed inset-0 z-[90] flex flex-col items-center justify-center pointer-events-none p-4">
-                  <div className="text-2xl sm:text-4xl font-black uppercase tracking-widest text-center text-white drop-shadow-[0_0_30px_rgba(255,255,255,1)] bg-black/60 backdrop-blur-md px-8 sm:px-12 py-6 rounded-3xl border border-white/20 animate-fade-in shadow-2xl flex flex-col items-center gap-2 pointer-events-auto">
-                    {roundResultMsg}
-                    {playedCardIds.length >= 11 && (
-                      <button
-                        className="mt-6 px-8 py-3 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 font-black tracking-widest uppercase rounded-full shadow-[0_0_30px_rgba(251,191,36,0.5)] transition-all hover:scale-105 pointer-events-auto cursor-pointer"
-                        onClick={() => {
-                          playFx('click');
-                          nextRound();
-                        }}
-                      >
-                        Xem Kết Quả Trận Đấu 🏆
-                      </button>
-                    )}
-                  </div>
-                  {playedCardIds.length < 11 ? (
-                    <div className="mt-8 text-amber-400 text-[10px] sm:text-xs font-bold tracking-widest uppercase animate-pulse bg-black/50 px-6 py-2 rounded-full border border-amber-400/30">
-                       Chạm vào thẻ bất kỳ trên sân 3D để chơi tiếp
-                    </div>
+                <div className="fixed inset-0 z-[90] flex flex-col items-center justify-end pointer-events-none p-6">
+                  {playedCardIds.length >= 11 ? (
+                    <button
+                      className="mb-8 px-8 py-3 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 font-black tracking-widest uppercase rounded-full shadow-[0_0_30px_rgba(251,191,36,0.5)] transition-all hover:scale-105 pointer-events-auto cursor-pointer animate-bounce-subtle"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        playFx('click');
+                        nextRound();
+                      }}
+                    >
+                      Xem Kết Quả Trận Đấu 🏆
+                    </button>
                   ) : (
-                    <div className="mt-8 text-green-400 text-[10px] sm:text-xs font-bold tracking-widest uppercase animate-pulse bg-black/50 px-6 py-2 rounded-full border border-green-400/30">
-                       Nhấp nút phía trên để kết thúc trận đấu
+                    <div className="mb-8 text-amber-400 text-[10px] sm:text-xs font-bold tracking-widest uppercase animate-pulse bg-black/85 px-6 py-2.5 rounded-full border border-amber-500/30 shadow-lg pointer-events-auto cursor-pointer">
+                       Chạm vào bất kỳ đâu để tiếp tục ⚽
                     </div>
                   )}
                 </div>
@@ -5894,134 +6062,6 @@ export default function App() {
       )}
 
       {/* ================= MODALS & CELEBRATIONS ================= */}
-
-      {/* 1. INSPECT PROFILE MODAL DELETED (INTEGRATED INTO USER WALL) */}
-      {false && inspectingUser && (
-        <div 
-          className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in"
-          onClick={() => { playFx('click'); setInspectingUser(null); setInspectedUserData(null); }}
-        >
-          <div 
-            className="glass-panel w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-[2.5rem] border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col relative bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/80 p-8 gap-6 hide-scrollbar"
-            onClick={(e) => e.stopPropagation()}
-          >
-            
-            <button 
-              className="absolute top-4 right-4 text-gray-400 hover:text-white bg-black/40 hover:bg-black/80 p-2 rounded-full w-8 h-8 flex items-center justify-center transition-colors z-[160] cursor-pointer"
-              onClick={() => { playFx('click'); setInspectingUser(null); setInspectedUserData(null); }}
-            >
-              ✕
-            </button>
-
-            {loadingInspectedUser ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-4 w-full">
-                <div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
-                <div className="text-cyan-400 font-extrabold tracking-widest text-xs uppercase animate-pulse">Đang tải hồ sơ HLV...</div>
-              </div>
-            ) : !inspectedUserData ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-4 w-full text-center">
-                <div className="text-red-400 text-lg font-black uppercase mb-2">Không tìm thấy thông tin HLV ❌</div>
-                <p className="text-gray-400 text-sm max-w-xs">Dữ liệu HLV chưa sẵn sàng hoặc HLV đang chơi ở chế độ ngoại tuyến.</p>
-              </div>
-            ) : (
-              <div className="w-full flex flex-col gap-4">
-                <div className="flex flex-col items-center text-center">
-                  {/* Level Badge */}
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 flex items-center justify-center border-2 border-white/20 shadow-lg shadow-purple-900/50 mb-3 relative animate-pulse-subtle">
-                    <span className="text-xl font-black text-white">Lv.{inspectedUserData.level || 1}</span>
-                  </div>
-
-                  <h2 className="text-2xl font-black text-white mb-1 uppercase tracking-wider">{inspectingUser}</h2>
-                  <span className="text-xs px-3 py-1 bg-cyan-900/40 text-cyan-400 border border-cyan-500/20 font-black rounded-full uppercase tracking-widest mb-4">
-                    {inspectedUserData.squad ? Math.round(inspectedUserData.squad.reduce((acc, card) => acc + Math.max(card.stats.attack, card.stats.defense, card.stats.control), 0) / 11) : 0} OVR
-                  </span>
-                  
-                  {/* XP Progress Bar */}
-                  <div className="w-full bg-black/60 rounded-full h-2.5 border border-white/5 overflow-hidden mb-6 relative">
-                    <div 
-                      className="bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-500 h-full rounded-full transition-all duration-1000"
-                      style={{ width: `${Math.min(100, ((inspectedUserData.xp || 0) / ((inspectedUserData.level || 1) * 100)) * 100)}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                {/* Battle Stats Grid */}
-                <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex flex-col gap-3">
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-white/5 pb-2 text-center">Thống Kê Trận Đấu</div>
-                  
-                  <div className="grid grid-cols-2 gap-3 text-center">
-                    <div className="bg-slate-900/50 border border-white/5 p-2 rounded-xl">
-                      <div className="text-[9px] text-gray-400 font-bold uppercase">Trận đã đấu</div>
-                      <div className="text-lg font-black text-white">{inspectedUserData.stats?.played || 0}</div>
-                    </div>
-                    <div className="bg-green-950/20 border border-green-500/10 p-2 rounded-xl">
-                      <div className="text-[9px] text-green-400 font-bold uppercase">Chiến Thắng</div>
-                      <div className="text-lg font-black text-green-400">{inspectedUserData.stats?.wins || 0}</div>
-                    </div>
-                    <div className="bg-yellow-950/20 border border-yellow-500/10 p-2 rounded-xl">
-                      <div className="text-[9px] text-yellow-400 font-bold uppercase">Hòa</div>
-                      <div className="text-lg font-black text-yellow-400">{inspectedUserData.stats?.draws || 0}</div>
-                    </div>
-                    <div className="bg-red-950/20 border border-red-500/10 p-2 rounded-xl">
-                      <div className="text-[9px] text-red-400 font-bold uppercase">Thất bại</div>
-                      <div className="text-lg font-black text-red-400">{inspectedUserData.stats?.losses || 0}</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Interactivity Buttons */}
-                <div className="flex flex-col gap-2 mt-4">
-                  <button 
-                    className="btn !bg-violet-600 hover:!bg-violet-500 w-full flex items-center justify-center gap-2 !py-3 font-bold text-sm tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-violet-900/30"
-                    onClick={() => {
-                      playFx('click');
-                      setGameState('lobby');
-                      setActivePrivatePartner(inspectingUser);
-                      setChatTab('private');
-                      setInspectingUser(null);
-                      // Scroll to chat panel and auto-focus private chat input
-                      setTimeout(() => {
-                        const el = document.getElementById('lobby-chat-panel');
-                        if (el) {
-                          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }
-                        const inputEl = document.getElementById('private-chat-input');
-                        if (inputEl) {
-                          inputEl.focus();
-                        }
-                      }, 300);
-                    }}
-                  >
-                    <MessageSquare size={16} /> Nhắn Tin Riêng
-                  </button>
-                  
-                  <button 
-                    className={`btn w-full flex items-center justify-center gap-2 !py-3 font-bold text-sm tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg ${
-                      squad.length < 11
-                        ? 'opacity-40 !bg-gray-700 cursor-not-allowed text-gray-400' 
-                        : 'bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white shadow-red-900/30'
-                    }`}
-                    disabled={squad.length < 11}
-                    onClick={() => {
-                      if (squad.length === 11) {
-                        const activeObj = onlineUsers.find(o => o.username === inspectingUser);
-                        if (activeObj) {
-                          sendChallengeInvite(activeObj.username, activeObj.peerId);
-                          setInspectingUser(null);
-                        } else {
-                          showAlert("Ngoại Tuyến ⚪", "HLV này đã ngoại tuyến hoặc không khả dụng để thách đấu pvp trực tiếp.");
-                        }
-                      }
-                    }}
-                  >
-                    <Swords size={16} /> Gửi Lời Thách Đấu
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* 2. LEVEL UP CELEBRATION MODAL */}
       {showLevelUpModal && (

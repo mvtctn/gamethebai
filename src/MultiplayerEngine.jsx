@@ -189,8 +189,10 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       console.warn('[PVP] sendData: connection not ready');
     }
   }, []);
-  const calculateRoundResult = useCallback((myCard, opCard, _ignoredStat) => {
+  const calculateRoundResult = useCallback((myCard, opCard) => {
+    // Guard: only process once, and ONLY host calculates
     if (phaseRef.current === 'result') return;
+    
     const currentStat = activeStatRef.current;
 
     const getPlayerAttr = (player) => {
@@ -212,48 +214,55 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       return false;
     };
 
-    const attr1 = getPlayerAttr(myCard);
-    const attr2 = getPlayerAttr(opCard);
+    // HOST perspective: myCard = host card, opCard = guest card
+    // GUEST perspective: myCard = guest card, opCard = host card
+    // Both call this only when HOST triggers it, so we use consistent seed assignment:
+    // seed offset +1 always = host card, seed offset +2 always = guest card
+    let hostCard, guestCard;
+    if (isHostRef.current) {
+      hostCard = myCard;
+      guestCard = opCard;
+    } else {
+      // Guest should NOT calculate — this should not be reached
+      console.warn('[PVP] Guest called calculateRoundResult — this should not happen!');
+      return;
+    }
 
-    let myBonus = 0;
-    let opBonus = 0;
+    const attr1 = getPlayerAttr(hostCard); // host
+    const attr2 = getPlayerAttr(guestCard); // guest
+
+    let hostBonus = 0;
+    let guestBonus = 0;
 
     if (checkAttrAdvantage(attr1.key, attr2.key)) {
-      myBonus = 5;
+      hostBonus = 5;
     } else if (checkAttrAdvantage(attr2.key, attr1.key)) {
-      opBonus = 5;
+      guestBonus = 5;
     }
 
-    // Generate Form/Condition based on weather, elements, underdog logic
-    // Using independent seeded RNGs for each card to guarantee identical evaluation regardless of order!
-    let formResult1, formResult2;
-    if (isHostRef.current) {
-      formResult1 = generateCardForm(myCard, opCard, matchEnvironment, seededRNG(roundCountRef.current * 10 + 1));
-      formResult2 = generateCardForm(opCard, myCard, matchEnvironment, seededRNG(roundCountRef.current * 10 + 2));
-    } else {
-      // Guest: opCard corresponds to Host's myCard (rng + 1), myCard corresponds to Host's opCard (rng + 2)
-      formResult2 = generateCardForm(opCard, myCard, matchEnvironment, seededRNG(roundCountRef.current * 10 + 1));
-      formResult1 = generateCardForm(myCard, opCard, matchEnvironment, seededRNG(roundCountRef.current * 10 + 2));
-    }
+    // Use a single consistent seed for both cards (no per-side reversal)
+    const rng1 = seededRNG(roundCountRef.current * 10 + 1);
+    const rng2 = seededRNG(roundCountRef.current * 10 + 2);
+    const formResult1 = generateCardForm(hostCard, guestCard, matchEnvironment, rng1);
+    const formResult2 = generateCardForm(guestCard, hostCard, matchEnvironment, rng2);
 
-    const formBonus1 = formResult1.bonus;
-    const formBonus2 = formResult2.bonus;
+    const formBonus1 = formResult1.bonus; // host
+    const formBonus2 = formResult2.bonus; // guest
 
-    // Squad Chemistry Boost
-    const chemBonus1 = getPlayerChemistryBoost(myCard, squad);
-    const chemBonus2 = getPlayerChemistryBoost(opCard, opponentSquadRef.current);
+    // Squad Chemistry Boost (host uses squad, guest uses opponentSquad)
+    const chemBonus1 = getPlayerChemistryBoost(hostCard, squad); // host
+    const chemBonus2 = getPlayerChemistryBoost(guestCard, opponentSquadRef.current); // guest
 
     // Captain Boost (+3 OVR)
-    const capBonus1 = (squad.length > 0 && myCard.id === squad[0].id) ? 3 : 0;
-    const capBonus2 = (opponentSquadRef.current.length > 0 && opCard.id === opponentSquadRef.current[0].id) ? 3 : 0;
+    const capBonus1 = (squad.length > 0 && hostCard.id === squad[0].id) ? 3 : 0;
+    const capBonus2 = (opponentSquadRef.current.length > 0 && guestCard.id === opponentSquadRef.current[0].id) ? 3 : 0;
 
-    let winner;
-    const myLvlBonus = ((myCard.level || 1) - 1) * 2;
-    const opLvlBonus = ((opCard.level || 1) - 1) * 2;
-    const myVal = myCard.stats[currentStat] + myLvlBonus;
-    const opVal = opCard.stats[currentStat] + opLvlBonus;
-    const myFinal = myVal + myBonus + formBonus1 + chemBonus1 + capBonus1;
-    const opFinal = opVal + opBonus + formBonus2 + chemBonus2 + capBonus2;
+    const hostLvlBonus = ((hostCard.level || 1) - 1) * 2;
+    const guestLvlBonus = ((guestCard.level || 1) - 1) * 2;
+    const hostVal = hostCard.stats[currentStat] + hostLvlBonus;
+    const guestVal = guestCard.stats[currentStat] + guestLvlBonus;
+    const hostFinal = hostVal + hostBonus + formBonus1 + chemBonus1 + capBonus1;
+    const guestFinal = guestVal + guestBonus + formBonus2 + chemBonus2 + capBonus2;
 
     const bonusPart = (b, emoji, lb, fb, fs, chem, cap) => {
       let parts = [];
@@ -270,13 +279,121 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       return parts.length > 0 ? ` [${parts.join(' & ')}]` : '';
     };
 
-    const myBonusDetails = bonusPart(myBonus, attr1.emoji, myLvlBonus, formBonus1, formResult1.state, chemBonus1, capBonus1);
-    const opBonusDetails = bonusPart(opBonus, attr2.emoji, opLvlBonus, formBonus2, formResult2.state, chemBonus2, capBonus2);
+    const hostBonusDetails = bonusPart(hostBonus, attr1.emoji, hostLvlBonus, formBonus1, formResult1.state, chemBonus1, capBonus1);
+    const guestBonusDetails = bonusPart(guestBonus, attr2.emoji, guestLvlBonus, formBonus2, formResult2.state, chemBonus2, capBonus2);
 
-    if (myFinal > opFinal) {
-      winner = 'me';
-      setMyScore(s => s + 1);
-      setRoundResultMsg(`BẠN THẮNG VÒNG NÀY! 🎉 (${myFinal}${myBonusDetails} > ${opFinal}${opBonusDetails})`);
+    // Determine winner from HOST perspective
+    let winner; // 'host' | 'guest' | 'draw'
+    if (hostFinal > guestFinal) {
+      winner = 'host';
+    } else if (guestFinal > hostFinal) {
+      winner = 'guest';
+    } else {
+      winner = 'draw';
+    }
+
+    // Compute new scores
+    const newHostScore = myScoreRef.current + (winner === 'host' ? 1 : 0);
+    const newGuestScore = opponentScoreRef.current + (winner === 'guest' ? 1 : 0);
+
+    // HOST builds result messages
+    const hostResultMsg = winner === 'host'
+      ? `BẠN THẮNG VÒNG NÀY! 🎉 (${hostFinal}${hostBonusDetails} > ${guestFinal}${guestBonusDetails})`
+      : winner === 'guest'
+      ? `BẠN THUA VÒNG NÀY! 😤 (${hostFinal}${hostBonusDetails} < ${guestFinal}${guestBonusDetails})`
+      : `HÒA! ⚖️ (${hostFinal}${hostBonusDetails} = ${guestFinal}${guestBonusDetails})`;
+
+    // GUEST gets mirrored message
+    const guestResultMsg = winner === 'guest'
+      ? `BẠN THẮNG VÒNG NÀY! 🎉 (${guestFinal}${guestBonusDetails} > ${hostFinal}${hostBonusDetails})`
+      : winner === 'host'
+      ? `BẠN THUA VÒNG NÀY! 😤 (${guestFinal}${guestBonusDetails} < ${hostFinal}${hostBonusDetails})`
+      : `HÒA! ⚖️ (${guestFinal}${guestBonusDetails} = ${hostFinal}${hostBonusDetails})`;
+
+    const historyEntry = {
+      myStat: currentStat,
+      myCardName: hostCard.name,
+      myBonusDetails: hostBonusDetails,
+      myFinalVal: hostFinal,
+      opStat: currentStat,
+      opCardName: guestCard.name,
+      opBonusDetails: guestBonusDetails,
+      opFinalVal: guestFinal,
+      result: winner === 'host' ? 'win' : winner === 'guest' ? 'loss' : 'draw'
+    };
+
+    // ===== APPLY RESULT LOCALLY (HOST) =====
+    applyRoundResult({
+      winner,          // 'host' | 'guest' | 'draw'
+      perspective: 'host',
+      newHostScore,
+      newGuestScore,
+      resultMsg: hostResultMsg,
+      historyEntry
+    });
+
+    // ===== BROADCAST AUTHORITATIVE RESULT TO GUEST =====
+    sendData({
+      type: 'round_result',
+      winner,               // 'host' | 'guest' | 'draw'
+      newHostScore,         // authoritative host score
+      newGuestScore,        // authoritative guest score
+      resultMsg: guestResultMsg,
+      stat: currentStat,
+      hostFinal,
+      guestFinal,
+      roundIndex: roundCountRef.current,
+      historyEntry: {
+        ...historyEntry,
+        // Mirror for guest view
+        myCardName: guestCard.name,
+        myBonusDetails: guestBonusDetails,
+        myFinalVal: guestFinal,
+        opCardName: hostCard.name,
+        opBonusDetails: hostBonusDetails,
+        opFinalVal: hostFinal,
+        result: winner === 'guest' ? 'win' : winner === 'host' ? 'loss' : 'draw'
+      }
+    });
+  }, [squad, sendData]);
+
+  // Apply a round result (from local calculation or received from host)
+  const applyRoundResult = useCallback(({
+    winner,        // 'host' | 'guest' | 'draw'
+    perspective,   // 'host' | 'guest'
+    newHostScore,
+    newGuestScore,
+    resultMsg,
+    historyEntry
+  }) => {
+    if (phaseRef.current === 'result') return;
+
+    // Determine local winner label ('me', 'opponent', 'draw')
+    let localWinner;
+    if (winner === 'draw') {
+      localWinner = 'draw';
+    } else if (perspective === 'host') {
+      localWinner = winner === 'host' ? 'me' : 'opponent';
+    } else {
+      localWinner = winner === 'guest' ? 'me' : 'opponent';
+    }
+
+    // Apply authoritative scores
+    if (perspective === 'host') {
+      setMyScore(newHostScore);
+      myScoreRef.current = newHostScore;
+      setOpponentScore(newGuestScore);
+      opponentScoreRef.current = newGuestScore;
+    } else {
+      // Guest: my score = guest score, opponent score = host score
+      setMyScore(newGuestScore);
+      myScoreRef.current = newGuestScore;
+      setOpponentScore(newHostScore);
+      opponentScoreRef.current = newHostScore;
+    }
+
+    // Audio & visual feedback
+    if (localWinner === 'me') {
       playFx('winPoint');
       confetti({
         particleCount: 150,
@@ -284,29 +401,17 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
         origin: { y: 0.6 },
         colors: ['#22c55e', '#3b82f6', '#fbbf24']
       });
-    } else if (opFinal > myFinal) {
-      winner = 'opponent';
-      setOpponentScore(s => s + 1);
-      setRoundResultMsg(`BẠN THUA VÒNG NÀY! 😤 (${myFinal}${myBonusDetails} < ${opFinal}${opBonusDetails})`);
+    } else if (localWinner === 'opponent') {
       playFx('losePoint');
     } else {
-      winner = 'draw';
-      setRoundResultMsg(`HÒA! ⚖️ (${myFinal}${myBonusDetails} = ${opFinal}${opBonusDetails})`);
       playFx('drawPoint');
     }
 
-    setRoundWinner(winner);
-    setMatchHistory(prev => [...prev, {
-      myStat: currentStat,
-      myCardName: myCard.name,
-      myBonusDetails,
-      myFinalVal: myFinal,
-      opStat: currentStat,
-      opCardName: opCard.name,
-      opBonusDetails,
-      opFinalVal: opFinal,
-      result: winner === 'me' ? 'win' : winner === 'opponent' ? 'loss' : 'draw'
-    }]);
+    setRoundWinner(localWinner);
+    setRoundResultMsg(resultMsg);
+    if (historyEntry) {
+      setMatchHistory(prev => [...prev, historyEntry]);
+    }
     updatePhase('result');
     roundCountRef.current += 1;
     setRoundCount(prev => prev + 1);
@@ -317,7 +422,6 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     }
 
     roundTimeoutRef.current = setTimeout(() => {
-      // Reset values for the next round
       myPlayedCardRef.current = null;
       opponentPlayedCardRef.current = null;
       opponentPlayedStatRef.current = null;
@@ -331,7 +435,6 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
         setStatus('gameover');
       } else {
         if (isHostRef.current) {
-          // Host generates next stat and pushes to guest
           const stats = ['attack', 'control', 'defense'];
           const nextStat = stats[Math.floor(Math.random() * stats.length)];
           const roundSeed = Math.floor(Math.random() * 1000000);
@@ -340,8 +443,6 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
           updatePhase('select_card');
           sendData({ type: 'start_round', stat: nextStat, roundIndex: roundCountRef.current, seed: roundSeed });
         } else {
-          // GUEST ONLY: Only transition to waiting_start if we haven't already transitioned
-          // to select_card via a fast-arriving network 'start_round' message.
           if (phaseRef.current === 'result') {
             updatePhase('waiting_start');
             setRoundResultMsg('Đang chờ máy chủ bắt đầu vòng mới...');
@@ -383,19 +484,14 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
         setOpponentSquad(data.squad);
         opponentSquadRef.current = data.squad;
       }
-      // Synchronize environment if provided
       if (data.weatherIdx !== undefined && data.timeIdx !== undefined) {
         setMatchEnvironment({ weather: ENV_WEATHER[data.weatherIdx], time: ENV_TIME[data.timeIdx] });
       }
       if (data.seed !== undefined) {
         roundSeedRef.current = data.seed;
       }
-
-      // Synchronize round count
       roundCountRef.current = data.roundIndex;
       setRoundCount(data.roundIndex);
-
-      // Clear played cards for the new round immediately to avoid race condition!
       myPlayedCardRef.current = null;
       opponentPlayedCardRef.current = null;
       opponentPlayedStatRef.current = null;
@@ -406,9 +502,9 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       updatePhase('select_card');
     }
     else if (data.type === 'play_card') {
-      // Verify round index to avoid race conditions!
+      // Verify round index to avoid race conditions
       if (data.roundIndex !== roundCountRef.current) {
-        console.warn(`[PVP] Stale/future play_card received: message index ${data.roundIndex}, current index ${roundCountRef.current}`);
+        console.warn(`[PVP] Stale/future play_card received: message index ${data.roundIndex}, current ${roundCountRef.current}`);
         return;
       }
       opponentPlayedCardRef.current = data.card;
@@ -416,9 +512,26 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       setOpponentPlayedCard(data.card);
       setOpponentDeckCount(prev => prev - 1);
 
-      if (myPlayedCardRef.current) {
-        calculateRoundResult(myPlayedCardRef.current, data.card, data.stat);
+      // HOST ONLY: trigger calculation when both cards are played
+      if (isHostRef.current && myPlayedCardRef.current) {
+        calculateRoundResult(myPlayedCardRef.current, data.card);
       }
+      // Guest does NOT calculate — waits for 'round_result' from host
+    }
+    // ===== NEW: Authoritative round result from Host =====
+    else if (data.type === 'round_result') {
+      if (phaseRef.current === 'result') return; // already applied
+      console.log('[PVP] Guest received authoritative round_result:', data);
+
+      // Apply the host's authoritative result from GUEST perspective
+      applyRoundResult({
+        winner: data.winner,
+        perspective: 'guest',
+        newHostScore: data.newHostScore,
+        newGuestScore: data.newGuestScore,
+        resultMsg: data.resultMsg,
+        historyEntry: data.historyEntry
+      });
     }
     else if (data.type === 'sync_session') {
       console.log('[PVP] Re-connected and restoring match session state...');
@@ -427,7 +540,9 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
         opponentSquadRef.current = data.squad;
       }
       setMyScore(data.opponentScore);
+      myScoreRef.current = data.opponentScore;
       setOpponentScore(data.myScore);
+      opponentScoreRef.current = data.myScore;
       setRoundCount(data.roundIndex);
       roundCountRef.current = data.roundIndex;
       setOpponentDeckCount(data.opponentDeckCount);
@@ -443,7 +558,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     else if (data.type === 'pong') {
       window.lastPvpPong = Date.now();
     }
-  }, [calculateRoundResult, sendData, squad]);
+  }, [calculateRoundResult, applyRoundResult, sendData, squad]);
 
   const setupConnectionHandlers = useCallback((conn) => {
     conn.on('data', (data) => {
@@ -652,9 +767,16 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       // Broadcast play card to opponent
       sendData({ type: 'play_card', card, roundIndex: roundCountRef.current, stat: activeStatRef.current });
 
-      if (opponentPlayedCardRef.current) {
-        calculateRoundResult(card, opponentPlayedCardRef.current, opponentPlayedStatRef.current || activeStatRef.current);
+      if (isHostRef.current) {
+        // HOST: check if opponent already played — if so, calculate
+        if (opponentPlayedCardRef.current) {
+          calculateRoundResult(card, opponentPlayedCardRef.current);
+        } else {
+          updatePhase('waiting');
+          setRoundResultMsg('Đang chờ đối thủ ra bài...');
+        }
       } else {
+        // GUEST: always wait for host's round_result broadcast
         updatePhase('waiting');
         setRoundResultMsg('Đang chờ đối thủ ra bài...');
       }
