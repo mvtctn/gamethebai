@@ -6264,7 +6264,7 @@ export default function App() {
               {/* Battle Overlay for Effects */}
               {matchPhase === 'roundResult' && (
                 <div className={`battle-overlay active ${
-                  roundResultMsg.includes('THẮNG') ? '' : 
+                  roundResultMsg.includes('THẮNG') ? 'win-overlay' : 
                   roundResultMsg.includes('THUA') ? 'cloud-overlay' : 'draw-overlay'
                 }`}></div>
               )}

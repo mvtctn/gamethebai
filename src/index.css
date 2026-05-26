@@ -712,71 +712,46 @@ h2 {
 }
 
 /* Battle Result Overlays */
+/* Optimized, Lightweight Viewport Vignette Glow for Match Results (GPU Accelerated) */
 .battle-overlay {
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 15;
-  transition: opacity 1s ease-in-out;
+  transition: opacity 0.5s ease-in-out;
   opacity: 0;
+  will-change: opacity;
 }
 
 .battle-overlay.active {
   opacity: 1;
 }
 
-/* Hiệu ứng mây đen khi Thua */
+/* emerald breathing vignette for WIN */
+.win-overlay {
+  box-shadow: inset 0 0 80px rgba(16, 185, 129, 0.45);
+  animation: breathing-glow 2.5s ease-in-out infinite alternate;
+}
+
+/* crimson breathing vignette for LOSS */
 .cloud-overlay {
-  background: 
-    radial-gradient(ellipse at top, rgba(30, 41, 59, 0.8) 0%, transparent 70%),
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.6) 0%, transparent 100%);
-  animation: thunder-flash 4s infinite;
+  box-shadow: inset 0 0 80px rgba(244, 63, 94, 0.45);
+  animation: breathing-glow 2.5s ease-in-out infinite alternate;
 }
 
-.cloud-overlay::before,
-.cloud-overlay::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 60%;
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M10,40 Q20,20 40,30 Q60,10 80,30 Q100,20 100,50 L100,100 L0,100 L0,50 Q5,35 10,40 Z" fill="rgba(15, 23, 42, 0.5)"/></svg>');
-  background-size: 200% 100%;
-  background-position: 0 0;
-  background-repeat: repeat-x;
-  opacity: 0.8;
-  filter: blur(5px);
-  animation: move-clouds 20s linear infinite;
-}
-
-.cloud-overlay::after {
-  top: -10%;
-  height: 70%;
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M20,50 Q30,30 50,40 Q70,20 90,40 Q100,30 100,60 L100,100 L0,100 L0,60 Q10,45 20,50 Z" fill="rgba(30, 41, 59, 0.4)"/></svg>');
-  animation: move-clouds 15s linear infinite reverse;
-}
-
-@keyframes move-clouds {
-  0% { background-position: 0 0; }
-  100% { background-position: -200% 0; }
-}
-
-@keyframes thunder-flash {
-  0%, 95%, 98% { background-color: transparent; }
-  96%, 99% { background-color: rgba(255, 255, 255, 0.2); }
-  100% { background-color: transparent; }
-}
-
-/* Hiệu ứng màu trung tính gradient khi Hòa */
+/* amber/slate breathing vignette for DRAW */
 .draw-overlay {
-  background: radial-gradient(circle at center, rgba(156, 163, 175, 0.4) 0%, transparent 60%);
-  animation: draw-pulse 3s infinite alternate;
+  box-shadow: inset 0 0 80px rgba(245, 158, 11, 0.35);
+  animation: breathing-glow 2.5s ease-in-out infinite alternate;
 }
 
-@keyframes draw-pulse {
-  0% { opacity: 0.5; transform: scale(1); }
-  100% { opacity: 1; transform: scale(1.1); }
+@keyframes breathing-glow {
+  0% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1.0;
+  }
 }
 
 /* ═══════════════════════════════════════════
