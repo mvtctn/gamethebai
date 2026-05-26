@@ -329,6 +329,21 @@ export const getNationEmoji = (nation) => {
   return mapping[nation.toLowerCase()] || '🏳️';
 };
 
+export const getRelativeTime = (timestamp) => {
+  if (!timestamp) return "";
+  const now = Date.now();
+  const diffMs = now - timestamp;
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHr = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHr / 24);
+
+  if (diffSec < 60) return "vừa xong";
+  if (diffMin < 60) return `${diffMin} phút trước`;
+  if (diffHr < 24) return `${diffHr} giờ trước`;
+  return `${diffDay} ngày trước`;
+};
+
 export const getSquadChemistry = (squad) => {
   if (!squad || squad.length === 0) return {};
   const nationCounts = {};
@@ -695,6 +710,14 @@ export default function App() {
   const [inspectingUser, setInspectingUser] = useState(null);
   const [inspectedUserData, setInspectedUserData] = useState(null);
   const [loadingInspectedUser, setLoadingInspectedUser] = useState(false);
+
+  // User Wall (X/Twitter) States
+  const [userWallTarget, setUserWallTarget] = useState(null);
+  const [userWallData, setUserWallData] = useState(null);
+  const [userWallPosts, setUserWallPosts] = useState([]);
+  const [newPostText, setNewPostText] = useState("");
+  const [commentInputs, setCommentInputs] = useState({});
+  const [loadingWall, setLoadingWall] = useState(false);
 
   // Private Chat States
   const [activePrivatePartner, setActivePrivatePartner] = useState(null);
@@ -1160,21 +1183,222 @@ export default function App() {
     showAlert("Nhận Quà Thành Công 🎁", `Chúc mừng! Bạn đã nhận được ${m.coins ? `${m.coins} Xu` : ''}${m.coins && m.packs ? ' + ' : ''}${m.packs ? `${m.packs} Gói Thẻ Miễn Phí` : ''} từ mốc Cấp Độ ${m.level}.`);
   };
 
-  // Inspect User effect
+  // User Wall (X/Twitter) Data Loading Effect (Firebase + LocalStorage fallback)
   useEffect(() => {
-    if (!inspectingUser || !isConnectedToFirebase) {
-      setInspectedUserData(null);
+    if (!userWallTarget) {
+      setUserWallData(null);
+      setUserWallPosts([]);
       return;
     }
 
-    setLoadingInspectedUser(true);
-    const targetUserRef = ref(database, `/users/${inspectingUser}`);
-    onValue(targetUserRef, (snapshot) => {
-      const data = snapshot.val();
-      setInspectedUserData(data);
-      setLoadingInspectedUser(false);
-    }, { onlyOnce: true });
-  }, [inspectingUser, isConnectedToFirebase]);
+    setLoadingWall(true);
+
+    if (isConnectedToFirebase) {
+      // 1. Fetch profile info
+      const targetUserRef = ref(database, `/users/${userWallTarget}`);
+      const unsubscribeUser = onValue(targetUserRef, (snapshot) => {
+        const data = snapshot.val();
+        setUserWallData(data);
+      }, (error) => {
+        console.error("Error fetching wall user info:", error);
+      });
+
+      // 2. Fetch posts in real-time
+      const postsRef = ref(database, `/user_walls/${userWallTarget}/posts`);
+      const unsubscribePosts = onValue(postsRef, (snapshot) => {
+        const postsVal = snapshot.val();
+        if (postsVal) {
+          const list = Object.keys(postsVal).map(key => ({
+            id: key,
+            ...postsVal[key]
+          })).sort((a, b) => b.timestamp - a.timestamp);
+          setUserWallPosts(list);
+        } else {
+          setUserWallPosts([]);
+        }
+        setLoadingWall(false);
+      }, (error) => {
+        console.error("Error fetching wall posts:", error);
+        setLoadingWall(false);
+      });
+
+      return () => {
+        unsubscribeUser();
+        unsubscribePosts();
+      };
+    } else {
+      // Offline mode: load from LocalStorage
+      const localWalls = localStorage.getItem('thebongda_local_user_walls');
+      const wallsData = localWalls ? JSON.parse(localWalls) : {};
+      const wall = wallsData[userWallTarget] || {};
+      
+      let offlineProfile = null;
+      if (userWallTarget === currentUser) {
+        offlineProfile = {
+          level,
+          xp,
+          stats,
+          squad
+        };
+      } else {
+        const matchingOnline = onlineUsers.find(u => u.username === userWallTarget);
+        offlineProfile = matchingOnline ? {
+          level: matchingOnline.level || 1,
+          xp: 0,
+          stats: { played: 0, wins: 0, draws: 0, losses: 0 },
+          squad: []
+        } : {
+          level: 1,
+          xp: 0,
+          stats: { played: 0, wins: 0, draws: 0, losses: 0 },
+          squad: []
+        };
+      }
+
+      setUserWallData(offlineProfile);
+      
+      const postsList = wall.posts ? Object.keys(wall.posts).map(key => ({
+        id: key,
+        ...wall.posts[key]
+      })).sort((a, b) => b.timestamp - a.timestamp) : [];
+      
+      setUserWallPosts(postsList);
+      setLoadingWall(false);
+    }
+  }, [userWallTarget, isConnectedToFirebase, currentUser, level, xp, stats, squad, onlineUsers]);
+
+  // Create new Post
+  const handleCreatePost = async () => {
+    if (!newPostText.trim()) return;
+    if (newPostText.length > 280) {
+      showAlert("⚠️ Lỗi bài viết", "Bài viết của bạn vượt quá giới hạn 280 ký tự!");
+      return;
+    }
+    
+    playFx('upgrade');
+    const postData = {
+      author: currentUser,
+      authorLevel: level,
+      content: newPostText.trim(),
+      timestamp: Date.now(),
+      likes: {},
+      comments: {}
+    };
+
+    if (isConnectedToFirebase) {
+      try {
+        const postsRef = ref(database, `/user_walls/${currentUser}/posts`);
+        const newPostRef = push(postsRef);
+        await set(newPostRef, postData);
+        setNewPostText("");
+      } catch (err) {
+        console.error("Error creating post:", err);
+        showAlert("❌ Thất bại", "Không thể gửi bài viết lên server.");
+      }
+    } else {
+      const localWalls = localStorage.getItem('thebongda_local_user_walls');
+      const wallsData = localWalls ? JSON.parse(localWalls) : {};
+      if (!wallsData[currentUser]) wallsData[currentUser] = { posts: {} };
+      if (!wallsData[currentUser].posts) wallsData[currentUser].posts = {};
+      
+      const fakeId = 'local_post_' + Date.now();
+      wallsData[currentUser].posts[fakeId] = postData;
+      localStorage.setItem('thebongda_local_user_walls', JSON.stringify(wallsData));
+      
+      const list = Object.keys(wallsData[currentUser].posts).map(key => ({
+        id: key,
+        ...wallsData[currentUser].posts[key]
+      })).sort((a, b) => b.timestamp - a.timestamp);
+      setUserWallPosts(list);
+      setNewPostText("");
+    }
+  };
+
+  // Like / Unlike Post
+  const handleLikePost = async (postId) => {
+    playFx('click');
+    const post = userWallPosts.find(p => p.id === postId);
+    if (!post) return;
+
+    const likes = post.likes || {};
+    const hasLiked = !!likes[currentUser];
+    const updatedLikes = { ...likes };
+    if (hasLiked) {
+      delete updatedLikes[currentUser];
+    } else {
+      updatedLikes[currentUser] = true;
+    }
+
+    if (isConnectedToFirebase) {
+      try {
+        const likeRef = ref(database, `/user_walls/${userWallTarget}/posts/${postId}/likes`);
+        await set(likeRef, updatedLikes);
+      } catch (err) {
+        console.error("Error liking post:", err);
+      }
+    } else {
+      const localWalls = localStorage.getItem('thebongda_local_user_walls');
+      const wallsData = localWalls ? JSON.parse(localWalls) : {};
+      if (wallsData[userWallTarget] && wallsData[userWallTarget].posts && wallsData[userWallTarget].posts[postId]) {
+        wallsData[userWallTarget].posts[postId].likes = updatedLikes;
+        localStorage.setItem('thebongda_local_user_walls', JSON.stringify(wallsData));
+        
+        setUserWallPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: updatedLikes } : p));
+      }
+    }
+  };
+
+  // Create new Comment under a Post
+  const handleCreateComment = async (postId) => {
+    const commentText = commentInputs[postId] || "";
+    if (!commentText.trim()) return;
+    if (commentText.length > 200) {
+      showAlert("⚠️ Lỗi bình luận", "Bình luận của bạn vượt quá giới hạn 200 ký tự!");
+      return;
+    }
+
+    playFx('cardSelect');
+    const commentData = {
+      author: currentUser,
+      authorLevel: level,
+      content: commentText.trim(),
+      timestamp: Date.now()
+    };
+
+    if (isConnectedToFirebase) {
+      try {
+        const commentsRef = ref(database, `/user_walls/${userWallTarget}/posts/${postId}/comments`);
+        const newCommentRef = push(commentsRef);
+        await set(newCommentRef, commentData);
+        setCommentInputs(prev => ({ ...prev, [postId]: "" }));
+      } catch (err) {
+        console.error("Error creating comment:", err);
+      }
+    } else {
+      const localWalls = localStorage.getItem('thebongda_local_user_walls');
+      const wallsData = localWalls ? JSON.parse(localWalls) : {};
+      if (wallsData[userWallTarget] && wallsData[userWallTarget].posts && wallsData[userWallTarget].posts[postId]) {
+        if (!wallsData[userWallTarget].posts[postId].comments) {
+          wallsData[userWallTarget].posts[postId].comments = {};
+        }
+        const commentId = 'local_comment_' + Date.now();
+        wallsData[userWallTarget].posts[postId].comments[commentId] = commentData;
+        localStorage.setItem('thebongda_local_user_walls', JSON.stringify(wallsData));
+        
+        setUserWallPosts(prev => prev.map(p => {
+          if (p.id === postId) {
+            const comments = p.comments || {};
+            return {
+              ...p,
+              comments: { ...comments, [commentId]: commentData }
+            };
+          }
+          return p;
+        }));
+        setCommentInputs(prev => ({ ...prev, [postId]: "" }));
+      }
+    }
+  };
 
   // Private Chats List effect
   useEffect(() => {
@@ -2800,7 +3024,15 @@ export default function App() {
           {/* Native flow footer used at the bottom of app-container instead */}
 
           {/* User Header Profile */}
-          <div className="absolute top-4 right-4 z-50 flex items-center gap-4 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
+          <div className="absolute top-4 right-4 z-50 flex items-center gap-3 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
+            <button 
+              onClick={() => { playFx('click'); setGameState('userWall'); setUserWallTarget(currentUser); }} 
+              className="text-xs text-cyan-400 hover:text-cyan-300 font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer select-none transition-all hover:scale-105 active:scale-95"
+              title="Xem Tường nhà cá nhân"
+            >
+              🐦 Tường
+            </button>
+            <div className="w-[1px] h-4 bg-white/20"></div>
             <div className="text-sm flex items-center gap-2 cursor-pointer hover:text-cyan-400 hover:scale-105 transition-all duration-300 select-none" onClick={() => { playFx('click'); setGameState('profile'); }} title="Xem hồ sơ và cài đặt HLV">
               <span className="text-gray-400">HLV: </span>
               <span className="font-bold text-fuchsia-400">{currentUser}</span>
@@ -3013,9 +3245,10 @@ export default function App() {
                                           style={{ background: getAvatarGradient(msg.sender) }}
                                           onClick={() => {
                                             playFx('click');
-                                            setInspectingUser(msg.sender);
+                                            setGameState('userWall');
+                                            setUserWallTarget(msg.sender);
                                           }}
-                                          title={`Xem hồ sơ ${msg.sender}`}
+                                          title={`Xem Tường nhà ${msg.sender}`}
                                         >
                                           {msg.sender.charAt(0).toUpperCase()}
                                         </div>
@@ -3029,7 +3262,8 @@ export default function App() {
                                           onClick={() => {
                                             if (!isSystem && !isMe) {
                                               playFx('click');
-                                              setInspectingUser(msg.sender);
+                                              setGameState('userWall');
+                                              setUserWallTarget(msg.sender);
                                             }
                                           }}
                                         >
@@ -3109,9 +3343,9 @@ export default function App() {
                                   <span className="font-extrabold text-[11px] text-white truncate max-w-[120px]">Chat: {activePrivatePartner}</span>
                                   <button 
                                     className="text-[9px] px-2 py-0.5 bg-cyan-900/30 text-cyan-400 border border-cyan-500/20 rounded hover:bg-cyan-900/50 font-bold cursor-pointer"
-                                    onClick={() => setInspectingUser(activePrivatePartner)}
+                                    onClick={() => { playFx('click'); setGameState('userWall'); setUserWallTarget(activePrivatePartner); }}
                                   >
-                                    Hồ sơ
+                                    Tường
                                   </button>
                                 </div>
 
@@ -3136,9 +3370,10 @@ export default function App() {
                                             style={{ background: getAvatarGradient(msg.sender) }}
                                             onClick={() => {
                                               playFx('click');
-                                              setInspectingUser(msg.sender);
+                                              setGameState('userWall');
+                                              setUserWallTarget(msg.sender);
                                             }}
-                                            title={`Xem hồ sơ ${msg.sender}`}
+                                            title={`Xem Tường nhà ${msg.sender}`}
                                           >
                                             {msg.sender.charAt(0).toUpperCase()}
                                           </div>
@@ -3245,7 +3480,7 @@ export default function App() {
                                       <span className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)] shrink-0 animate-pulse"></span>
                                       <span 
                                         className="font-extrabold text-xs text-white truncate hover:underline hover:text-cyan-400 cursor-pointer"
-                                        onClick={() => { playFx('click'); setInspectingUser(user.username); }}
+                                        onClick={() => { playFx('click'); setGameState('userWall'); setUserWallTarget(user.username); }}
                                       >
                                         {user.username}
                                       </span>
@@ -3866,6 +4101,361 @@ export default function App() {
         </div>
       )}
 
+      {gameState === 'userWall' && (
+        <div className="w-full max-w-5xl mx-auto flex flex-col mt-2 sm:mt-8 animate-fade-in px-2 sm:px-4 text-white">
+          {/* Header Action Row */}
+          <div className="flex items-center justify-between w-full mb-6">
+            <button 
+              className="btn !bg-slate-800 hover:!bg-slate-700 transition-colors flex items-center gap-2 cursor-pointer text-xs font-black uppercase tracking-wider !py-2.5 rounded-full border border-white/10" 
+              onClick={() => { playFx('click'); setGameState('lobby'); setUserWallTarget(null); }}
+            >
+              ← Về Sảnh
+            </button>
+            <h2 className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 uppercase tracking-widest text-center">
+              Tường HLV 🐦
+            </h2>
+            <div className="w-[100px] sm:w-[120px]"></div>
+          </div>
+
+          {loadingWall ? (
+            <div className="glass-panel w-full rounded-[2rem] p-20 flex flex-col items-center justify-center gap-4">
+              <div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+              <div className="text-cyan-400 font-extrabold tracking-widest text-xs uppercase animate-pulse">Đang tải Tường HLV...</div>
+            </div>
+          ) : !userWallData ? (
+            <div className="glass-panel w-full rounded-[2rem] p-20 flex flex-col items-center justify-center text-center gap-4 border border-white/10">
+              <div className="text-red-400 text-lg font-black uppercase mb-2">Không tìm thấy thông tin HLV ❌</div>
+              <p className="text-gray-400 text-sm max-w-xs">Dữ liệu HLV này chưa sẵn sàng hoặc HLV chưa tạo tài khoản trực tuyến.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full items-stretch">
+              
+              {/* LEFT PROFILE CARD (5/12 cols): Cover, stats, and fast actions */}
+              <div className="lg:col-span-5 flex flex-col gap-6">
+                <div className="glass-panel rounded-[2rem] border border-white/10 shadow-2xl overflow-hidden bg-slate-950/40 backdrop-blur-md relative flex flex-col">
+                  {/* Premium Cover Banner */}
+                  <div className="h-28 sm:h-36 bg-gradient-to-r from-cyan-900 via-indigo-950 to-purple-950 relative overflow-hidden flex items-center justify-center">
+                    <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_white_1px,_transparent_1px)] bg-[size:10px_10px]"></div>
+                    <div className="absolute -top-10 -left-10 w-32 h-32 bg-cyan-400/20 rounded-full blur-[40px]"></div>
+                    <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-purple-500/20 rounded-full blur-[40px]"></div>
+                    <span className="text-white/10 font-black italic tracking-tighter text-4xl sm:text-5xl uppercase select-none pointer-events-none transform -rotate-6">THE BONG DA</span>
+                  </div>
+
+                  {/* Profile Overlay details */}
+                  <div className="px-6 pb-6 pt-1 flex flex-col items-center text-center relative">
+                    {/* Avatar circle overlapping banner */}
+                    <div 
+                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center border-4 border-slate-950 shadow-2xl relative select-none z-10 -mt-10 sm:-mt-12"
+                      style={{ 
+                        background: getAvatarGradient(userWallTarget),
+                        boxShadow: `0 0 25px rgba(${userWallTarget === currentUser ? '244,63,94' : '59,130,246'}, 0.4)`
+                      }}
+                    >
+                      <span className="text-3xl sm:text-4xl font-black text-white">{userWallTarget.charAt(0).toUpperCase()}</span>
+                      
+                      {/* Floating level badge */}
+                      <span className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-500 to-amber-600 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full border-2 border-slate-950 shadow-md">
+                        Lv.{userWallData.level || 1}
+                      </span>
+                    </div>
+
+                    <h3 className="text-xl sm:text-2xl font-black text-white mt-3 uppercase tracking-wider flex items-center gap-1.5 justify-center">
+                      {userWallTarget}
+                      {userWallTarget === currentUser && (
+                        <span className="text-[9px] bg-fuchsia-950/40 text-fuchsia-400 border border-fuchsia-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider font-extrabold">BẠN</span>
+                      )}
+                    </h3>
+                    
+                    {/* Squad OVR badge */}
+                    <div className="mt-1 mb-4 flex items-center gap-1">
+                      {(() => {
+                        const ovrVal = userWallData.squad ? Math.round(userWallData.squad.reduce((acc, card) => acc + Math.max(card.stats.attack, card.stats.defense, card.stats.control), 0) / 11) : 0;
+                        return (
+                          <span className="text-xs px-3 py-1 bg-cyan-950/40 text-cyan-400 border border-cyan-500/20 font-black rounded-full uppercase tracking-widest">
+                            🔥 {ovrVal || 0} OVR Đội Hình
+                          </span>
+                        );
+                      })()}
+                    </div>
+
+                    {/* XP Progress */}
+                    <div className="w-full mb-6">
+                      <div className="flex justify-between text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 px-1">
+                        <span>Cấp Độ HLV</span>
+                        <span>{userWallData.xp || 0} / {(userWallData.level || 1) * 100} XP</span>
+                      </div>
+                      <div className="w-full bg-black/60 rounded-full h-2 border border-white/5 overflow-hidden relative">
+                        <div 
+                          className="bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-500 h-full rounded-full transition-all duration-1000"
+                          style={{ width: `${Math.min(100, ((userWallData.xp || 0) / ((userWallData.level || 1) * 100)) * 100)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    {/* Battle Stats Dashboard */}
+                    <div className="w-full bg-black/30 border border-white/5 rounded-2xl p-4 flex flex-col gap-3.5 mb-6 text-center">
+                      <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-white/5 pb-2">Thống Kê Chiến Tích 🏆</div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-slate-900/50 border border-white/5 p-2.5 rounded-xl">
+                          <div className="text-[9px] text-gray-400 font-bold uppercase">Trận đã đấu</div>
+                          <div className="text-lg font-black text-white">{userWallData.stats?.played || 0}</div>
+                        </div>
+                        <div className="bg-green-950/20 border border-green-500/10 p-2.5 rounded-xl">
+                          <div className="text-[9px] text-green-400 font-bold uppercase">Thắng</div>
+                          <div className="text-lg font-black text-green-400">{userWallData.stats?.wins || 0}</div>
+                        </div>
+                        <div className="bg-yellow-950/20 border border-yellow-500/10 p-2.5 rounded-xl">
+                          <div className="text-[9px] text-yellow-400 font-bold uppercase">Hòa</div>
+                          <div className="text-lg font-black text-yellow-400">{userWallData.stats?.draws || 0}</div>
+                        </div>
+                        <div className="bg-red-950/20 border border-red-500/10 p-2.5 rounded-xl">
+                          <div className="text-[9px] text-red-400 font-bold uppercase">Thua</div>
+                          <div className="text-lg font-black text-red-400">{userWallData.stats?.losses || 0}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quick Interactive Actions */}
+                    <div className="w-full flex flex-col gap-2 mt-auto">
+                      {userWallTarget !== currentUser ? (
+                        <>
+                          <button 
+                            className="btn !bg-violet-600 hover:!bg-violet-500 w-full flex items-center justify-center gap-2 !py-3 font-bold text-sm tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-violet-900/30"
+                            onClick={() => {
+                              playFx('click');
+                              setGameState('lobby');
+                              setActivePrivatePartner(userWallTarget);
+                              setChatTab('private');
+                              setUserWallTarget(null);
+                              setTimeout(() => {
+                                const el = document.getElementById('lobby-chat-panel');
+                                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                const inputEl = document.getElementById('private-chat-input');
+                                if (inputEl) inputEl.focus();
+                              }, 300);
+                            }}
+                          >
+                            <MessageSquare size={16} /> Nhắn Tin Riêng
+                          </button>
+                          
+                          <button 
+                            className={`btn w-full flex items-center justify-center gap-2 !py-3 font-bold text-sm tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg ${
+                              squad.length < 11
+                                ? 'opacity-40 !bg-gray-700 cursor-not-allowed text-gray-400' 
+                                : 'bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white shadow-red-900/30'
+                            }`}
+                            disabled={squad.length < 11}
+                            onClick={() => {
+                              if (squad.length === 11) {
+                                const activeObj = onlineUsers.find(o => o.username === userWallTarget);
+                                if (activeObj) {
+                                  sendChallengeInvite(activeObj.username, activeObj.peerId);
+                                  setGameState('lobby');
+                                  setUserWallTarget(null);
+                                } else {
+                                  showAlert("Ngoại Tuyến ⚪", "HLV này đã ngoại tuyến hoặc không khả dụng để thách đấu pvp trực tiếp.");
+                                }
+                              }
+                            }}
+                          >
+                            <Swords size={16} /> Thách Đấu Ngay
+                          </button>
+                        </>
+                      ) : (
+                        <button 
+                          className="btn !bg-indigo-600 hover:!bg-indigo-500 w-full flex items-center justify-center gap-2 !py-3 font-bold text-sm tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg"
+                          onClick={() => {
+                            playFx('click');
+                            setGameState('profile');
+                          }}
+                        >
+                          Cấu Hình PIN & Email ⚙️
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* RIGHT FEED PANEL (7/12 cols): Composer and post feed timeline */}
+              <div className="lg:col-span-7 flex flex-col gap-6 h-full max-h-[85vh] overflow-y-auto pr-1 hide-scrollbar">
+                
+                {/* 1. Composer (Only for the wall owner) */}
+                {userWallTarget === currentUser && (
+                  <div className="glass-panel rounded-[2rem] p-5 border border-white/10 shadow-xl bg-slate-950/40 backdrop-blur-md flex gap-3.5">
+                    <div 
+                      className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center font-black border border-white/10 select-none text-sm"
+                      style={{ background: getAvatarGradient(currentUser) }}
+                    >
+                      {currentUser.charAt(0).toUpperCase()}
+                    </div>
+                    
+                    <div className="flex-1 flex flex-col gap-3">
+                      <textarea
+                        value={newPostText}
+                        onChange={(e) => setNewPostText(e.target.value)}
+                        placeholder="Hãy chia sẻ suy nghĩ, đội hình lý tưởng hay kinh nghiệm trận mạc bóng đá của bạn... ⚽"
+                        maxLength={280}
+                        rows={3}
+                        className="w-full bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-2xl p-3 text-xs font-semibold placeholder-gray-500 focus:outline-none resize-none transition-colors leading-relaxed text-white"
+                      />
+                      
+                      <div className="flex items-center justify-between">
+                        <span className={`text-[10px] font-bold tracking-widest ${
+                          newPostText.length > 250 ? 'text-red-400' : newPostText.length > 200 ? 'text-yellow-400' : 'text-gray-500'
+                        }`}>
+                          {newPostText.length} / 280
+                        </span>
+
+                        <button
+                          onClick={handleCreatePost}
+                          disabled={!newPostText.trim() || newPostText.length > 280}
+                          className={`btn !py-2 !px-5 text-xs font-black uppercase tracking-wider rounded-full shadow-lg transition-all active:scale-95 cursor-pointer ${
+                            !newPostText.trim() || newPostText.length > 280
+                              ? 'opacity-40 !bg-gray-800 cursor-not-allowed text-gray-500 shadow-none'
+                              : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-cyan-900/30'
+                          }`}
+                        >
+                          Đăng Bài 🚀
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. Timeline Feed */}
+                <div className="flex flex-col gap-4">
+                  <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-white/5 pb-2 px-2 flex justify-between items-center">
+                    <span>Dòng hoạt động bài đăng</span>
+                    <span>{userWallPosts.length} bài viết</span>
+                  </div>
+
+                  {userWallPosts.length === 0 ? (
+                    <div className="glass-panel rounded-[2rem] p-12 text-center border border-white/5 bg-slate-900/10">
+                      <div className="text-3xl mb-2">📭</div>
+                      <div className="text-xs text-gray-400 font-bold uppercase mb-1">Chưa có bài viết nào</div>
+                      <p className="text-[10px] text-gray-500 font-medium">HLV này vẫn chưa đăng tải chia sẻ gì lên dòng thời gian.</p>
+                    </div>
+                  ) : (
+                    userWallPosts.map((post) => {
+                      const likesCount = post.likes ? Object.keys(post.likes).length : 0;
+                      const hasLiked = post.likes ? !!post.likes[currentUser] : false;
+                      const commentsList = post.comments 
+                        ? Object.keys(post.comments).map(k => ({ id: k, ...post.comments[k] })).sort((a,b) => a.timestamp - b.timestamp)
+                        : [];
+                      
+                      return (
+                        <div 
+                          key={post.id} 
+                          className="glass-panel rounded-3xl p-5 border border-white/5 bg-slate-950/20 backdrop-blur-sm flex flex-col gap-4 hover:border-white/10 transition-all duration-300 shadow-sm"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div 
+                              className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-xs font-black border border-white/5 select-none"
+                              style={{ background: getAvatarGradient(post.author) }}
+                            >
+                              {post.author.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-extrabold text-sm text-white truncate">{post.author}</span>
+                                <span className="text-[9px] bg-white/10 text-gray-400 px-1.5 py-0.2 rounded border border-white/10 font-bold shrink-0">Lv.{post.authorLevel || 1}</span>
+                              </div>
+                              <span className="text-[9px] text-gray-500 font-bold font-mono block mt-0.5">{getRelativeTime(post.timestamp)}</span>
+                            </div>
+                          </div>
+
+                          <p className="text-xs sm:text-sm text-gray-100 font-medium leading-relaxed whitespace-pre-wrap px-1">
+                            {post.content}
+                          </p>
+
+                          <div className="flex items-center gap-6 border-t border-b border-white/5 py-2 px-1">
+                            <button 
+                              onClick={() => handleLikePost(post.id)}
+                              className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-75 hover:opacity-80 cursor-pointer ${
+                                hasLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-400'
+                              }`}
+                            >
+                              <span className="text-base select-none">{hasLiked ? '❤️' : '🤍'}</span>
+                              <span className="text-[11px] font-extrabold">{likesCount} Thích</span>
+                            </button>
+
+                            <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500">
+                              <span className="text-base select-none">💬</span>
+                              <span className="text-[11px] font-extrabold">{commentsList.length} Bình luận</span>
+                            </div>
+                          </div>
+
+                          {commentsList.length > 0 && (
+                            <div className="flex flex-col gap-3 pl-3 sm:pl-4 border-l border-white/5 mt-1">
+                              {commentsList.map((comm) => (
+                                <div key={comm.id} className="flex gap-2.5 items-start text-xs bg-black/10 p-2.5 rounded-xl border border-white/5 animate-fade-in">
+                                  <div 
+                                    className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[9px] font-black border border-white/5 select-none"
+                                    style={{ background: getAvatarGradient(comm.author) }}
+                                  >
+                                    {comm.author.charAt(0).toUpperCase()}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="font-extrabold text-[11px] text-white truncate">{comm.author}</span>
+                                      <span className="text-[8px] bg-white/10 text-gray-400 px-1 py-0.1 rounded border border-white/10 font-bold shrink-0">Lv.{comm.authorLevel || 1}</span>
+                                      <span className="text-[8px] text-gray-500 font-bold font-mono ml-auto">{getRelativeTime(comm.timestamp)}</span>
+                                    </div>
+                                    <p className="text-[11px] text-gray-300 font-semibold leading-relaxed mt-1 whitespace-pre-wrap">
+                                      {comm.content}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="flex gap-3 items-center mt-2 border-t border-white/5 pt-3">
+                            <div 
+                              className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[10px] font-black border border-white/5 select-none"
+                              style={{ background: getAvatarGradient(currentUser) }}
+                            >
+                              {currentUser.charAt(0).toUpperCase()}
+                            </div>
+                            
+                            <form 
+                              onSubmit={(e) => { e.preventDefault(); handleCreateComment(post.id); }}
+                              className="flex-1 flex gap-2"
+                            >
+                              <input
+                                type="text"
+                                value={commentInputs[post.id] || ""}
+                                onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))}
+                                placeholder="Viết phản hồi bình luận ngắn... ✍️"
+                                maxLength={200}
+                                className="flex-1 bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-full px-3 py-1.5 text-xs font-semibold focus:outline-none placeholder-gray-500 transition-colors text-white"
+                              />
+                              <button
+                                type="submit"
+                                disabled={!(commentInputs[post.id] || "").trim()}
+                                className={`btn !py-1.5 !px-4 text-[10px] font-black uppercase tracking-wider rounded-full shrink-0 cursor-pointer ${
+                                  !(commentInputs[post.id] || "").trim()
+                                    ? 'opacity-40 !bg-gray-800 text-gray-500'
+                                    : 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-md'
+                                }`}
+                              >
+                                Gửi 💬
+                              </button>
+                            </form>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+            </div>
+          )}
+        </div>
+      )}
+
       {gameState === 'leaderboard' && (
         <div className="w-full max-w-4xl mx-auto flex flex-col items-center mt-2 sm:mt-8 animate-fade-in px-1 sm:px-4">
           {/* Header */}
@@ -3974,7 +4564,7 @@ export default function App() {
                                 className={`font-extrabold hover:underline hover:text-cyan-400 cursor-pointer ${
                                   rank === 1 ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]' : isMe ? 'text-fuchsia-400' : 'text-white'
                                 }`}
-                                onClick={() => { playFx('click'); setInspectingUser(user.username); }}
+                                onClick={() => { playFx('click'); setGameState('userWall'); setUserWallTarget(user.username); }}
                               >
                                 {user.username} {isMe && ' (BẠN)'}
                               </span>
@@ -4968,8 +5558,8 @@ export default function App() {
 
       {/* ================= MODALS & CELEBRATIONS ================= */}
 
-      {/* 1. INSPECT PROFILE MODAL */}
-      {inspectingUser && (
+      {/* 1. INSPECT PROFILE MODAL DELETED (INTEGRATED INTO USER WALL) */}
+      {false && inspectingUser && (
         <div 
           className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in"
           onClick={() => { playFx('click'); setInspectingUser(null); setInspectedUserData(null); }}
