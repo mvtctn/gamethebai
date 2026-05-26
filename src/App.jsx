@@ -5921,8 +5921,9 @@ export default function App() {
                           />
                         )}
                         <div
-                          className="relative rounded-2xl overflow-hidden"
+                          className="relative rounded-2xl overflow-hidden cursor-pointer hover:scale-[1.03] transition-transform duration-200"
                           style={isSuperstar ? { boxShadow: `0 0 30px ${tier.glow}, 0 0 60px ${tier.glow}` } : {}}
+                          onClick={() => setSelectedUpgradeCard(card)}
                         >
                           <Card player={card} />
                         </div>
@@ -6059,7 +6060,7 @@ export default function App() {
 
                   {/* Left Column: Big Card Visual */}
                   <div className="w-44 sm:w-56 shrink-0 drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)] relative group">
-                    <Card player={cardInCollection} hideStats={false} />
+                    <Card player={cardInCollection || selectedUpgradeCard} hideStats={false} />
                   </div>
 
                   {/* Right Column: Level Up Controls */}
@@ -6126,8 +6127,9 @@ export default function App() {
                             setSelectedUpgradeCard(null);
                           } else {
                             if (squad.length < 11) {
-                              setSquad([...squad, cardInCollection]);
-                              localStorage.setItem(`panini_${currentUser}_squad`, JSON.stringify([...squad, cardInCollection]));
+                              const cardToInsert = cardInCollection || selectedUpgradeCard;
+                              setSquad([...squad, cardToInsert]);
+                              localStorage.setItem(`panini_${currentUser}_squad`, JSON.stringify([...squad, cardToInsert]));
                               setSelectedUpgradeCard(null);
                             } else {
                               showAlert("🚫 Đội Hình Đầy!", "Đội hình chính đã đủ 11 cầu thủ!");
