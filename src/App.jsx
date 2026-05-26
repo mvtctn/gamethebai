@@ -2974,6 +2974,45 @@ export default function App() {
     setCurrentAiCard(null);
   };
 
+  const [showFooter, setShowFooter] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const threshold = 30; // px tolerance
+      const windowHeight = window.innerHeight;
+      const docHeight = Math.max(
+        document.body.scrollHeight,
+        document.documentElement.scrollHeight,
+        document.body.offsetHeight,
+        document.documentElement.offsetHeight,
+        document.body.clientHeight,
+        document.documentElement.clientHeight
+      );
+      
+      const scrollY = window.scrollY || window.pageYOffset;
+      
+      // If the content is too small to scroll, show it. Otherwise check bottom proximity.
+      if (docHeight <= windowHeight + 10) {
+        setShowFooter(true);
+      } else if (docHeight - (scrollY + windowHeight) <= threshold) {
+        setShowFooter(true);
+      } else {
+        setShowFooter(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('resize', handleScroll);
+    
+    const interval = setInterval(handleScroll, 200);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+      clearInterval(interval);
+    };
+  }, []);
+
   const [gameAlert, setGameAlert] = useState(null); // Custom in-game dialog alert: { title, message }
   const showAlert = (title, message) => {
     setGameAlert({ title, message });
@@ -6322,7 +6361,7 @@ export default function App() {
 
               {/* Round Result Overlay */}
               {matchPhase === 'roundResult' && (
-                <div className="fixed inset-0 z-[90] flex flex-col items-center justify-between pointer-events-none p-6 pt-24 pb-8">
+                <div className="fixed inset-0 z-[90] flex flex-col items-center justify-center pointer-events-none p-4 sm:p-6 gap-6 sm:gap-12">
                   {/* Floating Round Result Card */}
                   {matchHistory.length > 0 && (() => {
                     const lastRound = matchHistory[matchHistory.length - 1];
@@ -6388,7 +6427,7 @@ export default function App() {
 
                   {playedCardIds.length >= 11 ? (
                     <button
-                      className="mb-8 px-8 py-3 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 font-black tracking-widest uppercase rounded-full shadow-[0_0_30px_rgba(251,191,36,0.5)] transition-all hover:scale-105 pointer-events-auto cursor-pointer animate-bounce-subtle"
+                      className="px-8 py-3 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 font-black tracking-widest uppercase rounded-full shadow-[0_0_30px_rgba(251,191,36,0.5)] transition-all hover:scale-105 pointer-events-auto cursor-pointer animate-bounce-subtle"
                       onClick={(e) => {
                         e.stopPropagation();
                         playFx('click');
@@ -6398,7 +6437,7 @@ export default function App() {
                       Xem Kết Quả Trận Đấu 🏆
                     </button>
                   ) : (
-                    <div className="mb-8 text-amber-400 text-[10px] sm:text-xs font-bold tracking-widest uppercase animate-pulse bg-black/85 px-6 py-2.5 rounded-full border border-amber-500/30 shadow-lg pointer-events-auto cursor-pointer">
+                    <div className="text-amber-400 text-[10px] sm:text-xs font-bold tracking-widest uppercase animate-pulse bg-black/85 px-6 py-2.5 rounded-full border border-amber-500/30 shadow-lg pointer-events-auto cursor-pointer">
                        Chạm vào bất kỳ đâu để tiếp tục ⚽
                      </div>
                   )}
@@ -6600,7 +6639,7 @@ export default function App() {
       )}
 
       {/* Professional Footer */}
-      <footer className="mt-auto pt-12 pb-4 border-t border-white/5 text-center flex flex-col sm:flex-row items-center justify-between gap-4 w-full relative z-20">
+      <footer className={`mt-auto pt-12 pb-4 border-t border-white/5 text-center flex flex-col sm:flex-row items-center justify-between gap-4 w-full relative z-20 transition-all duration-500 ${showFooter ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-10 pointer-events-none'}`}>
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_#22c55e]"></span>
           <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">Máy Chủ Trực Tuyến Hợp Lệ</span>
