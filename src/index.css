@@ -115,7 +115,7 @@ body {
 .pitch-container {
   position: relative;
   width: 100%;
-  max-width: 500px;
+  max-width: 750px;
   aspect-ratio: 0.65;
   background: 
     linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),

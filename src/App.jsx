@@ -6400,7 +6400,7 @@ export default function App() {
               )}
 
               {/* Màn hình 1: Sân vận động 3D (Cột Trái) */}
-              <div className="flex-1 flex flex-col gap-2 h-full justify-between">
+              <div className="flex-[1.6] flex flex-col gap-2 h-full justify-between w-full">
                 
                 {/* HUD Score */}
                 <div className="glass-panel px-6 py-3 rounded-2xl flex justify-between items-center bg-black/40 border border-white/10 shadow-lg">
@@ -6548,7 +6548,7 @@ export default function App() {
               </div>
 
               {/* Màn hình 2: Đội hình đối thủ (Cột Phải) */}
-              <div className="flex-1 glass-panel p-4 rounded-3xl flex flex-col justify-between bg-black/40 border border-white/5 relative">
+              <div className="flex-[0.7] glass-panel p-4 rounded-3xl flex flex-col justify-between bg-black/40 border border-white/5 relative w-full">
                  <button className="absolute top-4 right-4 z-50 text-gray-500 hover:text-white bg-black/50 p-2 rounded-full border border-white/10 transition-colors" onClick={() => setGameState('lobby')} title="Thoát trận">
                     <Lock size={16} className="opacity-0 hidden" /> {/* Dummy icon if needed */}
                     Thoát
