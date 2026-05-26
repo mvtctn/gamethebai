@@ -820,6 +820,7 @@ export default function App() {
   // User Wall (X/Twitter) States
   const [userWallTarget, setUserWallTarget] = useState(null);
   const [userWallData, setUserWallData] = useState(null);
+  const wallData = userWallData || { level: 1, xp: 0, stats: { played: 0, wins: 0, draws: 0, losses: 0 }, squad: [] };
   const [userWallPosts, setUserWallPosts] = useState([]);
   const [globalPosts, setGlobalPosts] = useState([]);
   const [socialWallTab, setSocialWallTab] = useState('global'); // 'global' | 'owner'
@@ -1009,7 +1010,7 @@ export default function App() {
         if (snapshot.exists()) {
           const lbObj = snapshot.val();
           const list = Object.keys(lbObj).map((key) => {
-            const val = lbObj[key];
+            const val = lbObj[key] || {};
             return {
               username: key,
               level: val.level || 1,
@@ -1037,7 +1038,7 @@ export default function App() {
             if (snap.exists()) {
               const usersObj = snap.val();
               const list = Object.keys(usersObj).map((key) => {
-                const userVal = usersObj[key];
+                const userVal = usersObj[key] || {};
                 const cardCount = userVal.collection ? Object.keys(userVal.collection).length : 0;
                 const userOvr = userVal.squad ? Math.round(userVal.squad.reduce((acc, card) => acc + Math.max(card.stats.attack, card.stats.defense, card.stats.control), 0) / 11) : 0;
                 const stats = {
@@ -4486,7 +4487,7 @@ export default function App() {
                       
                       {/* Floating level badge */}
                       <span className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-500 to-amber-600 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full border-2 border-slate-950 shadow-md">
-                        Lv.{userWallData.level || 1}
+                        Lv.{wallData.level || 1}
                       </span>
                     </div>
 
@@ -4500,7 +4501,7 @@ export default function App() {
                     {/* Squad OVR badge */}
                     <div className="mt-1 mb-4 flex items-center gap-1">
                       {(() => {
-                        const ovrVal = userWallData.squad ? Math.round(userWallData.squad.reduce((acc, card) => acc + Math.max(card.stats.attack, card.stats.defense, card.stats.control), 0) / 11) : 0;
+                        const ovrVal = wallData.squad ? Math.round(wallData.squad.reduce((acc, card) => acc + Math.max(card.stats.attack, card.stats.defense, card.stats.control), 0) / 11) : 0;
                         return (
                           <span className="text-xs px-3 py-1 bg-cyan-950/40 text-cyan-400 border border-cyan-500/20 font-black rounded-full uppercase tracking-widest">
                             🔥 {ovrVal || 0} OVR Đội Hình
@@ -4513,12 +4514,12 @@ export default function App() {
                     <div className="w-full mb-6">
                       <div className="flex justify-between text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 px-1">
                         <span>Cấp Độ HLV</span>
-                        <span>{userWallData.xp || 0} / {(userWallData.level || 1) * 100} XP</span>
+                        <span>{wallData.xp || 0} / {(wallData.level || 1) * 100} XP</span>
                       </div>
                       <div className="w-full bg-black/60 rounded-full h-2 border border-white/5 overflow-hidden relative">
                         <div 
                           className="bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-500 h-full rounded-full transition-all duration-1000"
-                          style={{ width: `${Math.min(100, ((userWallData.xp || 0) / ((userWallData.level || 1) * 100)) * 100)}%` }}
+                          style={{ width: `${Math.min(100, ((wallData.xp || 0) / ((wallData.level || 1) * 100)) * 100)}%` }}
                         ></div>
                       </div>
                     </div>
@@ -4529,19 +4530,19 @@ export default function App() {
                       <div className="grid grid-cols-2 gap-3">
                         <div className="bg-slate-900/50 border border-white/5 p-2.5 rounded-xl">
                           <div className="text-[9px] text-gray-400 font-bold uppercase">Trận đã đấu</div>
-                          <div className="text-lg font-black text-white">{userWallData.stats?.played || 0}</div>
+                          <div className="text-lg font-black text-white">{wallData.stats?.played || 0}</div>
                         </div>
                         <div className="bg-green-950/20 border border-green-500/10 p-2.5 rounded-xl">
                           <div className="text-[9px] text-green-400 font-bold uppercase">Thắng</div>
-                          <div className="text-lg font-black text-green-400">{userWallData.stats?.wins || 0}</div>
+                          <div className="text-lg font-black text-green-400">{wallData.stats?.wins || 0}</div>
                         </div>
                         <div className="bg-yellow-950/20 border border-yellow-500/10 p-2.5 rounded-xl">
                           <div className="text-[9px] text-yellow-400 font-bold uppercase">Hòa</div>
-                          <div className="text-lg font-black text-yellow-400">{userWallData.stats?.draws || 0}</div>
+                          <div className="text-lg font-black text-yellow-400">{wallData.stats?.draws || 0}</div>
                         </div>
                         <div className="bg-red-950/20 border border-red-500/10 p-2.5 rounded-xl">
                           <div className="text-[9px] text-red-400 font-bold uppercase">Thua</div>
-                          <div className="text-lg font-black text-red-400">{userWallData.stats?.losses || 0}</div>
+                          <div className="text-lg font-black text-red-400">{wallData.stats?.losses || 0}</div>
                         </div>
                       </div>
                     </div>
