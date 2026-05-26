@@ -4705,10 +4705,16 @@ export default function App() {
               <div className="text-cyan-400 font-extrabold tracking-widest text-xs uppercase animate-pulse">Đang tải dữ liệu mạng xã hội...</div>
             </div>
           ) : !userWallTarget ? (
-            <div className="glass-panel w-full rounded-[2rem] p-20 flex flex-col items-center justify-center text-center gap-4 border border-white/10">
+            <div className="glass-panel w-full rounded-[2rem] p-12 sm:p-20 flex flex-col items-center justify-center text-center gap-4 border border-white/10">
               <div className="text-4xl mb-3">🐦</div>
               <div className="text-cyan-400 text-lg font-black uppercase mb-2">Mạng Xã Hội HLV</div>
-              <p className="text-gray-400 text-sm max-w-xs">Chọn một HLV để xem tường cá nhân hoặc nhấn Khám Phá để xem feed toàn cầu.</p>
+              <p className="text-gray-400 text-sm max-w-xs mb-2">Chọn một HLV để xem tường cá nhân hoặc nhấn Khám Phá bên dưới để xem feed toàn cầu.</p>
+              <button
+                className="btn !bg-gradient-to-r !from-cyan-700 !to-indigo-700 hover:!from-cyan-600 hover:!to-indigo-600 text-xs font-black uppercase tracking-wider !py-3 !px-8 rounded-full border border-cyan-500/30 shadow-md cursor-pointer transition-all hover:scale-105"
+                onClick={() => { playFx('click'); setUserWallTarget(currentUser); setSocialWallTab('global'); }}
+              >
+                🌍 Khám Phá Feed Toàn Cầu
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full items-stretch">
