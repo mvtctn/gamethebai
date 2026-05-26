@@ -1,5 +1,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { PackageOpen, Users, Swords, ChevronRight, CheckCircle2, Lock, Coins, Sparkles, Play, Trophy, Shield, Target, Wifi, User, ChevronLeft, Send, MessageSquare, Mail, History } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import playersData from './players.json';
 const MultiplayerEngine = React.lazy(() => import('./MultiplayerEngine'));
 import { MatchHistoryModal } from './MatchHistoryModal';
@@ -141,6 +142,16 @@ const RARITY_LABEL = {
   'Super Limited':    { label: 'SIÊU CẤP ✨', color: 'text-rose-400',     bg: 'bg-rose-950/40   border-rose-400/40' },
   'Icon':             { label: 'SIÊU CẤP ✨', color: 'text-rose-400',     bg: 'bg-rose-950/40   border-rose-400/40' },
 };
+
+const CHECK_IN_REWARDS = [
+  { day: 1, name: "50 Xu", icon: "🪙", type: "coins", amount: 50 },
+  { day: 2, name: "80 Xu", icon: "🪙", type: "coins", amount: 80 },
+  { day: 3, name: "1 Gói Quà", icon: "🎁", type: "pack", amount: 1 },
+  { day: 4, name: "120 Xu", icon: "🪙", type: "coins", amount: 120 },
+  { day: 5, name: "150 Xu", icon: "🪙", type: "coins", amount: 150 },
+  { day: 6, name: "2 Gói Quà", icon: "🎁", type: "pack", amount: 2 },
+  { day: 7, name: "Thẻ Siêu Sao", icon: "🌟", type: "card", amount: 1 }
+];
 
 const _LEVEL_MILESTONES_TAIL = [
 ];
@@ -620,6 +631,101 @@ export default function App() {
       return updated;
     });
   };
+
+  const performCheckIn = () => {
+    if (!currentUser) return;
+    const now = Date.now();
+    const lastClaimed = checkInState.lastClaimed || 0;
+    
+    // Check if claimed today (less than 24h and same calendar day)
+    const lastDate = new Date(lastClaimed).toDateString();
+    const nowDate = new Date(now).toDateString();
+    
+    if (lastClaimed > 0 && lastDate === nowDate) {
+      showAlert("🚫 Đã Điểm Danh!", "Hôm nay bạn đã điểm danh rồi. Hãy quay lại vào ngày mai nhé!");
+      return;
+    }
+    
+    // Check if the streak is consecutive. If the last claim was more than 48 hours ago, reset streak to 0.
+    let newStreak = (checkInState.streak || 0) + 1;
+    if (lastClaimed > 0 && now - lastClaimed > 48 * 60 * 60 * 1000) {
+      newStreak = 1; // reset streak to 1 if broken
+    }
+    if (newStreak > 7) {
+      newStreak = 1; // cycle back to 1 after Day 7
+    }
+    
+    // Claim reward based on newStreak
+    let rewardMsg = "";
+    if (newStreak === 1) {
+      const amt = 50;
+      setCoins(c => c + amt);
+      rewardMsg = `🎁 Bạn nhận được +${amt} Xu!`;
+    } else if (newStreak === 2) {
+      const amt = 80;
+      setCoins(c => c + amt);
+      rewardMsg = `🎁 Bạn nhận được +${amt} Xu!`;
+    } else if (newStreak === 3) {
+      setFreePacks(f => f + 1);
+      rewardMsg = "🎁 Bạn nhận được +1 Gói Quà Miễn Phí!";
+    } else if (newStreak === 4) {
+      const amt = 120;
+      setCoins(c => c + amt);
+      rewardMsg = `🎁 Bạn nhận được +${amt} Xu!`;
+    } else if (newStreak === 5) {
+      const amt = 150;
+      setCoins(c => c + amt);
+      rewardMsg = `🎁 Bạn nhận được +${amt} Xu!`;
+    } else if (newStreak === 6) {
+      setFreePacks(f => f + 2);
+      rewardMsg = "🎁 Bạn nhận được +2 Gói Quà Miễn Phí!";
+    } else if (newStreak === 7) {
+      // Day 7: random rare card! Let's pick a Legendary or Icon/Super Limited card.
+      const rarePlayers = playersData.filter(p => ['Icon', 'Golden Baller', 'Super Limited', 'Platinum Edition'].includes(p.type));
+      const chosenPlayer = rarePlayers[Math.floor(Math.random() * rarePlayers.length)] || playersData[0];
+      
+      // Add card to collection
+      const newCard = {
+        ...chosenPlayer,
+        id: `${chosenPlayer.id}_checkin_${now}`, // unique id
+        level: 1,
+        _rarity: chosenPlayer.type === 'Icon' ? 'mythic' : 'legendary'
+      };
+      
+      const updatedCollection = [...collection, newCard];
+      setCollection(updatedCollection);
+      localStorage.setItem(`panini_${currentUser}_collection`, JSON.stringify(updatedCollection));
+      if (isConnectedToFirebase) {
+        set(ref(database, `/users/${currentUser}/collection`), updatedCollection);
+      }
+      
+      rewardMsg = `🌟 SIÊU CẤP ĐẶC BIỆT! Bạn đã hoàn thành 7 ngày điểm danh và nhận được thẻ ngôi sao [${chosenPlayer.name}] (${chosenPlayer.type})!`;
+    }
+    
+    const nextState = {
+      lastClaimed: now,
+      streak: newStreak
+    };
+    
+    setCheckInState(nextState);
+    playFx('winPoint');
+    
+    // Add check-in message in Global Chat!
+    if (isConnectedToFirebase) {
+      const chatRef = ref(database, '/chat');
+      push(chatRef, {
+        sender: 'HỆ THỐNG 📣',
+        text: `🎉 Chúc mừng HLV [${currentUser}] đã điểm danh thành công Ngày ${newStreak}/7 và nhận quà!`,
+        timestamp: serverTimestamp()
+      });
+    }
+    
+    // Trigger confetti!
+    triggerConfetti({ particleCount: newStreak === 7 ? 300 : 100, spread: 80, origin: { y: 0.6 } });
+    
+    showAlert(`📅 Điểm Danh Thành Công (Ngày ${newStreak}/7)`, `${rewardMsg} Hãy duy trì điểm danh liên tục nhé!`);
+  };
+
   useEffect(() => {
     const timer = setInterval(() => {
       setActiveBannerIdx(prev => (prev + 1) % BANNERS.length);
@@ -766,6 +872,26 @@ export default function App() {
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
   const [leaderboardTab, setLeaderboardTab] = useState('leaderboard'); // 'leaderboard', 'tiers', 'milestones'
 
+  // --- Daily Check-In & Achievements State ---
+  const [checkInState, setCheckInState] = useState(() => {
+    if (!currentUser) return { lastClaimed: 0, streak: 0 };
+    const saved = localStorage.getItem(`panini_${currentUser}_checkin`);
+    return saved ? JSON.parse(saved) : { lastClaimed: 0, streak: 0 };
+  });
+
+  const [equippedTitle, setEquippedTitle] = useState(() => {
+    if (!currentUser) return "";
+    return localStorage.getItem(`panini_${currentUser}_equippedTitle`) || "";
+  });
+
+  const [claimedAchievements, setClaimedAchievements] = useState(() => {
+    if (!currentUser) return [];
+    const saved = localStorage.getItem(`panini_${currentUser}_claimedAchievements`);
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [showCheckInModal, setShowCheckInModal] = useState(false);
+
   // Global Escape Key Handler for Modals
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -775,6 +901,7 @@ export default function App() {
           setInspectingUser(null);
           setInspectedUserData(null);
         }
+        setShowCheckInModal(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -817,6 +944,35 @@ export default function App() {
       }
     }
   }, [userCreatedAt, currentUser]);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(`panini_${currentUser}_checkin`, JSON.stringify(checkInState));
+      if (isConnectedToFirebase) {
+        set(ref(database, `/users/${currentUser}/checkIn`), checkInState);
+      }
+    }
+  }, [checkInState, currentUser]);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(`panini_${currentUser}_equippedTitle`, equippedTitle);
+      if (isConnectedToFirebase) {
+        set(ref(database, `/users/${currentUser}/equippedTitle`), equippedTitle);
+        // Also update in leaderboard presence to make it public!
+        update(ref(database, `/leaderboard/${currentUser}`), { equippedTitle });
+      }
+    }
+  }, [equippedTitle, currentUser]);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(`panini_${currentUser}_claimedAchievements`, JSON.stringify(claimedAchievements));
+      if (isConnectedToFirebase) {
+        set(ref(database, `/users/${currentUser}/claimedAchievements`), claimedAchievements);
+      }
+    }
+  }, [claimedAchievements, currentUser]);
 
   useEffect(() => {
     if (gameState === 'profile') {
@@ -988,11 +1144,12 @@ export default function App() {
         losses: stats?.losses || 0,
         draws: stats?.draws || 0,
         cardCount: cardCount,
-        ovr: userOvr
+        ovr: userOvr,
+        equippedTitle: equippedTitle || ""
       };
       syncLeaderboard(currentUser, lbStats);
     }
-  }, [currentUser, level, xp, coins, stats, collection, squad, isConnectedToFirebase]);
+  }, [currentUser, level, xp, coins, stats, collection, squad, equippedTitle, isConnectedToFirebase]);
 
   useEffect(() => {
     if (currentUser) {
@@ -1031,6 +1188,9 @@ export default function App() {
         if (data.claimedLevelRewards) setClaimedLevelRewards(data.claimedLevelRewards);
         if (data.rewardedMilestones) setRewardedMilestones(data.rewardedMilestones);
         if (data.createdAt) setUserCreatedAt(data.createdAt);
+        if (data.checkIn) setCheckInState(data.checkIn);
+        if (data.equippedTitle !== undefined) setEquippedTitle(data.equippedTitle);
+        if (data.claimedAchievements) setClaimedAchievements(data.claimedAchievements);
       } else {
         // Initialize brand-new guest user — fresh start with 3 starter packs + 200 xu
         const initialData = {
@@ -1046,6 +1206,9 @@ export default function App() {
           freePacks: 3,
           startingBonus: true, // mark as received
           createdAt: Date.now(),
+          checkIn: { lastClaimed: 0, streak: 0 },
+          equippedTitle: "",
+          claimedAchievements: [],
           quests: [
             { id: 'open_pack1', title: 'Mở gói thẻ đầu tiên', target: 1, progress: 0, reward: 100, isCompleted: false, isClaimed: false },
             { id: 'build_squad', title: 'Xây dựng đội hình 11 cầu thủ', target: 11, progress: 0, reward: 200, isCompleted: false, isClaimed: false },
@@ -1387,6 +1550,8 @@ export default function App() {
     const timestamp = Date.now();
     const newMsg = {
       sender: currentUser,
+      senderLevel: level,
+      senderTitle: equippedTitle || "",
       text: privateChatInput.trim(),
       timestamp: timestamp
     };
@@ -1592,6 +1757,7 @@ export default function App() {
     push(chatRef, {
       sender: currentUser,
       senderLevel: level, // Sync sender's level in message history
+      senderTitle: equippedTitle || "",
       text: text.trim(),
       timestamp: serverTimestamp()
     });
@@ -3146,12 +3312,15 @@ export default function App() {
                       </button>
                     </div>
 
-                    {/* Quests Quick Button */}
-                    <div className="mt-8 mb-4">
-                       <button className="glass-panel px-6 py-2.5 rounded-full text-sm font-bold uppercase tracking-widest text-emerald-400 hover:text-emerald-300 hover:bg-white/10 transition-colors flex items-center gap-2 cursor-pointer border border-emerald-500/20" onClick={() => setGameState('quests')}>
-                          Nhiệm Vụ Hàng Ngày <ChevronRight size={16}/>
-                       </button>
-                    </div>
+                     {/* Quests & Checkin Quick Buttons */}
+                     <div className="mt-8 mb-4 flex gap-4 items-center justify-center flex-wrap">
+                        <button className="glass-panel px-6 py-2.5 rounded-full text-xs sm:text-sm font-bold uppercase tracking-widest text-emerald-400 hover:text-emerald-300 hover:bg-white/10 transition-colors flex items-center gap-2 cursor-pointer border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.15)]" onClick={() => { playFx('click'); setGameState('quests'); }}>
+                           Nhiệm Vụ Hàng Ngày <ChevronRight size={16}/>
+                        </button>
+                        <button className="glass-panel px-6 py-2.5 rounded-full text-xs sm:text-sm font-bold uppercase tracking-widest text-yellow-400 hover:text-yellow-300 hover:bg-white/10 transition-colors flex items-center gap-2 cursor-pointer border border-yellow-500/20 shadow-[0_0_15px_rgba(234,179,8,0.15)] animate-pulse" onClick={() => { playFx('click'); setShowCheckInModal(true); }}>
+                           📅 Điểm Danh Nhận Quà <ChevronRight size={16}/>
+                        </button>
+                     </div>
                   </div>
 
                   {/* RIGHT COLUMN: Real-time Global Chat & Online Panel */}
@@ -3280,6 +3449,11 @@ export default function App() {
                                                   </span>
                                                 );
                                               })()}
+                                              {msg.senderTitle && (
+                                                <span className="text-[8px] font-black px-1.5 py-0.2 rounded bg-gradient-to-r from-yellow-500 to-amber-500 text-black border border-yellow-400/40 shrink-0 shadow-[0_0_8px_rgba(234,179,8,0.3)] animate-pulse">
+                                                  {msg.senderTitle}
+                                                </span>
+                                              )}
                                             </>
                                           )}
                                         </span>
@@ -3378,12 +3552,19 @@ export default function App() {
                                           >
                                             {msg.sender.charAt(0).toUpperCase()}
                                           </div>
-                                          <div className={`p-2.5 rounded-2xl text-xs font-semibold leading-relaxed border ${
-                                            isMe 
-                                              ? 'bg-violet-950/20 border-violet-500/25 text-violet-100 rounded-tr-none' 
-                                              : 'bg-slate-900/60 border-white/10 text-gray-100 rounded-tl-none'
-                                          }`}>
-                                            {msg.text}
+                                          <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                                            {msg.senderTitle && (
+                                              <span className="text-[7px] sm:text-[8px] font-black mb-0.5 px-1.5 py-0.2 rounded bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white border border-violet-400/30 shrink-0">
+                                                {msg.senderTitle}
+                                              </span>
+                                            )}
+                                            <div className={`p-2.5 rounded-2xl text-xs font-semibold leading-relaxed border ${
+                                              isMe 
+                                                ? 'bg-violet-950/20 border-violet-500/25 text-violet-100 rounded-tr-none' 
+                                                : 'bg-slate-900/60 border-white/10 text-gray-100 rounded-tl-none'
+                                            }`}>
+                                              {msg.text}
+                                            </div>
                                           </div>
                                         </div>
                                       );
@@ -4513,6 +4694,16 @@ export default function App() {
             >
               🎁 Quà Cấp Độ
             </button>
+            <button 
+              className={`flex-1 py-3 text-xs sm:text-sm font-black uppercase tracking-wider flex items-center justify-center gap-2 border-b-2 transition-all ${
+                leaderboardTab === 'achievements' 
+                  ? 'border-yellow-500 text-yellow-400 bg-white/5 font-extrabold' 
+                  : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+              onClick={() => { playFx('click'); setLeaderboardTab('achievements'); }}
+            >
+              🏆 Thành Tựu
+            </button>
           </div>
 
           {/* TAB 1: Global Leaderboard */}
@@ -4788,6 +4979,145 @@ export default function App() {
                     </div>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: Achievements & Titles */}
+          {leaderboardTab === 'achievements' && (
+            <div className="w-full glass-panel rounded-3xl border border-white/10 shadow-2xl animate-fade-in p-6">
+              <div className="flex flex-col items-center mb-8 text-center">
+                <h3 className="text-xl font-black italic uppercase tracking-wider text-white mb-2">Thành Tựu & Danh Hiệu 🏆</h3>
+                <p className="text-gray-400 text-xs sm:text-sm max-w-lg">Hoàn thành các thành tựu để nhận Xu thưởng và mở khóa các **Danh hiệu Chat** lấp lánh để thể hiện đẳng cấp!</p>
+              </div>
+
+              {/* Equipped Title Display */}
+              <div className="bg-slate-950/40 rounded-2xl border border-white/5 p-4 mb-8 w-full max-w-md mx-auto text-center flex flex-col items-center gap-2">
+                <div className="text-xs text-gray-400 font-bold uppercase">Danh Hiệu Đang Sử Dụng</div>
+                {equippedTitle ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-black px-3 py-1 rounded-full bg-gradient-to-r from-yellow-500 to-amber-500 text-black border border-yellow-400/40 shadow-[0_0_15px_rgba(234,179,8,0.4)] animate-pulse">
+                      {equippedTitle}
+                    </span>
+                    <button 
+                      className="text-xs text-red-400 hover:text-red-300 font-bold hover:underline"
+                      onClick={() => { playFx('click'); setEquippedTitle(""); }}
+                    >
+                      Tháo bỏ
+                    </button>
+                  </div>
+                ) : (
+                  <span className="text-xs text-gray-500 italic">Chưa trang bị danh hiệu nào</span>
+                )}
+              </div>
+
+              {/* Achievements list */}
+              <div className="flex flex-col gap-4 w-full max-w-2xl mx-auto">
+                {(() => {
+                  const uniqueCards = new Set(collection.map(c => c.id)).size;
+                  
+                  const achievementsList = [
+                    { id: 'played_10_ai', title: 'Chinh Phục AI', desc: 'Chơi 10 trận với AI', target: 10, current: stats?.played || 0, rewardCoins: 200, rewardTitle: '🏆 Vua Đấu Tập' },
+                    { id: 'wins_15_ai', title: 'Khủng Bố Máy Tập', desc: 'Thắng 15 trận với AI', target: 15, current: stats?.wins || 0, rewardCoins: 300, rewardTitle: '✨ Thợ Săn AI' },
+                    { id: 'collection_30', title: 'Nhà Sưu Tầm', desc: 'Sở hữu 30 thẻ cầu thủ khác nhau', target: 30, current: uniqueCards, rewardCoins: 250, rewardTitle: '👑 Nhà Sưu Tầm' },
+                    { id: 'level_10', title: 'HLV Trưởng Thành', desc: 'Đạt HLV Cấp độ 10', target: 10, current: level, rewardCoins: 300, rewardTitle: '⚡ HLV Lão Luyện' },
+                    { id: 'streak_checkin_5', title: 'HLV Chuyên Cần', desc: 'Điểm danh đạt chuỗi 5 ngày', target: 5, current: checkInState.streak || 0, rewardCoins: 150, rewardTitle: '📅 Trọng Tài Siêu Cấp' }
+                  ];
+
+                  return achievementsList.map((ach) => {
+                    const isCompleted = ach.current >= ach.target;
+                    const isClaimed = claimedAchievements.includes(ach.id);
+                    const isEquipped = equippedTitle === ach.rewardTitle;
+
+                    return (
+                      <div 
+                        key={ach.id}
+                        className={`p-5 rounded-2xl border flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 transition-all ${
+                          isClaimed 
+                            ? 'bg-black/50 border-gray-700 opacity-60' 
+                            : isCompleted 
+                            ? 'bg-gradient-to-r from-yellow-950/20 to-slate-900 border-yellow-500/40 shadow-xl shadow-yellow-950/10' 
+                            : 'bg-black/40 border-white/5'
+                        }`}
+                      >
+                        {/* Info details */}
+                        <div className="flex items-center gap-4">
+                          <div className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center font-black text-xl border shadow-lg shrink-0 ${
+                            isClaimed 
+                              ? 'bg-gray-800 text-gray-500 border-gray-700' 
+                              : isCompleted 
+                              ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-black border-yellow-300 shadow-yellow-900/30' 
+                              : 'bg-slate-900 text-gray-300 border-white/10'
+                          }`}>
+                            🏆
+                          </div>
+                          <div>
+                            <h4 className="text-sm sm:text-base font-extrabold text-white mb-0.5">
+                              {ach.title} ({Math.min(ach.current, ach.target)}/{ach.target})
+                            </h4>
+                            <p className="text-xs text-gray-400 font-semibold mb-1.5">{ach.desc}</p>
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-yellow-400 font-bold flex items-center gap-1">
+                                <Coins size={12} /> +{ach.rewardCoins} Xu
+                              </span>
+                              <span className="text-xs text-cyan-400 font-bold flex items-center gap-1">
+                                🏷️ Danh hiệu: <span className="text-yellow-400 underline font-extrabold">{ach.rewardTitle}</span>
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Action Area */}
+                        <div className="flex items-center justify-end gap-2">
+                          {isClaimed ? (
+                            isEquipped ? (
+                              <button 
+                                className="btn !bg-yellow-500 text-black !py-2.5 !px-5 rounded-xl font-black uppercase tracking-widest text-xs cursor-pointer active:scale-95 shadow-md shadow-yellow-900/30"
+                                onClick={() => { playFx('click'); setEquippedTitle(""); }}
+                              >
+                                Đang Dùng ✓
+                              </button>
+                            ) : (
+                              <button 
+                                className="btn !bg-slate-800 text-yellow-400 border border-yellow-500/20 hover:border-yellow-500/50 !py-2.5 !px-5 rounded-xl font-bold uppercase tracking-widest text-xs cursor-pointer active:scale-95 transition-all"
+                                onClick={() => {
+                                  playFx('click');
+                                  setEquippedTitle(ach.rewardTitle);
+                                  showAlert("🏷️ Danh Hiệu Đã Đeo!", `Bạn đã đeo danh hiệu [${ach.rewardTitle}] thành công! Danh hiệu này sẽ hiển thị bên cạnh tên của bạn trong Sảnh Chat và Tin nhắn.`);
+                                }}
+                              >
+                                Sử Dụng
+                              </button>
+                            )
+                          ) : isCompleted ? (
+                            <button 
+                              className="btn !bg-gradient-to-r !from-green-500 !to-emerald-500 hover:!from-green-600 hover:!to-emerald-600 text-white !py-2.5 !px-6 rounded-xl font-black uppercase tracking-widest text-xs animate-bounce-subtle cursor-pointer shadow-lg shadow-green-900/30 transition-all hover:scale-105 active:scale-95"
+                              onClick={() => {
+                                playFx('winGame');
+                                setCoins(c => c + ach.rewardCoins);
+                                const nextClaimed = [...claimedAchievements, ach.id];
+                                setClaimedAchievements(nextClaimed);
+                                // Also auto-equip for immediate delight!
+                                setEquippedTitle(ach.rewardTitle);
+                                triggerConfetti({ particleCount: 200, spread: 80 });
+                                showAlert("🎉 Hoàn Thành Thành Tựu!", `Chúc mừng! Bạn nhận được +${ach.rewardCoins} Xu & Đã mở khóa + Trang bị danh hiệu [${ach.rewardTitle}]!`);
+                              }}
+                            >
+                              Nhận 🎁
+                            </button>
+                          ) : (
+                            <button 
+                              className="btn !bg-gray-800 text-gray-600 !py-2 !px-5 rounded-xl font-bold uppercase tracking-wider text-xs cursor-not-allowed"
+                              disabled
+                            >
+                              Chưa Đạt 🔒
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             </div>
           )}
@@ -5728,6 +6058,128 @@ export default function App() {
         </div>
       )}
 
+      {/* 2.0 DAILY CHECK-IN MODAL */}
+      {showCheckInModal && (() => {
+        const streak = checkInState.streak || 0;
+        const lastClaimed = checkInState.lastClaimed || 0;
+        const lastDate = new Date(lastClaimed).toDateString();
+        const nowDate = new Date(Date.now()).toDateString();
+        const alreadyClaimedToday = lastClaimed > 0 && lastDate === nowDate;
+
+        return (
+          <div className="fixed inset-0 z-[220] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in" onClick={() => setShowCheckInModal(false)}>
+            <div 
+              className="glass-panel w-full max-w-2xl rounded-[2.5rem] border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col relative bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/40 p-6 sm:p-8 gap-5 animate-scale-in"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button 
+                className="absolute top-4 right-4 text-gray-400 hover:text-white bg-black/40 hover:bg-black/80 p-2 rounded-full w-8 h-8 flex items-center justify-center transition-colors z-[230] cursor-pointer"
+                onClick={() => { playFx('click'); setShowCheckInModal(false); }}
+              >
+                ✕
+              </button>
+
+              <div className="text-center">
+                <span className="text-[10px] font-black uppercase text-amber-400 tracking-[0.25em] pl-[0.25em] block mb-1">
+                  📅 QUÀ TẶNG HẰNG NGÀY
+                </span>
+                <h2 className="text-2xl sm:text-4xl font-black text-white italic uppercase tracking-wider">
+                  Điểm Danh Nhận Quà
+                </h2>
+                <p className="text-gray-400 text-xs mt-1 font-semibold">
+                  Chuỗi điểm danh hiện tại: <span className="text-yellow-400 font-extrabold text-sm">{streak} Ngày</span>
+                  {streak > 0 && " 🔥"} (Nhận thẻ Siêu sao ngẫu nhiên vào Ngày 7!)
+                </p>
+              </div>
+
+              {/* Day Selection Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mt-2">
+                {CHECK_IN_REWARDS.map((reward) => {
+                  const isClaimed = reward.day <= streak;
+                  const isToday = reward.day === streak + 1 && !alreadyClaimedToday;
+
+                  return (
+                    <div 
+                      key={reward.day}
+                      className={`relative rounded-2xl p-3 flex flex-col items-center justify-between aspect-[5/7] border transition-all ${
+                        isClaimed 
+                          ? 'bg-slate-950/80 border-green-500/30 opacity-60 shadow-[inset_0_0_10px_rgba(16,185,129,0.1)]' 
+                          : isToday 
+                          ? 'bg-yellow-500/10 border-yellow-400 shadow-[0_0_20px_rgba(234,179,8,0.3)] scale-102 cursor-pointer hover:scale-105' 
+                          : 'bg-black/40 border-white/5 opacity-40'
+                      }`}
+                      onClick={() => {
+                        if (isToday) {
+                          performCheckIn();
+                        }
+                      }}
+                    >
+                      {/* Day Label */}
+                      <span className={`text-[9px] font-black uppercase tracking-wider ${
+                        isClaimed ? 'text-green-400' : isToday ? 'text-yellow-400' : 'text-gray-500'
+                      }`}>
+                        Ngày {reward.day}
+                      </span>
+
+                      {/* Icon & Details */}
+                      <div className="flex flex-col items-center gap-1 my-2">
+                        <span className={`text-3xl ${isToday ? 'scale-110 animate-bounce-subtle' : ''}`}>{reward.icon}</span>
+                        <span className="text-[10px] font-black text-white text-center leading-tight">
+                          {reward.name}
+                        </span>
+                      </div>
+
+                      {/* Claim Status Badge */}
+                      {isClaimed ? (
+                        <span className="text-[8px] font-black bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/30 uppercase tracking-widest">
+                          ✓ Nhận
+                        </span>
+                      ) : isToday ? (
+                        <span className="text-[8px] font-black bg-yellow-500 text-black px-2 py-0.5 rounded-full uppercase tracking-widest animate-bounce">
+                          Nhận!
+                        </span>
+                      ) : (
+                        <span className="text-[8px] font-black bg-white/5 text-gray-500 px-2 py-0.5 rounded-full uppercase tracking-widest">
+                          Khóa 🔒
+                        </span>
+                      )}
+
+                      {/* Sparkle background for Day 7 */}
+                      {reward.day === 7 && (
+                        <div className="absolute inset-0 bg-gradient-to-t from-yellow-500/15 to-amber-500/10 opacity-70 rounded-2xl pointer-events-none z-[-1]" />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Action Button */}
+              <div className="flex flex-col items-center mt-3 gap-2">
+                <button 
+                  className={`btn w-full font-black py-4 rounded-xl shadow-lg transition-all active:scale-95 text-base uppercase tracking-widest cursor-pointer ${
+                    alreadyClaimedToday 
+                      ? '!bg-slate-800 text-gray-400 border border-white/5 cursor-not-allowed'
+                      : '!bg-gradient-to-r from-yellow-500 to-amber-600 text-black shadow-yellow-500/10 hover:shadow-yellow-500/20 hover:from-yellow-400 hover:to-amber-500'
+                  }`}
+                  onClick={() => {
+                    if (!alreadyClaimedToday) {
+                      performCheckIn();
+                    } else {
+                      showAlert("📅 Ngày Mai Quay Lại!", "Hôm nay bạn đã điểm danh rồi. Hãy quay lại vào ngày mai để nhận quà tiếp theo nhé!");
+                    }
+                  }}
+                >
+                  {alreadyClaimedToday ? "✓ Hôm Nay Đã Điểm Danh" : "📅 Điểm Danh Nhận Quà Ngay"}
+                </button>
+                <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest text-center mt-1">
+                  Đừng bỏ lỡ ngày nào để duy trì chuỗi điểm danh nhé!
+                </p>
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
 
       {/* 2.5 KHOE THẺ XỊN SHOWCASE POSTER MODAL */}
       {showSharePoster && (() => {
