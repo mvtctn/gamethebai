@@ -228,6 +228,11 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       return;
     }
 
+    if (!hostCard || !guestCard) {
+      console.warn('[PVP] calculateRoundResult: hostCard or guestCard is null', { hostCard, guestCard });
+      return;
+    }
+
     const attr1 = getPlayerAttr(hostCard); // host
     const attr2 = getPlayerAttr(guestCard); // guest
 
@@ -756,6 +761,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
   };
 
   function handleCardSelect(card) {
+    if (!card) return;
     if (phase === 'select_card' && !myPlayedCard) {
       playFx('click');
       const newDeck = myDeckRef.current.filter(c => c.id !== card.id);

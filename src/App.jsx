@@ -2416,6 +2416,7 @@ export default function App() {
   };
 
   const playRound = (stat) => {
+    if (!selectedPlayerCard) return;
     setSelectedStat(stat);
     setPlayerStatChoiceHistory([...playerStatChoiceHistory, stat]);
     
