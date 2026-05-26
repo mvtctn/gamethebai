@@ -2788,7 +2788,7 @@ export default function App() {
                   {/* RIGHT COLUMN: Real-time Global Chat & Online Panel */}
                   <div className="w-full lg:w-96 flex flex-col z-20 shrink-0">
                     {/* Inline LobbyChatPanel rendering */}
-                    <div className="glass-panel w-full h-[450px] lg:h-[580px] rounded-3xl lg:rounded-r-none flex flex-col overflow-hidden border border-white/10 lg:border-r-0 shadow-[0_4px_30px_rgba(0,0,0,0.4)] backdrop-blur-md bg-slate-950/40 relative">
+                    <div id="lobby-chat-panel" className="glass-panel w-full h-[450px] lg:h-[580px] rounded-3xl lg:rounded-r-none flex flex-col overflow-hidden border border-white/10 lg:border-r-0 shadow-[0_4px_30px_rgba(0,0,0,0.4)] backdrop-blur-md bg-slate-950/40 relative">
                       {/* Header Tabs */}
                       <div className="flex border-b border-white/10 bg-black/40">
                         <button 
@@ -2992,6 +2992,7 @@ export default function App() {
                                   className="flex gap-2 bg-black/40 p-1.5 rounded-2xl border border-white/10"
                                 >
                                   <input 
+                                    id="private-chat-input"
                                     type="text" 
                                     className="flex-1 bg-transparent border-0 focus:outline-none focus:ring-0 text-xs px-3 text-white"
                                     placeholder={`Nhắn cho ${activePrivatePartner}...`}
@@ -4392,10 +4393,12 @@ export default function App() {
                           if (inSquad) {
                             setSquad(squad.filter(s => s.id !== selectedUpgradeCard.id));
                             localStorage.setItem(`panini_${currentUser}_squad`, JSON.stringify(squad.filter(s => s.id !== selectedUpgradeCard.id)));
+                            setSelectedUpgradeCard(null);
                           } else {
                             if (squad.length < 11) {
                               setSquad([...squad, cardInCollection]);
                               localStorage.setItem(`panini_${currentUser}_squad`, JSON.stringify([...squad, cardInCollection]));
+                              setSelectedUpgradeCard(null);
                             } else {
                               showAlert("🚫 Đội Hình Đầy!", "Đội hình chính đã đủ 11 cầu thủ!");
                             }
@@ -4857,9 +4860,21 @@ export default function App() {
                     className="btn !bg-violet-600 hover:!bg-violet-500 w-full flex items-center justify-center gap-2 !py-3 font-bold text-sm tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-violet-900/30"
                     onClick={() => {
                       playFx('click');
+                      setGameState('lobby');
                       setActivePrivatePartner(inspectingUser);
                       setChatTab('private');
                       setInspectingUser(null);
+                      // Scroll to chat panel and auto-focus private chat input
+                      setTimeout(() => {
+                        const el = document.getElementById('lobby-chat-panel');
+                        if (el) {
+                          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                        const inputEl = document.getElementById('private-chat-input');
+                        if (inputEl) {
+                          inputEl.focus();
+                        }
+                      }, 300);
                     }}
                   >
                     <MessageSquare size={16} /> Nhắn Tin Riêng
