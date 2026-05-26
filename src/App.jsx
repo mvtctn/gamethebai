@@ -1183,89 +1183,6 @@ export default function App() {
     showAlert("Nhận Quà Thành Công 🎁", `Chúc mừng! Bạn đã nhận được ${m.coins ? `${m.coins} Xu` : ''}${m.coins && m.packs ? ' + ' : ''}${m.packs ? `${m.packs} Gói Thẻ Miễn Phí` : ''} từ mốc Cấp Độ ${m.level}.`);
   };
 
-  // User Wall (X/Twitter) Data Loading Effect (Firebase + LocalStorage fallback)
-  useEffect(() => {
-    if (!userWallTarget) {
-      setUserWallData(null);
-      setUserWallPosts([]);
-      return;
-    }
-
-    setLoadingWall(true);
-
-    if (isConnectedToFirebase) {
-      // 1. Fetch profile info
-      const targetUserRef = ref(database, `/users/${userWallTarget}`);
-      const unsubscribeUser = onValue(targetUserRef, (snapshot) => {
-        const data = snapshot.val();
-        setUserWallData(data);
-      }, (error) => {
-        console.error("Error fetching wall user info:", error);
-      });
-
-      // 2. Fetch posts in real-time
-      const postsRef = ref(database, `/user_walls/${userWallTarget}/posts`);
-      const unsubscribePosts = onValue(postsRef, (snapshot) => {
-        const postsVal = snapshot.val();
-        if (postsVal) {
-          const list = Object.keys(postsVal).map(key => ({
-            id: key,
-            ...postsVal[key]
-          })).sort((a, b) => b.timestamp - a.timestamp);
-          setUserWallPosts(list);
-        } else {
-          setUserWallPosts([]);
-        }
-        setLoadingWall(false);
-      }, (error) => {
-        console.error("Error fetching wall posts:", error);
-        setLoadingWall(false);
-      });
-
-      return () => {
-        unsubscribeUser();
-        unsubscribePosts();
-      };
-    } else {
-      // Offline mode: load from LocalStorage
-      const localWalls = localStorage.getItem('thebongda_local_user_walls');
-      const wallsData = localWalls ? JSON.parse(localWalls) : {};
-      const wall = wallsData[userWallTarget] || {};
-      
-      let offlineProfile = null;
-      if (userWallTarget === currentUser) {
-        offlineProfile = {
-          level,
-          xp,
-          stats,
-          squad
-        };
-      } else {
-        const matchingOnline = onlineUsers.find(u => u.username === userWallTarget);
-        offlineProfile = matchingOnline ? {
-          level: matchingOnline.level || 1,
-          xp: 0,
-          stats: { played: 0, wins: 0, draws: 0, losses: 0 },
-          squad: []
-        } : {
-          level: 1,
-          xp: 0,
-          stats: { played: 0, wins: 0, draws: 0, losses: 0 },
-          squad: []
-        };
-      }
-
-      setUserWallData(offlineProfile);
-      
-      const postsList = wall.posts ? Object.keys(wall.posts).map(key => ({
-        id: key,
-        ...wall.posts[key]
-      })).sort((a, b) => b.timestamp - a.timestamp) : [];
-      
-      setUserWallPosts(postsList);
-      setLoadingWall(false);
-    }
-  }, [userWallTarget, isConnectedToFirebase, currentUser, level, xp, stats, squad, onlineUsers]);
 
   // Create new Post
   const handleCreatePost = async () => {
@@ -1576,6 +1493,90 @@ export default function App() {
       set(userStatusDatabaseRef, null); // Clear presence on unmount
     };
   }, [currentUser, squad, level, userCreatedAt]);
+
+  // User Wall (X/Twitter) Data Loading Effect (Firebase + LocalStorage fallback)
+  useEffect(() => {
+    if (!userWallTarget) {
+      setUserWallData(null);
+      setUserWallPosts([]);
+      return;
+    }
+
+    setLoadingWall(true);
+
+    if (isConnectedToFirebase) {
+      // 1. Fetch profile info
+      const targetUserRef = ref(database, `/users/${userWallTarget}`);
+      const unsubscribeUser = onValue(targetUserRef, (snapshot) => {
+        const data = snapshot.val();
+        setUserWallData(data);
+      }, (error) => {
+        console.error("Error fetching wall user info:", error);
+      });
+
+      // 2. Fetch posts in real-time
+      const postsRef = ref(database, `/user_walls/${userWallTarget}/posts`);
+      const unsubscribePosts = onValue(postsRef, (snapshot) => {
+        const postsVal = snapshot.val();
+        if (postsVal) {
+          const list = Object.keys(postsVal).map(key => ({
+            id: key,
+            ...postsVal[key]
+          })).sort((a, b) => b.timestamp - a.timestamp);
+          setUserWallPosts(list);
+        } else {
+          setUserWallPosts([]);
+        }
+        setLoadingWall(false);
+      }, (error) => {
+        console.error("Error fetching wall posts:", error);
+        setLoadingWall(false);
+      });
+
+      return () => {
+        unsubscribeUser();
+        unsubscribePosts();
+      };
+    } else {
+      // Offline mode: load from LocalStorage
+      const localWalls = localStorage.getItem('thebongda_local_user_walls');
+      const wallsData = localWalls ? JSON.parse(localWalls) : {};
+      const wall = wallsData[userWallTarget] || {};
+      
+      let offlineProfile = null;
+      if (userWallTarget === currentUser) {
+        offlineProfile = {
+          level,
+          xp,
+          stats,
+          squad
+        };
+      } else {
+        const matchingOnline = onlineUsers.find(u => u.username === userWallTarget);
+        offlineProfile = matchingOnline ? {
+          level: matchingOnline.level || 1,
+          xp: 0,
+          stats: { played: 0, wins: 0, draws: 0, losses: 0 },
+          squad: []
+        } : {
+          level: 1,
+          xp: 0,
+          stats: { played: 0, wins: 0, draws: 0, losses: 0 },
+          squad: []
+        };
+      }
+
+      setUserWallData(offlineProfile);
+      
+      const postsList = wall.posts ? Object.keys(wall.posts).map(key => ({
+        id: key,
+        ...wall.posts[key]
+      })).sort((a, b) => b.timestamp - a.timestamp) : [];
+      
+      setUserWallPosts(postsList);
+      setLoadingWall(false);
+    }
+  }, [userWallTarget, isConnectedToFirebase, currentUser, level, xp, stats, squad, onlineUsers]);
 
   // Scroll chat to bottom when messages update
   useEffect(() => {

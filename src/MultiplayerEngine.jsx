@@ -161,6 +161,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
   const roundCountRef = useRef(0);
   const phaseRef = useRef('select_card');
   const roundSeedRef = useRef(12345);
+  const roundTimeoutRef = useRef(null);
 
   const seededRNG = (seedOffset) => {
     // A simple fast pseudo-random generator
@@ -188,8 +189,9 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       console.warn('[PVP] sendData: connection not ready');
     }
   }, []);
-  const calculateRoundResult = useCallback((myCard, opCard, currentStat) => {
+  const calculateRoundResult = useCallback((myCard, opCard, _ignoredStat) => {
     if (phaseRef.current === 'result') return;
+    const currentStat = activeStatRef.current;
 
     const getPlayerAttr = (player) => {
       if (!player || !player.stats) return { key: 'speed', name: 'Tốc Độ', emoji: '⚡' };
@@ -310,7 +312,11 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     setRoundCount(prev => prev + 1);
     const isGameOver = roundCountRef.current >= squad.length;
 
-    setTimeout(() => {
+    if (roundTimeoutRef.current) {
+      clearTimeout(roundTimeoutRef.current);
+    }
+
+    roundTimeoutRef.current = setTimeout(() => {
       // Reset values for the next round
       myPlayedCardRef.current = null;
       opponentPlayedCardRef.current = null;
@@ -319,6 +325,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       setOpponentPlayedCard(null);
       setRoundResultMsg('');
       setRoundWinner(null);
+      roundTimeoutRef.current = null;
 
       if (isGameOver) {
         setStatus('gameover');
@@ -368,6 +375,10 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       }, 300);
     }
     else if (data.type === 'start_round') {
+      if (roundTimeoutRef.current) {
+        clearTimeout(roundTimeoutRef.current);
+        roundTimeoutRef.current = null;
+      }
       if (data.squad) {
         setOpponentSquad(data.squad);
         opponentSquadRef.current = data.squad;
@@ -552,6 +563,10 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
 
     return () => {
       if (peer) peer.destroy();
+      if (roundTimeoutRef.current) {
+        clearTimeout(roundTimeoutRef.current);
+        roundTimeoutRef.current = null;
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -996,7 +1011,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
               )}
               <span className="text-[10px] font-black text-blue-400 bg-blue-900/40 px-2 py-0.5 rounded-full">{myDeck.length} lá</span>
             </div>
-            <div className="overflow-x-auto hide-scrollbar" style={{ height: 'clamp(88px, 17vw, 140px)' }}>
+            <div className="overflow-x-auto hide-scrollbar" style={{ height: 'clamp(140px, 20vh, 180px)' }}>
               <div className="flex flex-row items-center h-full px-3 py-2 gap-2 min-w-max">
                 {myDeck.map((player, idx) => {
                   const isCap = squad.length > 0 && player.id === squad[0].id;

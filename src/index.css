@@ -192,8 +192,8 @@ body {
 
 .pitch-player-slot {
   position: absolute;
-  width: 65px; /* Kích thước cố định để thẻ không bị ép góc */
-  height: 90px;
+  width: 85px; /* Kích thước to hơn để hiển thị rõ chi tiết thẻ */
+  height: 119px;
   /* Dựng đứng thẻ trên sân nghiêng */
   transform: translate(-50%, -100%) rotateX(-55deg); 
   transform-origin: bottom center; /* Xoay từ bàn chân */
@@ -204,8 +204,8 @@ body {
 
 @media (min-width: 768px) {
   .pitch-player-slot {
-    width: 80px;
-    height: 112px;
+    width: 105px;
+    height: 147px;
   }
 }
 
