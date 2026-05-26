@@ -539,7 +539,11 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       });
     }
     else if (data.type === 'sync_session') {
-      console.log('[PVP] Re-connected and restoring match session state...');
+      if (isHostRef.current) {
+        console.log('[PVP] Host ignoring sync_session from Guest to preserve authority.');
+        return;
+      }
+      console.log('[PVP] Guest synchronizing match session state from Host...');
       if (data.squad) {
         setOpponentSquad(data.squad);
         opponentSquadRef.current = data.squad;
@@ -595,16 +599,18 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
         window.pvpExitTimeout = null;
       }
       setIsReconnecting(false);
-      // Synchronize states
-      conn.send({
-        type: 'sync_session',
-        roundIndex: roundCountRef.current,
-        myScore: myScoreRef.current,
-        opponentScore: opponentScoreRef.current,
-        opponentDeckCount: myDeckRef.current.length,
-        activeStat: activeStatRef.current,
-        phase: phaseRef.current
-      });
+      // Authoritative synchronization: Only the Host initiates state sync
+      if (isHostRef.current) {
+        conn.send({
+          type: 'sync_session',
+          roundIndex: roundCountRef.current,
+          myScore: myScoreRef.current,
+          opponentScore: opponentScoreRef.current,
+          opponentDeckCount: myDeckRef.current.length,
+          activeStat: activeStatRef.current,
+          phase: phaseRef.current
+        });
+      }
       setRoundResultMsg('Đã kết nối lại thành công! Trận đấu tiếp tục.');
       playFx('winPoint');
     });
