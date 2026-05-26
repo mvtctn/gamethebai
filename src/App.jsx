@@ -1976,6 +1976,7 @@ export default function App() {
   const [currentAiCard, setCurrentAiCard] = useState(null);
   const [roundResultMsg, setRoundResultMsg] = useState("");
   const [playedCardIds, setPlayedCardIds] = useState([]);
+  const [aiAttackCardIndex, setAiAttackCardIndex] = useState(0);
   const [matchEnvironment, setMatchEnvironment] = useState({ weather: ENV_WEATHER[4], time: ENV_TIME[1] });
 
   // ─── Unified Smart Auth Handler ─────────────────────────────────────────────
@@ -2469,14 +2470,29 @@ export default function App() {
     // Deep clone the shuffled cards so we don't mutate the original playersData pool!
     const aiSelectedTeam = shuffled.slice(0, 11).map(card => {
       const clonedCard = JSON.parse(JSON.stringify(card));
+      
+      // Dynamic AI Card Levels based on difficulty
+      let aiLevel = 1;
+      if (diff === 'Medium' || diff === 'Professional') {
+        aiLevel = Math.random() < 0.3 ? 2 : 1;
+      } else if (diff === 'Hard' || diff === 'World Class') {
+        aiLevel = Math.random() < 0.5 ? 3 : 2;
+      } else if (diff === 'Legendary') {
+        aiLevel = Math.random() < 0.5 ? 4 : 3;
+      } else if (diff === 'Ultimate') {
+        aiLevel = Math.random() < 0.5 ? 5 : 4;
+      }
+      clonedCard.level = aiLevel;
+
       let boost = 0;
-      if (diff === 'Legendary') boost = 2;
-      else if (diff === 'Ultimate') boost = 5;
+      if (diff === 'Legendary') boost = 3;
+      else if (diff === 'Ultimate') boost = 6;
       
       if (boost > 0) {
-        clonedCard.stats.attack = Math.min(100, clonedCard.stats.attack + boost);
-        clonedCard.stats.defense = Math.min(100, clonedCard.stats.defense + boost);
-        clonedCard.stats.control = Math.min(100, clonedCard.stats.control + boost);
+        // competitive stat scaling up to 115 OVR limit
+        clonedCard.stats.attack = Math.min(115, clonedCard.stats.attack + boost);
+        clonedCard.stats.defense = Math.min(115, clonedCard.stats.defense + boost);
+        clonedCard.stats.control = Math.min(115, clonedCard.stats.control + boost);
       }
       return clonedCard;
     });
@@ -2501,6 +2517,142 @@ export default function App() {
     setSelectedPlayerCard(null);
     setSelectedStat(null);
     setCurrentAiCard(null);
+  };
+
+  const triggerAiTurn = (updatedPlayedCardIds = playedCardIds, updatedAiHand = aiHand) => {
+    if (updatedPlayedCardIds.length >= 11) return;
+    
+    // Smart card selection for AI turn
+    let cardIndex = 0;
+    if (difficulty === 'Easy' || difficulty === 'Amateur') {
+      cardIndex = Math.floor(Math.random() * updatedAiHand.length);
+    } else {
+      // Find AI card with the highest single stat
+      let maxOverallStatVal = -1;
+      updatedAiHand.forEach((c, idx) => {
+        const bestStatOfCard = Math.max(c.stats.attack, c.stats.defense, c.stats.control);
+        if (bestStatOfCard > maxOverallStatVal) {
+          maxOverallStatVal = bestStatOfCard;
+          cardIndex = idx;
+        }
+      });
+    }
+    
+    const chosenCard = updatedAiHand[cardIndex];
+    
+    // Determine the highest stat on the card
+    let chosenStat = 'attack';
+    let maxVal = chosenCard.stats.attack;
+    if (chosenCard.stats.control > maxVal) {
+      maxVal = chosenCard.stats.control;
+      chosenStat = 'control';
+    }
+    if (chosenCard.stats.defense > maxVal) {
+      maxVal = chosenCard.stats.defense;
+      chosenStat = 'defense';
+    }
+    
+    setCurrentAiCard(chosenCard);
+    setSelectedStat(chosenStat);
+    setAiAttackCardIndex(cardIndex);
+  };
+
+  const playRoundAiTurn = (playerCard) => {
+    if (!currentAiCard || !selectedStat) return;
+    
+    // Defend counter stats
+    let playerDefendStat = 'defense';
+    if (selectedStat === 'defense') playerDefendStat = 'attack';
+    else if (selectedStat === 'control') playerDefendStat = 'control';
+    
+    const lvlBonus1 = ((playerCard.level || 1) - 1) * 2;
+    const lvlBonus2 = ((currentAiCard.level || 1) - 1) * 2;
+    
+    const chemBonus1 = getPlayerChemistryBoost(playerCard, squad);
+    const chemBonus2 = getPlayerChemistryBoost(currentAiCard, aiSquad);
+    
+    const capBonus1 = (squad.length > 0 && playerCard.id === squad[0].id) ? 3 : 0;
+    const capBonus2 = (aiSquad.length > 0 && currentAiCard.id === aiSquad[0].id) ? 3 : 0;
+    
+    let baseV1 = playerCard.stats[playerDefendStat] + lvlBonus1;
+    let baseV2 = currentAiCard.stats[selectedStat] + lvlBonus2;
+    
+    const formResult1 = generateCardForm(playerCard, currentAiCard, matchEnvironment);
+    const formResult2 = generateCardForm(currentAiCard, playerCard, matchEnvironment);
+    const formBonus1 = formResult1.bonus;
+    const formBonus2 = formResult2.bonus;
+    
+    const bonus1 = getCardTypeBonus(playerCard.type);
+    const bonus2 = getCardTypeBonus(currentAiCard.type);
+    
+    const attr1 = getPlayerAttr(playerCard);
+    const attr2 = getPlayerAttr(currentAiCard);
+    let attrBonus1 = 0;
+    let attrBonus2 = 0;
+    
+    if (checkAttrAdvantage(attr1.key, attr2.key)) {
+      attrBonus1 = 5;
+    } else if (checkAttrAdvantage(attr2.key, attr1.key)) {
+      attrBonus2 = 5;
+    }
+    
+    const v1 = baseV1 + bonus1 + attrBonus1 + formBonus1 + chemBonus1 + capBonus1;
+    const v2 = baseV2 + bonus2 + attrBonus2 + formBonus2 + chemBonus2 + capBonus2;
+    
+    let pScore = matchScore.player;
+    let aScore = matchScore.ai;
+    let msg = "";
+    
+    const bonusPart = (b, ab, emoji, lb, fb, fs, chem, cap) => {
+      let parts = [];
+      if (lb > 0) parts.push(`+${lb} Lv`);
+      if (b > 0) parts.push(`+${b} Rarity`);
+      if (ab > 0) parts.push(`+${ab} Khắc chế ${emoji}`);
+      if (fb !== 0) {
+        const sign = fb > 0 ? '+' : '';
+        parts.push(`${sign}${fb} Phong độ ${fs.emoji}`);
+      } else {
+        parts.push(`+0 Phong độ ➡️`);
+      }
+      if (chem > 0) parts.push(`+${chem} Duyên 🤝`);
+      if (cap > 0) parts.push(`+${cap} Đội trưởng 👑`);
+      return parts.length > 0 ? ` [${parts.join(' & ')}]` : '';
+    };
+    
+    const myBonusDetails = bonusPart(bonus1, attrBonus1, attr1.emoji, lvlBonus1, formBonus1, formResult1.state, chemBonus1, capBonus1);
+    const opBonusDetails = bonusPart(bonus2, attrBonus2, attr2.emoji, lvlBonus2, formBonus2, formResult2.state, chemBonus2, capBonus2);
+    
+    if (v1 > v2) {
+      pScore++;
+      msg = `THẮNG! ${v1}${myBonusDetails} > ${v2}${opBonusDetails}`;
+    } else if (v2 > v1) {
+      aScore++;
+      msg = `THUA! ${v1}${myBonusDetails} < ${v2}${opBonusDetails}`;
+    } else {
+      msg = `HÒA! ${v1}${myBonusDetails} = ${v2}${opBonusDetails}`;
+    }
+    
+    setMatchScore({ player: pScore, ai: aScore });
+    setRoundResultMsg(msg);
+    setSelectedPlayerCard(playerCard);
+    
+    setMatchLogs([...matchLogs, `Lượt ${playedCardIds.length + 1}: ${playerCard.name} (${playerDefendStat.toUpperCase()}${myBonusDetails}) vs ${currentAiCard.name} (${selectedStat.toUpperCase()}${opBonusDetails}) -> ${msg}`]);
+    setMatchHistory([...matchHistory, {
+      myStat: playerDefendStat,
+      myCardName: playerCard.name,
+      myBonusDetails,
+      myFinalVal: v1,
+      opStat: selectedStat,
+      opCardName: currentAiCard.name,
+      opBonusDetails,
+      opFinalVal: v2,
+      result: v1 > v2 ? 'win' : v1 < v2 ? 'loss' : 'draw'
+    }]);
+    setMatchPhase('roundResult');
+    
+    // Remove cards from hands
+    setPlayedCardIds([...playedCardIds, playerCard.id]);
+    setAiHand(aiHand.filter((_, i) => i !== aiAttackCardIndex));
   };
 
   const playRound = (stat) => {
@@ -2754,6 +2906,12 @@ export default function App() {
       setSelectedStat(null);
       setCurrentAiCard(null);
       setMatchPhase('playing');
+      
+      // If the next round is an AI-initiated turn (even rounds), pre-trigger AI attack selection
+      const nextRoundPlayedCount = playedCardIds.length;
+      if (nextRoundPlayedCount % 2 !== 0 && nextRoundPlayedCount < 11) {
+        triggerAiTurn(playedCardIds, aiHand);
+      }
     }
   };
 
@@ -2797,6 +2955,12 @@ export default function App() {
       setSelectedPlayerCard(null);
       setSelectedStat(null);
       setCurrentAiCard(null);
+      
+      // If the next round is an AI-initiated turn (even rounds), pre-trigger AI attack selection
+      const nextRoundPlayedCount = playedCardIds.length;
+      if (nextRoundPlayedCount % 2 !== 0 && nextRoundPlayedCount < 11) {
+        triggerAiTurn(playedCardIds, aiHand);
+      }
     }
   };
 
@@ -6295,7 +6459,16 @@ export default function App() {
 
                 {/* Sân 3D */}
                 <div className="glass-panel p-2 pb-6 rounded-3xl flex-1 flex flex-col relative bg-black/30 border border-white/10">
-                  <h3 className="text-xs font-bold text-blue-400 tracking-widest uppercase mb-1 text-center w-full z-20">Đội hình ra sân của bạn</h3>
+                  <h3 className="text-xs font-bold tracking-widest uppercase mb-1 text-center w-full z-20 flex items-center justify-center gap-2">
+                    <span>Đội hình ra sân của bạn</span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black border ${
+                      (playedCardIds.length % 2 === 0) 
+                        ? 'bg-blue-950/80 text-blue-400 border-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.3)] animate-pulse'
+                        : 'bg-amber-950/80 text-amber-400 border-amber-500/30'
+                    }`}>
+                      {(playedCardIds.length % 2 === 0) ? '⚔️ LƯỢT BẠN TẤN CÔNG' : '🛡️ BẠN PHÒNG THỦ'}
+                    </span>
+                  </h3>
                   
                   <div className="pitch-wrapper flex-1 mt-1">
                     <div className="pitch-container">
@@ -6322,15 +6495,28 @@ export default function App() {
                               if (!isPlayed) {
                                 playFx('click');
                                 if (matchPhase === 'playing') {
-                                  setSelectedPlayerCard(player);
+                                  const isPlayerTurn = (playedCardIds.length % 2 === 0);
+                                  if (isPlayerTurn) {
+                                    setSelectedPlayerCard(player);
+                                  } else {
+                                    // AI Turn: Player clicks to select defending card and immediately play!
+                                    playRoundAiTurn(player);
+                                  }
                                 } else if (matchPhase === 'roundResult') {
                                   if (playedCardIds.length >= 11) {
                                     nextRound(); // Xử lý GameOver
                                   } else {
+                                    const nextRoundPlayedCount = playedCardIds.length;
                                     setMatchPhase('playing');
                                     setSelectedStat(null);
                                     setCurrentAiCard(null);
-                                    setSelectedPlayerCard(player);
+                                    
+                                    if (nextRoundPlayedCount % 2 === 0) {
+                                      setSelectedPlayerCard(player);
+                                    } else {
+                                      // AI initiated turn triggered
+                                      triggerAiTurn(playedCardIds, aiHand);
+                                    }
                                   }
                                 }
                               }
