@@ -1217,6 +1217,10 @@ export default function App() {
         if (data.checkIn) setCheckInState(data.checkIn);
         if (data.equippedTitle !== undefined) setEquippedTitle(data.equippedTitle);
         if (data.claimedAchievements) setClaimedAchievements(data.claimedAchievements);
+        if (data.coinNotification) {
+          showAlert("🎁 Chúc Mừng!", `Bạn vừa nhận được ${data.coinNotification.amount} xu từ HLV ${data.coinNotification.from}!`);
+          set(ref(database, `/users/${currentUser}/coinNotification`), null);
+        }
       } else {
         // Initialize brand-new guest user — fresh start with 3 starter packs + 200 xu
         const initialData = {
@@ -1557,6 +1561,11 @@ export default function App() {
       updates[`/users/${currentUser}/giftLimits/${today}/sentCoins`] = mySentToday + giftAmount;
       updates[`/users/${userWallTarget}/coins`] = (targetData.coins || 0) + giftAmount;
       updates[`/users/${userWallTarget}/giftLimits/${today}/receivedCoins`] = targetReceivedToday + giftAmount;
+      updates[`/users/${userWallTarget}/coinNotification`] = {
+        from: currentUser,
+        amount: giftAmount,
+        timestamp: Date.now()
+      };
 
       await update(ref(database), updates);
 
