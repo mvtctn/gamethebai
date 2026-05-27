@@ -4994,11 +4994,11 @@ export default function App() {
                     </div>
 
                     {/* Quick Interactive Actions */}
-                    <div className="w-full flex flex-col gap-1.5 mt-auto">
+                    <div className="w-full mt-auto">
                       {userWallTarget !== currentUser ? (
-                        <>
+                        <div className="grid grid-cols-2 gap-2">
                           <button 
-                            className="btn !bg-violet-600 hover:!bg-violet-500 w-full flex items-center justify-center gap-2 !py-2.5 font-bold text-xs tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-violet-900/30"
+                            className="btn !bg-violet-600 hover:!bg-violet-500 flex items-center justify-center gap-1.5 !py-3 font-bold text-[10px] sm:text-xs tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-violet-900/30"
                             onClick={() => {
                               playFx('click');
                               setGameState('lobby');
@@ -5013,11 +5013,21 @@ export default function App() {
                               }, 300);
                             }}
                           >
-                            <MessageSquare size={14} /> Nhắn Tin Riêng
+                            <MessageSquare size={14} /> Nhắn Tin
+                          </button>
+
+                          <button 
+                            className="btn !bg-yellow-600 hover:!bg-yellow-500 flex items-center justify-center gap-1.5 !py-3 font-bold text-[10px] sm:text-xs tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-yellow-900/30"
+                            onClick={() => {
+                              playFx('click');
+                              setShowGiftModal(true);
+                            }}
+                          >
+                            🎁 Tặng Xu
                           </button>
                           
                           <button 
-                            className={`btn w-full flex items-center justify-center gap-2 !py-2.5 font-bold text-xs tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg ${
+                            className={`btn col-span-2 flex items-center justify-center gap-2 !py-3 font-black text-xs sm:text-sm tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg ${
                               squad.length < 11
                                 ? 'opacity-40 !bg-gray-700 cursor-not-allowed text-gray-400' 
                                 : 'bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white shadow-red-900/30'
@@ -5036,19 +5046,9 @@ export default function App() {
                               }
                             }}
                           >
-                            <Swords size={14} /> Thách Đấu Ngay
+                            <Swords size={16} /> Thách Đấu Ngay
                           </button>
-                          
-                          <button 
-                            className="btn !bg-yellow-600 hover:!bg-yellow-500 w-full flex items-center justify-center gap-2 !py-2.5 font-bold text-xs tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-yellow-900/30"
-                            onClick={() => {
-                              playFx('click');
-                              setShowGiftModal(true);
-                            }}
-                          >
-                            🎁 Tặng Xu
-                          </button>
-                        </>
+                        </div>
                       ) : (
                         <button 
                           className="btn !bg-indigo-600 hover:!bg-indigo-500 w-full flex items-center justify-center gap-2 !py-2.5 font-bold text-xs tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg hidden sm:flex"
