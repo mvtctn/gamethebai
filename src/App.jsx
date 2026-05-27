@@ -3004,12 +3004,12 @@ export default function App() {
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('resize', handleScroll);
     
-    const interval = setInterval(handleScroll, 200);
+    // FIX GPU: Bỏ setInterval polling 5 lần/giây — chỉ cần event listeners là đủ
+    handleScroll(); // chạy 1 lần khi mount để khởi tạo state
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
-      clearInterval(interval);
     };
   }, []);
 

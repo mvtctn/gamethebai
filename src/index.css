@@ -69,31 +69,34 @@ body {
 }
 @keyframes glow-pulse {
   0% { filter: drop-shadow(0 0 20px rgba(251,191,36,0.6)); }
-  50% { filter: drop-shadow(0 0 60px rgba(251,191,36,1)); }
+  50% { filter: drop-shadow(0 0 40px rgba(251,191,36,0.9)); }
   100% { filter: drop-shadow(0 0 20px rgba(251,191,36,0.6)); }
 }
 
+/* FIX GPU: Chỉ dùng 1 animation thay vì 2 animation đồng thời */
 .trophy-hero {
-  animation: float 6s ease-in-out infinite, glow-pulse 4s ease-in-out infinite;
+  animation: float 6s ease-in-out infinite;
+  filter: drop-shadow(0 0 25px rgba(251,191,36,0.7));
+  will-change: transform;
 }
 
-/* Glassmorphism Menu */
+/* Glassmorphism Menu — FIX GPU: Giảm blur từ 20-24px → 12px */
 .glass-panel {
-  background: rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
 }
 
 .glass-menu-card {
   background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.01));
-  backdrop-filter: blur(24px);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-top: 1px solid rgba(255, 255, 255, 0.4);
-  border-left: 1px solid rgba(255, 255, 255, 0.4);
+  border-top: 1px solid rgba(255, 255, 255, 0.35);
+  border-left: 1px solid rgba(255, 255, 255, 0.35);
   box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4);
-  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1.2);
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .glass-menu-card:hover {
@@ -341,7 +344,7 @@ h2 {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Hiệu ứng tráng gương Holographic */
+/* Hiệu ứng tráng gương Holographic — chỉ khi hover */
 .card::before {
   content: '';
   position: absolute;
@@ -361,35 +364,30 @@ h2 {
 
 .card-container:hover .card::before {
   transform: translateX(150%);
-}.card[data-rarity="Base"] { border-color: var(--color-base); box-shadow: 0 0 15px rgba(148, 163, 184, 0.2); }
-.card[data-rarity="Icon"], .card[data-rarity="Fan Favourite"] { border-color: var(--color-icon); box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); }
-.card[data-rarity="Golden Baller"] { border-color: var(--color-golden); box-shadow: 0 0 25px rgba(251, 191, 36, 0.6); background: linear-gradient(135deg, rgba(251,191,36,0.1), rgba(217,119,6,0.2)); }
+}.card[data-rarity="Base"] { border-color: var(--color-base); box-shadow: 0 0 10px rgba(148, 163, 184, 0.15); }
+.card[data-rarity="Icon"], .card[data-rarity="Fan Favourite"] { border-color: var(--color-icon); box-shadow: 0 0 15px rgba(245, 158, 11, 0.3); }
+.card[data-rarity="Golden Baller"] { border-color: var(--color-golden); box-shadow: 0 0 18px rgba(251, 191, 36, 0.4); background: linear-gradient(135deg, rgba(251,191,36,0.1), rgba(217,119,6,0.2)); }
 .card[data-rarity="Top Keeper"] { border-color: var(--color-keeper); }
 .card[data-rarity="Defensive Rock"] { border-color: var(--color-defender); }
 .card[data-rarity="Midfield Maestro"] { border-color: var(--color-midfield); }
 .card[data-rarity="Goal Machine"] { border-color: var(--color-striker); }
-.card[data-rarity^="Attacker ARG"], .card[data-rarity^="Midfielder ARG"], .card[data-rarity^="Defender ARG"] { border-color: var(--color-arg22); box-shadow: 0 0 20px rgba(56, 189, 248, 0.5); }
-.card[data-rarity="Bronze Edition"] { border-color: #b45309; box-shadow: 0 0 15px rgba(180, 83, 9, 0.4); background: linear-gradient(135deg, rgba(180,83,9,0.1), rgba(0,0,0,0.4)); }
-.card[data-rarity="Silver Edition"] { border-color: #cbd5e1; box-shadow: 0 0 20px rgba(203, 213, 225, 0.5); background: linear-gradient(135deg, rgba(203,213,225,0.15), rgba(0,0,0,0.5)); }
-.card[data-rarity="Platinum Edition"] { border-color: #38bdf8; box-shadow: 0 0 25px rgba(56, 189, 248, 0.6); background: linear-gradient(135deg, rgba(56,189,248,0.2), rgba(30,58,138,0.4)); }
-.card[data-rarity="Super Limited"] { border-color: #f43f5e; box-shadow: 0 0 30px rgba(244, 63, 94, 0.8); background: linear-gradient(135deg, rgba(244,63,94,0.3), rgba(88,28,135,0.5)); }
+.card[data-rarity^="Attacker ARG"], .card[data-rarity^="Midfielder ARG"], .card[data-rarity^="Defender ARG"] { border-color: var(--color-arg22); box-shadow: 0 0 15px rgba(56, 189, 248, 0.35); }
+.card[data-rarity="Bronze Edition"] { border-color: #b45309; box-shadow: 0 0 12px rgba(180, 83, 9, 0.3); background: linear-gradient(135deg, rgba(180,83,9,0.1), rgba(0,0,0,0.4)); }
+.card[data-rarity="Silver Edition"] { border-color: #cbd5e1; box-shadow: 0 0 15px rgba(203, 213, 225, 0.35); background: linear-gradient(135deg, rgba(203,213,225,0.15), rgba(0,0,0,0.5)); }
+.card[data-rarity="Platinum Edition"] { border-color: #38bdf8; box-shadow: 0 0 18px rgba(56, 189, 248, 0.45); background: linear-gradient(135deg, rgba(56,189,248,0.2), rgba(30,58,138,0.4)); }
+.card[data-rarity="Super Limited"] { border-color: #f43f5e; box-shadow: 0 0 20px rgba(244, 63, 94, 0.5); background: linear-gradient(135deg, rgba(244,63,94,0.3), rgba(88,28,135,0.5)); }
 
-/* Holo effect for non-base cards */
-.card:not([data-rarity="Base"])::after {
+/* FIX GPU: Holo effect chỉ chạy khi hover thẻ, không chạy liên tục */
+.card-container:hover .card:not([data-rarity="Base"])::after {
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.3) 25%, transparent 30%);
+  background: linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.25) 25%, transparent 30%);
   z-index: 5;
   pointer-events: none;
-  background-size: 200% 200%;
-  animation: holo 4s ease infinite;
 }
 
-@keyframes holo {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
+/* (animation holo vô hạn đã bị xóa để giảm tải GPU) */
 
 .card-image-wrapper {
   height: 60%;
@@ -804,7 +802,7 @@ h2 {
   pointer-events: none;
 }
 
-/* Top nav bar */
+/* Top nav bar — FIX GPU: blur 16px → 10px */
 .landing-nav {
   position: relative;
   z-index: 20;
@@ -813,8 +811,8 @@ h2 {
   justify-content: space-between;
   padding: 1.25rem 2rem;
   border-bottom: 1px solid rgba(255,255,255,0.06);
-  background: rgba(2,8,16,0.5);
-  backdrop-filter: blur(16px);
+  background: rgba(2,8,16,0.7);
+  backdrop-filter: blur(10px);
 }
 
 .landing-nav-logo {
@@ -1113,7 +1111,7 @@ h2 {
   50% { transform: translateY(-12px); }
 }
 
-/* RIGHT COLUMN — Login Panel */
+/* RIGHT COLUMN — Login Panel — FIX GPU: blur 32px → 14px */
 .landing-login-col {
   width: 100%;
   max-width: 460px;
@@ -1121,8 +1119,8 @@ h2 {
   flex-direction: column;
   justify-content: center;
   padding: 2rem;
-  background: rgba(2,8,16,0.6);
-  backdrop-filter: blur(32px);
+  background: rgba(2,8,16,0.75);
+  backdrop-filter: blur(14px);
   border-left: 1px solid rgba(255,255,255,0.06);
   animation: slideInRight 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
   overflow-y: auto;
@@ -1152,11 +1150,11 @@ h2 {
   font-weight: 500;
 }
 
-/* Auth card */
+/* Auth card — FIX GPU: blur 24px → 12px */
 .landing-glass-panel {
-  background: rgba(15, 23, 42, 0.7);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-top: 1px solid rgba(196, 240, 0, 0.3);
   border-radius: 1.5rem;
@@ -1753,57 +1751,60 @@ h2 {
 
 /* ═══════════════════════════════════════════
    HOLOGRAPHIC SHIMMER & RAINBOW EFFECTS
+   FIX GPU: Chỉ hiện khi hover, không animation liên tục
    ═══════════════════════════════════════════ */
 .card-holo {
   background: linear-gradient(
     135deg,
-    rgba(255, 0, 0, 0.25) 0%,
-    rgba(255, 154, 0, 0.25) 10%,
-    rgba(208, 222, 33, 0.25) 20%,
-    rgba(79, 220, 74, 0.25) 30%,
-    rgba(63, 218, 216, 0.25) 40%,
-    rgba(47, 201, 226, 0.25) 50%,
-    rgba(28, 127, 238, 0.25) 60%,
-    rgba(95, 21, 242, 0.25) 70%,
-    rgba(186, 12, 248, 0.25) 80%,
-    rgba(251, 7, 217, 0.25) 90%,
-    rgba(255, 0, 0, 0.25) 100%
+    rgba(255, 0, 0, 0.2) 0%,
+    rgba(255, 154, 0, 0.2) 10%,
+    rgba(208, 222, 33, 0.2) 20%,
+    rgba(79, 220, 74, 0.2) 30%,
+    rgba(63, 218, 216, 0.2) 40%,
+    rgba(47, 201, 226, 0.2) 50%,
+    rgba(28, 127, 238, 0.2) 60%,
+    rgba(95, 21, 242, 0.2) 70%,
+    rgba(186, 12, 248, 0.2) 80%,
+    rgba(251, 7, 217, 0.2) 90%,
+    rgba(255, 0, 0, 0.2) 100%
   );
   background-size: 300% 300%;
-  animation: holoGradient 6s ease infinite alternate, holoShine 4s ease infinite;
-  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.3);
+  /* FIX GPU: Bỏ animation chạy liên tục, dùng static + hover transition */
+  background-position: 0% 50%;
+  opacity: 0.35;
+  transition: opacity 0.4s ease, background-position 0.6s ease;
+  box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.2);
+  will-change: opacity;
 }
 
-@keyframes holoGradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-@keyframes holoShine {
-  0%, 100% { opacity: 0.35; filter: brightness(1) contrast(1.1); }
-  50% { opacity: 0.55; filter: brightness(1.2) contrast(1.25); }
+/* Chỉ khi hover mới shift màu */
+.card-container:hover .card-holo {
+  background-position: 100% 50%;
+  opacity: 0.55;
 }
 
 /* ═══════════════════════════════════════════
    DAILY CHECK-IN & ACHIEVEMENT STYLING
+   FIX GPU: Giảm tần suất animation, dùng will-change
    ═══════════════════════════════════════════ */
 @keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 15px rgba(251, 191, 36, 0.3), inset 0 0 10px rgba(251, 191, 36, 0.1); }
-  50% { box-shadow: 0 0 25px rgba(251, 191, 36, 0.6), inset 0 0 15px rgba(251, 191, 36, 0.2); }
+  0%, 100% { box-shadow: 0 0 12px rgba(251, 191, 36, 0.3); }
+  50% { box-shadow: 0 0 22px rgba(251, 191, 36, 0.5); }
 }
 
 .checkin-active-glow {
-  animation: pulseGlow 2s infinite alternate;
+  animation: pulseGlow 3s infinite alternate;
+  will-change: box-shadow;
 }
 
 @keyframes bounceSubtle {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+  50% { transform: translateY(-3px); }
 }
 
 .animate-bounce-subtle {
-  animation: bounceSubtle 2.5s ease-in-out infinite;
+  animation: bounceSubtle 3s ease-in-out infinite;
+  will-change: transform;
 }
 
 .scale-102 {
