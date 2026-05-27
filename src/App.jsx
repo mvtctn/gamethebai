@@ -5373,53 +5373,62 @@ export default function App() {
           </div>
 
           {/* Sub Tab Buttons */}
-          <div className="flex border border-white/10 rounded-2xl overflow-hidden bg-black/40 mb-8 w-full max-w-xl">
+          <div className="flex bg-slate-900/80 p-1.5 rounded-2xl border border-white/10 w-full max-w-2xl mx-auto mb-8 overflow-x-auto snap-x hide-scrollbar shadow-inner gap-1">
             <button 
-              className={`flex-1 py-3 text-xs sm:text-sm font-black uppercase tracking-wider flex items-center justify-center gap-2 border-b-2 transition-all ${
+              className={`flex-1 min-w-[100px] snap-center py-2.5 px-2 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 transition-all duration-300 ${
                 leaderboardTab === 'leaderboard' 
-                  ? 'border-yellow-500 text-yellow-400 bg-white/5 font-extrabold' 
-                  : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'
+                  ? 'bg-gradient-to-r from-yellow-500 to-amber-500 text-black shadow-[0_0_15px_rgba(234,179,8,0.4)]' 
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
               onClick={() => { playFx('click'); setLeaderboardTab('leaderboard'); }}
             >
-              🏆 Bảng Xếp Hạng
+              <span className="text-base sm:text-lg">🏆</span>
+              <span className="whitespace-nowrap">Xếp Hạng</span>
             </button>
             <button 
-              className={`flex-1 py-3 text-xs sm:text-sm font-black uppercase tracking-wider flex items-center justify-center gap-2 border-b-2 transition-all ${
+              className={`flex-1 min-w-[100px] snap-center py-2.5 px-2 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 transition-all duration-300 ${
                 leaderboardTab === 'tiers' 
-                  ? 'border-cyan-500 text-cyan-400 bg-white/5 font-extrabold' 
-                  : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'
+                  ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-black shadow-[0_0_15px_rgba(6,182,212,0.4)]' 
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
               onClick={() => { playFx('click'); setLeaderboardTab('tiers'); }}
             >
-              🛡️ Cấp Hạng
+              <span className="text-base sm:text-lg">🛡️</span>
+              <span className="whitespace-nowrap">Cấp Hạng</span>
             </button>
             <button 
-              className={`flex-1 py-3 text-xs sm:text-sm font-black uppercase tracking-wider flex items-center justify-center gap-2 border-b-2 transition-all ${
+              className={`flex-1 min-w-[100px] snap-center py-2.5 px-2 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 transition-all duration-300 ${
                 leaderboardTab === 'milestones' 
-                  ? 'border-fuchsia-500 text-fuchsia-400 bg-white/5 font-extrabold' 
-                  : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'
+                  ? 'bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white shadow-[0_0_15px_rgba(217,70,239,0.4)]' 
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
               onClick={() => { playFx('click'); setLeaderboardTab('milestones'); }}
             >
-              🎁 Quà Cấp Độ
+              <span className="text-base sm:text-lg">🎁</span>
+              <span className="whitespace-nowrap">Quà Cấp Độ</span>
             </button>
             <button 
-              className={`flex-1 py-3 text-xs sm:text-sm font-black uppercase tracking-wider flex items-center justify-center gap-2 border-b-2 transition-all ${
+              className={`flex-1 min-w-[100px] snap-center py-2.5 px-2 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 transition-all duration-300 ${
                 leaderboardTab === 'achievements' 
-                  ? 'border-yellow-500 text-yellow-400 bg-white/5 font-extrabold' 
-                  : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'
+                  ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-[0_0_15px_rgba(250,204,21,0.4)]' 
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
               onClick={() => { playFx('click'); setLeaderboardTab('achievements'); }}
             >
-              🏆 Thành Tựu
+              <span className="text-base sm:text-lg">🏅</span>
+              <span className="whitespace-nowrap">Thành Tựu</span>
             </button>
           </div>
 
           {/* TAB 1: Global Leaderboard */}
           {leaderboardTab === 'leaderboard' && (
-            <div className="w-full glass-panel rounded-3xl overflow-hidden border border-white/10 shadow-2xl animate-fade-in p-6">
-              <h3 className="text-xl font-black italic uppercase tracking-wider text-center text-white mb-6">HLV Xuất Sắc Nhất Lục Địa 🌍</h3>
+            <div className="w-full glass-panel rounded-[2rem] border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] animate-fade-in p-4 sm:p-8">
+              <div className="flex flex-col items-center mb-8 text-center">
+                <h3 className="text-2xl sm:text-3xl font-black italic uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 mb-2">
+                  HLV Xuất Sắc Nhất Lục Địa
+                </h3>
+                <div className="w-16 h-1 bg-yellow-500 rounded-full shadow-[0_0_10px_#eab308]"></div>
+              </div>
               
               {loadingLeaderboard ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4">
@@ -5429,65 +5438,84 @@ export default function App() {
               ) : leaderboardData.length === 0 ? (
                 <div className="text-center py-12 text-gray-500 italic">Chưa có dữ liệu người chơi.</div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-white/10 text-gray-400 text-[9px] sm:text-xs font-black uppercase tracking-widest pb-3">
-                        <th className="py-2 px-1 sm:py-3 sm:px-4 text-center">Hạng</th>
-                        <th className="py-2 px-1 sm:py-3 sm:px-4">HLV</th>
-                        <th className="py-2 px-1 sm:py-3 sm:px-4 text-center">Hạng Cấp</th>
-                        <th className="py-2 px-1 sm:py-3 sm:px-4 text-center">Cấp Độ</th>
-                        <th className="py-2 px-1 sm:py-3 sm:px-4 text-center">Đội</th>
-                        <th className="py-2 px-1 sm:py-3 sm:px-4 text-center">T/H/B</th>
-                        <th className="py-2 px-1 sm:py-3 sm:px-4 text-center">Thẻ</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5 text-[10px] sm:text-sm font-semibold">
-                      {leaderboardData.map((user, index) => {
-                        const isMe = user.username === currentUser;
-                        const rank = index + 1;
-                        const tier = getPlayerTier(user.level);
-                        
-                        return (
-                          <tr 
-                            key={user.username} 
-                            className={`transition-colors border-b border-white/5 ${
-                              isMe 
-                                ? 'bg-fuchsia-950/20 hover:bg-fuchsia-950/30 border-l-2 sm:border-l-4 border-l-fuchsia-500' 
-                                : 'hover:bg-white/5'
+                <div className="flex flex-col gap-3">
+                  {/* Header Row (Hidden on very small screens) */}
+                  <div className="hidden sm:flex items-center justify-between px-6 pb-2 text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-white/10">
+                    <div className="w-12 text-center">Hạng</div>
+                    <div className="flex-1 pl-4">Huấn Luyện Viên</div>
+                    <div className="w-24 text-center">Đội Hình</div>
+                    <div className="w-32 text-center">Thành Tích</div>
+                    <div className="w-24 text-right">Bộ Sưu Tập</div>
+                  </div>
+
+                  {leaderboardData.map((user, index) => {
+                    const isMe = user.username === currentUser;
+                    const rank = index + 1;
+                    const tier = getPlayerTier(user.level);
+                    
+                    let bgClass = isMe 
+                      ? 'bg-fuchsia-950/40 border-fuchsia-500/50 shadow-[0_0_20px_rgba(217,70,239,0.15)]' 
+                      : 'bg-black/40 border-white/5 hover:bg-white/10 hover:border-white/20';
+                    
+                    if (rank === 1) bgClass = 'bg-gradient-to-r from-yellow-950/60 to-black border-yellow-500/50 shadow-[0_0_20px_rgba(234,179,8,0.15)]';
+                    else if (rank === 2) bgClass = 'bg-gradient-to-r from-gray-800/60 to-black border-gray-400/50 shadow-[0_0_20px_rgba(156,163,175,0.15)]';
+                    else if (rank === 3) bgClass = 'bg-gradient-to-r from-orange-950/60 to-black border-orange-500/50 shadow-[0_0_20px_rgba(249,115,22,0.15)]';
+
+                    return (
+                      <div 
+                        key={user.username} 
+                        className={`relative flex items-center justify-between p-3 sm:p-4 rounded-2xl border transition-all duration-300 ${bgClass}`}
+                      >
+                        {/* Rank Badge */}
+                        <div className="w-10 sm:w-14 shrink-0 flex justify-center">
+                          {rank === 1 ? <div className="text-3xl sm:text-4xl drop-shadow-[0_0_10px_rgba(234,179,8,0.8)]">🥇</div> :
+                           rank === 2 ? <div className="text-3xl sm:text-4xl drop-shadow-[0_0_10px_rgba(156,163,175,0.8)]">🥈</div> :
+                           rank === 3 ? <div className="text-3xl sm:text-4xl drop-shadow-[0_0_10px_rgba(249,115,22,0.8)]">🥉</div> :
+                           <div className="text-lg sm:text-xl font-black text-gray-500 w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">{rank}</div>}
+                        </div>
+
+                        {/* Player Info */}
+                        <div className="flex-1 flex flex-col justify-center pl-2 sm:pl-4 overflow-hidden">
+                          <div 
+                            className={`font-black text-sm sm:text-lg truncate cursor-pointer hover:underline ${
+                              rank === 1 ? 'text-yellow-400' : rank === 2 ? 'text-gray-300' : rank === 3 ? 'text-orange-400' : isMe ? 'text-fuchsia-400' : 'text-white'
                             }`}
+                            onClick={() => { playFx('click'); setGameState('userWall'); setUserWallTarget(user.username); }}
                           >
-                            <td className="py-1.5 px-1 sm:py-4 sm:px-4 text-center font-black">
-                              {rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank}
-                            </td>
-                            <td className="py-1.5 px-1 sm:py-4 sm:px-4">
-                              <span 
-                                className={`font-extrabold hover:underline hover:text-cyan-400 cursor-pointer ${
-                                  rank === 1 ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]' : isMe ? 'text-fuchsia-400' : 'text-white'
-                                }`}
-                                onClick={() => { playFx('click'); setGameState('userWall'); setUserWallTarget(user.username); }}
-                              >
-                                {user.username} {isMe && ' (BẠN)'}
-                              </span>
-                            </td>
-                            <td className="py-1.5 px-1 sm:py-4 sm:px-4 text-center">
-                              <span className={`text-[8px] sm:text-[9px] font-black uppercase px-1 sm:px-2 py-0.5 rounded-full border ${tier.color} ${tier.glow}`}>
-                                <span className="hidden sm:inline">{tier.icon} </span>{tier.name}
-                              </span>
-                            </td>
-                            <td className="py-1.5 px-1 sm:py-4 sm:px-4 text-center font-black text-cyan-400">
-                              {user.level} <span className="text-[8px] sm:text-[10px] text-gray-500 font-medium block sm:inline">({user.xp} XP)</span>
-                            </td>
-                            <td className="py-1.5 px-1 sm:py-4 sm:px-4 text-center font-black text-emerald-400">{user.ovr}</td>
-                            <td className="py-1.5 px-1 sm:py-4 sm:px-4 text-center text-gray-300 whitespace-nowrap">
-                              <span className="text-green-400">{user.wins}</span>-<span className="text-yellow-400">{user.draws}</span>-<span className="text-red-400">{user.losses}</span>
-                            </td>
-                            <td className="py-1.5 px-1 sm:py-4 sm:px-4 text-center font-black text-purple-400 whitespace-nowrap">{user.cardCount}/{playersData.length}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                            {user.username} {isMe && <span className="text-[9px] sm:text-[10px] ml-1 bg-fuchsia-500/20 text-fuchsia-300 px-1.5 py-0.5 rounded uppercase align-middle">Bạn</span>}
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-1 sm:mt-1.5 flex-wrap">
+                            <span className="text-[9px] sm:text-[10px] font-black text-white bg-white/10 px-2 py-0.5 rounded-full border border-white/10 shadow-sm">
+                              Lv.{user.level}
+                            </span>
+                            <span className={`text-[8px] sm:text-[9px] font-black uppercase px-2 py-0.5 rounded-full border shadow-sm ${tier.color} ${tier.glow}`}>
+                              {tier.name}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Stats - Mobile Stacks, Desktop Rows */}
+                        <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-6 shrink-0 text-right sm:text-center ml-2">
+                          <div className="flex flex-col items-center justify-center sm:w-24 bg-black/40 px-2 sm:px-0 py-1 sm:py-2 rounded-xl border border-white/5">
+                            <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest hidden sm:block mb-0.5">OVR</span>
+                            <span className="font-black text-xs sm:text-base text-emerald-400">{user.ovr}</span>
+                          </div>
+                          
+                          <div className="hidden sm:flex flex-col items-center justify-center w-32 bg-black/40 py-2 rounded-xl border border-white/5">
+                            <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest mb-0.5">Thắng / Hòa / Thua</span>
+                            <div className="text-xs font-black text-gray-300">
+                              <span className="text-green-400">{user.wins}</span> - <span className="text-yellow-400">{user.draws}</span> - <span className="text-red-400">{user.losses}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col items-center justify-center sm:w-24 bg-black/40 px-2 sm:px-0 py-1 sm:py-2 rounded-xl border border-white/5">
+                            <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest hidden sm:block mb-0.5">Thẻ</span>
+                            <span className="font-black text-xs sm:text-base text-purple-400">{user.cardCount}<span className="text-[9px] sm:text-xs text-gray-600">/254</span></span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -6585,8 +6613,7 @@ export default function App() {
           )}
         </div>
       )}
-
-
+        </div>
         </>
       )}
 
