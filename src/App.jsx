@@ -824,6 +824,7 @@ export default function App() {
   const [userWallPosts, setUserWallPosts] = useState([]);
   const [globalPosts, setGlobalPosts] = useState([]);
   const [socialWallTab, setSocialWallTab] = useState('global'); // 'global' | 'owner'
+  const [mobileSubTab, setMobileSubTab] = useState('feed'); // 'feed' | 'search' | 'profile'
   const [newPostText, setNewPostText] = useState("");
   const [commentInputs, setCommentInputs] = useState({});
   const [loadingWall, setLoadingWall] = useState(false);
@@ -4714,12 +4715,12 @@ export default function App() {
 
           {/* TAB FILTER — X-style */}
           {userWallTarget && (
-            <div className="flex gap-0 w-full max-w-md mx-auto mb-6 bg-black/40 rounded-2xl p-1 border border-white/5">
+            <div className="flex gap-0 w-full max-w-md mx-auto mb-4 bg-black/40 rounded-xl p-1 border border-white/5">
               <button
                 onClick={() => { playFx('click'); setSocialWallTab('global'); }}
-                className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                   socialWallTab === 'global'
-                    ? 'bg-gradient-to-r from-cyan-600 to-indigo-600 text-white shadow-lg shadow-cyan-900/30'
+                    ? 'bg-gradient-to-r from-cyan-600 to-indigo-600 text-white shadow-md shadow-cyan-900/30'
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -4727,9 +4728,9 @@ export default function App() {
               </button>
               <button
                 onClick={() => { playFx('click'); setSocialWallTab('owner'); }}
-                className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                   socialWallTab === 'owner'
-                    ? 'bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white shadow-lg shadow-fuchsia-900/30'
+                    ? 'bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white shadow-md shadow-fuchsia-900/30'
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -4738,68 +4739,104 @@ export default function App() {
             </div>
           )}
 
+          {/* Mobile sub-tabs */}
+          {userWallTarget && (
+            <div className="flex lg:hidden gap-1 w-full bg-slate-900/60 rounded-xl p-1 border border-white/10 mb-4 shadow-inner">
+              <button
+                onClick={() => { playFx('click'); setMobileSubTab('feed'); }}
+                className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  mobileSubTab === 'feed'
+                    ? 'bg-gradient-to-r from-cyan-600 to-indigo-600 text-white shadow'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                📰 Bản tin
+              </button>
+              <button
+                onClick={() => { playFx('click'); setMobileSubTab('search'); }}
+                className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  mobileSubTab === 'search'
+                    ? 'bg-gradient-to-r from-cyan-600 to-indigo-600 text-white shadow'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                🔍 Tìm HLV
+              </button>
+              <button
+                onClick={() => { playFx('click'); setMobileSubTab('profile'); }}
+                className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  mobileSubTab === 'profile'
+                    ? 'bg-gradient-to-r from-cyan-600 to-indigo-600 text-white shadow'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                👤 Cá nhân
+              </button>
+            </div>
+          )}
+
           {(loadingWall || loadingGlobalPosts) ? (
-            <div className="glass-panel w-full rounded-[2rem] p-20 flex flex-col items-center justify-center gap-4">
-              <div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
-              <div className="text-cyan-400 font-extrabold tracking-widest text-xs uppercase animate-pulse">Đang tải dữ liệu mạng xã hội...</div>
+            <div className="glass-panel w-full rounded-2xl p-12 sm:p-20 flex flex-col items-center justify-center gap-4 border border-white/10">
+              <div className="w-10 h-10 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+              <div className="text-cyan-400 font-extrabold tracking-widest text-[10px] uppercase animate-pulse">Đang tải dữ liệu mạng xã hội...</div>
             </div>
           ) : !userWallTarget ? (
-            <div className="glass-panel w-full rounded-[2rem] p-12 sm:p-20 flex flex-col items-center justify-center text-center gap-4 border border-white/10">
-              <div className="text-4xl mb-3">🐦</div>
-              <div className="text-cyan-400 text-lg font-black uppercase mb-2">Mạng Xã Hội HLV</div>
-              <p className="text-gray-400 text-sm max-w-xs mb-2">Chọn một HLV để xem tường cá nhân hoặc nhấn Khám Phá bên dưới để xem feed toàn cầu.</p>
+            <div className="glass-panel w-full rounded-2xl p-8 sm:p-16 flex flex-col items-center justify-center text-center gap-4 border border-white/10">
+              <div className="text-3xl mb-1">🐦</div>
+              <div className="text-cyan-400 text-base font-black uppercase mb-1">Mạng Xã Hội HLV</div>
+              <p className="text-gray-400 text-xs max-w-xs mb-1">Chọn một HLV để xem tường cá nhân hoặc nhấn Khám Phá bên dưới để xem feed toàn cầu.</p>
               <button
-                className="btn !bg-gradient-to-r !from-cyan-700 !to-indigo-700 hover:!from-cyan-600 hover:!to-indigo-600 text-xs font-black uppercase tracking-wider !py-3 !px-8 rounded-full border border-cyan-500/30 shadow-md cursor-pointer transition-all hover:scale-105"
+                className="btn !bg-gradient-to-r !from-cyan-700 !to-indigo-700 hover:!from-cyan-600 hover:!to-indigo-600 text-xs font-black uppercase tracking-wider !py-2.5 !px-6 rounded-full border border-cyan-500/30 shadow-md cursor-pointer transition-all hover:scale-105"
                 onClick={() => { playFx('click'); setUserWallTarget(currentUser); setSocialWallTab('global'); }}
               >
                 🌍 Khám Phá Feed Toàn Cầu
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full items-stretch">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 w-full items-start">
               
               {/* LEFT PROFILE CARD (5/12 cols): Cover, stats, and fast actions */}
-              <div className="lg:col-span-5 flex flex-col gap-6">
-                <div className="glass-panel rounded-[2rem] border border-white/10 shadow-2xl overflow-hidden bg-slate-950/40 backdrop-blur-md relative flex flex-col">
+              <div className={`lg:col-span-5 flex-col gap-4 lg:flex w-full ${mobileSubTab === 'profile' ? 'flex' : 'hidden'}`}>
+                <div className="glass-panel rounded-2xl border border-white/10 shadow-2xl overflow-hidden bg-slate-950/40 backdrop-blur-md relative flex flex-col">
                   {/* Premium Cover Banner */}
-                  <div className="h-28 sm:h-36 bg-gradient-to-r from-cyan-900 via-indigo-950 to-purple-950 relative overflow-hidden flex items-center justify-center">
+                  <div className="h-16 sm:h-32 bg-gradient-to-r from-cyan-900 via-indigo-950 to-purple-950 relative overflow-hidden flex items-center justify-center">
                     <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_white_1px,_transparent_1px)] bg-[size:10px_10px]"></div>
-                    <div className="absolute -top-10 -left-10 w-32 h-32 bg-cyan-400/20 rounded-full blur-[40px]"></div>
-                    <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-purple-500/20 rounded-full blur-[40px]"></div>
-                    <span className="text-white/10 font-black italic tracking-tighter text-4xl sm:text-5xl uppercase select-none pointer-events-none transform -rotate-6">THE BONG DA</span>
+                    <div className="absolute -top-10 -left-10 w-24 h-24 bg-cyan-400/20 rounded-full blur-[30px]"></div>
+                    <div className="absolute -bottom-10 -right-10 w-24 h-24 bg-purple-500/20 rounded-full blur-[30px]"></div>
+                    <span className="text-white/10 font-black italic tracking-tighter text-2xl sm:text-4xl uppercase select-none pointer-events-none transform -rotate-6">THE BONG DA</span>
                   </div>
 
                   {/* Profile Overlay details */}
-                  <div className="px-6 pb-6 pt-1 flex flex-col items-center text-center relative">
+                  <div className="px-4 pb-4 pt-1 sm:px-6 sm:pb-6 flex flex-col items-center text-center relative">
                     {/* Avatar circle overlapping banner */}
                     <div 
-                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center border-4 border-slate-950 shadow-2xl relative select-none z-10 -mt-10 sm:-mt-12"
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center border-4 border-slate-950 shadow-2xl relative select-none z-10 -mt-8 sm:-mt-10"
                       style={{ 
                         background: getAvatarGradient(userWallTarget),
-                        boxShadow: `0 0 25px rgba(${userWallTarget === currentUser ? '244,63,94' : '59,130,246'}, 0.4)`
+                        boxShadow: `0 0 20px rgba(${userWallTarget === currentUser ? '244,63,94' : '59,130,246'}, 0.35)`
                       }}
                     >
-                      <span className="text-3xl sm:text-4xl font-black text-white">{userWallTarget.charAt(0).toUpperCase()}</span>
+                      <span className="text-2xl sm:text-3xl font-black text-white">{userWallTarget.charAt(0).toUpperCase()}</span>
                       
                       {/* Floating level badge */}
-                      <span className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-500 to-amber-600 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full border-2 border-slate-950 shadow-md">
+                      <span className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-500 to-amber-600 text-slate-950 text-[9px] font-black px-1.5 py-0.5 rounded-full border border-slate-950 shadow-md">
                         Lv.{wallData.level || 1}
                       </span>
                     </div>
 
-                    <h3 className="text-xl sm:text-2xl font-black text-white mt-3 uppercase tracking-wider flex items-center gap-1.5 justify-center">
+                    <h3 className="text-lg sm:text-xl font-black text-white mt-2 uppercase tracking-wider flex items-center gap-1.5 justify-center">
                       {userWallTarget}
                       {userWallTarget === currentUser && (
-                        <span className="text-[9px] bg-fuchsia-950/40 text-fuchsia-400 border border-fuchsia-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider font-extrabold">BẠN</span>
+                        <span className="text-[8px] bg-fuchsia-950/40 text-fuchsia-400 border border-fuchsia-500/20 px-1.5 py-0.5 rounded-full uppercase tracking-wider font-extrabold">BẠN</span>
                       )}
                     </h3>
                     
                     {/* Squad OVR badge */}
-                    <div className="mt-1 mb-4 flex items-center gap-1">
+                    <div className="mt-1 mb-3 flex items-center gap-1">
                       {(() => {
                         const ovrVal = wallData.squad ? Math.round(wallData.squad.reduce((acc, card) => acc + Math.max(card.stats.attack, card.stats.defense, card.stats.control), 0) / 11) : 0;
                         return (
-                          <span className="text-xs px-3 py-1 bg-cyan-950/40 text-cyan-400 border border-cyan-500/20 font-black rounded-full uppercase tracking-widest">
+                          <span className="text-[10px] px-2.5 py-0.5 bg-cyan-950/40 text-cyan-400 border border-cyan-500/20 font-black rounded-full uppercase tracking-wider">
                             🔥 {ovrVal || 0} OVR Đội Hình
                           </span>
                         );
@@ -4807,12 +4844,12 @@ export default function App() {
                     </div>
 
                     {/* XP Progress */}
-                    <div className="w-full mb-6">
-                      <div className="flex justify-between text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 px-1">
+                    <div className="w-full mb-4">
+                      <div className="flex justify-between text-[8px] font-bold text-gray-400 uppercase tracking-widest mb-1 px-1">
                         <span>Cấp Độ HLV</span>
                         <span>{wallData.xp || 0} / {(wallData.level || 1) * 100} XP</span>
                       </div>
-                      <div className="w-full bg-black/60 rounded-full h-2 border border-white/5 overflow-hidden relative">
+                      <div className="w-full bg-black/60 rounded-full h-1.5 border border-white/5 overflow-hidden relative">
                         <div 
                           className="bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-500 h-full rounded-full transition-all duration-1000"
                           style={{ width: `${Math.min(100, ((wallData.xp || 0) / ((wallData.level || 1) * 100)) * 100)}%` }}
@@ -4821,34 +4858,34 @@ export default function App() {
                     </div>
 
                     {/* Battle Stats Dashboard */}
-                    <div className="w-full bg-black/30 border border-white/5 rounded-2xl p-4 flex flex-col gap-3.5 mb-6 text-center">
-                      <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-white/5 pb-2">Thống Kê Chiến Tích 🏆</div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-slate-900/50 border border-white/5 p-2.5 rounded-xl">
-                          <div className="text-[9px] text-gray-400 font-bold uppercase">Trận đã đấu</div>
-                          <div className="text-lg font-black text-white">{wallData.stats?.played || 0}</div>
+                    <div className="w-full bg-black/30 border border-white/5 rounded-xl p-3 flex flex-col gap-2 mb-4 text-center">
+                      <div className="text-[9px] font-black text-gray-500 uppercase tracking-widest border-b border-white/5 pb-1.5">Thống Kê Chiến Tích 🏆</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-slate-900/50 border border-white/5 p-1.5 rounded-lg">
+                          <div className="text-[8px] text-gray-400 font-bold uppercase">Đã đấu</div>
+                          <div className="text-sm font-black text-white">{wallData.stats?.played || 0}</div>
                         </div>
-                        <div className="bg-green-950/20 border border-green-500/10 p-2.5 rounded-xl">
-                          <div className="text-[9px] text-green-400 font-bold uppercase">Thắng</div>
-                          <div className="text-lg font-black text-green-400">{wallData.stats?.wins || 0}</div>
+                        <div className="bg-green-950/20 border border-green-500/10 p-1.5 rounded-lg">
+                          <div className="text-[8px] text-green-400 font-bold uppercase">Thắng</div>
+                          <div className="text-sm font-black text-green-400">{wallData.stats?.wins || 0}</div>
                         </div>
-                        <div className="bg-yellow-950/20 border border-yellow-500/10 p-2.5 rounded-xl">
-                          <div className="text-[9px] text-yellow-400 font-bold uppercase">Hòa</div>
-                          <div className="text-lg font-black text-yellow-400">{wallData.stats?.draws || 0}</div>
+                        <div className="bg-yellow-950/20 border border-yellow-500/10 p-1.5 rounded-lg">
+                          <div className="text-[8px] text-yellow-400 font-bold uppercase">Hòa</div>
+                          <div className="text-sm font-black text-yellow-400">{wallData.stats?.draws || 0}</div>
                         </div>
-                        <div className="bg-red-950/20 border border-red-500/10 p-2.5 rounded-xl">
-                          <div className="text-[9px] text-red-400 font-bold uppercase">Thua</div>
-                          <div className="text-lg font-black text-red-400">{wallData.stats?.losses || 0}</div>
+                        <div className="bg-red-950/20 border border-red-500/10 p-1.5 rounded-lg">
+                          <div className="text-[8px] text-red-400 font-bold uppercase">Thua</div>
+                          <div className="text-sm font-black text-red-400">{wallData.stats?.losses || 0}</div>
                         </div>
                       </div>
                     </div>
 
                     {/* Quick Interactive Actions */}
-                    <div className="w-full flex flex-col gap-2 mt-auto">
+                    <div className="w-full flex flex-col gap-1.5 mt-auto">
                       {userWallTarget !== currentUser ? (
                         <>
                           <button 
-                            className="btn !bg-violet-600 hover:!bg-violet-500 w-full flex items-center justify-center gap-2 !py-3 font-bold text-sm tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-violet-900/30"
+                            className="btn !bg-violet-600 hover:!bg-violet-500 w-full flex items-center justify-center gap-2 !py-2.5 font-bold text-xs tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-violet-900/30"
                             onClick={() => {
                               playFx('click');
                               setGameState('lobby');
@@ -4863,11 +4900,11 @@ export default function App() {
                               }, 300);
                             }}
                           >
-                            <MessageSquare size={16} /> Nhắn Tin Riêng
+                            <MessageSquare size={14} /> Nhắn Tin Riêng
                           </button>
                           
                           <button 
-                            className={`btn w-full flex items-center justify-center gap-2 !py-3 font-bold text-sm tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg ${
+                            className={`btn w-full flex items-center justify-center gap-2 !py-2.5 font-bold text-xs tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg ${
                               squad.length < 11
                                 ? 'opacity-40 !bg-gray-700 cursor-not-allowed text-gray-400' 
                                 : 'bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white shadow-red-900/30'
@@ -4886,12 +4923,12 @@ export default function App() {
                               }
                             }}
                           >
-                            <Swords size={16} /> Thách Đấu Ngay
+                            <Swords size={14} /> Thách Đấu Ngay
                           </button>
                         </>
                       ) : (
                         <button 
-                          className="btn !bg-indigo-600 hover:!bg-indigo-500 w-full flex items-center justify-center gap-2 !py-3 font-bold text-sm tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg"
+                          className="btn !bg-indigo-600 hover:!bg-indigo-500 w-full flex items-center justify-center gap-2 !py-2.5 font-bold text-xs tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg hidden sm:flex"
                           onClick={() => {
                             playFx('click');
                             setGameState('profile');
@@ -4905,7 +4942,7 @@ export default function App() {
                 </div>
 
                 {/* HLV Search & Discovery Directory */}
-                <div className="glass-panel rounded-[2rem] border border-white/10 p-5 shadow-2xl bg-slate-950/40 backdrop-blur-md flex flex-col gap-4">
+                <div className={`glass-panel rounded-2xl border border-white/10 p-4 shadow-2xl bg-slate-950/40 backdrop-blur-md flex-col gap-4 w-full ${mobileSubTab === 'search' ? 'flex' : 'hidden lg:flex'}`}>
                   <div>
                     <h4 className="text-xs font-black text-cyan-400 uppercase tracking-widest flex items-center gap-1.5">
                       <span>🔍</span> Tìm Kiếm & Khám Phá HLV
@@ -4920,13 +4957,13 @@ export default function App() {
                       placeholder="Nhập tên HLV cần tìm..." 
                       value={socialSearchQuery}
                       onChange={(e) => setSocialSearchQuery(e.target.value)}
-                      className="w-full bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-xl px-3 py-2.5 pl-9 text-xs font-semibold placeholder-gray-500 focus:outline-none transition-colors text-white"
+                      className="w-full bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-xl px-3 py-2 text-xs font-semibold placeholder-gray-500 focus:outline-none transition-colors text-white"
                     />
-                    <span className="absolute left-3 top-[11px] text-[10px] text-gray-500 pointer-events-none">🔍</span>
+                    <span className="absolute left-3 top-[10px] text-[10px] text-gray-500 pointer-events-none">🔍</span>
                     {socialSearchQuery && (
                       <button 
                         onClick={() => setSocialSearchQuery("")}
-                        className="absolute right-3 top-[10px] text-gray-500 hover:text-white text-xs font-bold transition-colors"
+                        className="absolute right-3 top-[8px] text-gray-500 hover:text-white text-xs font-bold transition-colors"
                       >
                         ✕
                       </button>
@@ -4992,12 +5029,13 @@ export default function App() {
                               playFx('click');
                               setUserWallTarget(coach.username);
                               setSocialWallTab('owner');
+                              setMobileSubTab('feed'); // Quay lại feed để xem tường HLV
                               setTimeout(() => {
                                 const el = document.getElementById('social-wall-panel');
                                 if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
                               }, 100);
                             }}
-                            className={`p-2.5 rounded-xl border flex items-center justify-between gap-3 hover:scale-[1.01] hover:border-cyan-500/30 hover:bg-cyan-950/10 cursor-pointer transition-all duration-200 ${
+                            className={`p-2 rounded-xl border flex items-center justify-between gap-3 hover:scale-[1.01] hover:border-cyan-500/30 hover:bg-cyan-950/10 cursor-pointer transition-all duration-200 ${
                               userWallTarget === coach.username 
                                 ? 'bg-cyan-950/20 border-cyan-500/40 ring-1 ring-cyan-500/20' 
                                 : 'bg-black/20 border-white/5'
@@ -5040,32 +5078,32 @@ export default function App() {
               </div>
 
               {/* RIGHT FEED PANEL (7/12 cols): Composer and post feed timeline */}
-              <div className="lg:col-span-7 flex flex-col gap-6 h-full max-h-[85vh] overflow-y-auto pr-1 hide-scrollbar">
+              <div className={`lg:col-span-7 flex-col gap-4 h-full max-h-[85vh] overflow-y-auto pr-1 hide-scrollbar w-full ${mobileSubTab === 'feed' ? 'flex' : 'hidden lg:flex'}`}>
                 
                 {/* 1. Composer (Only for the wall owner, when not on global feed tab) */}
                 {userWallTarget === currentUser && socialWallTab !== 'global' && (
-                  <div className="glass-panel rounded-[2rem] p-5 border border-white/10 shadow-xl bg-slate-950/40 backdrop-blur-md flex gap-3.5">
+                  <div className="glass-panel rounded-2xl p-4 border border-white/10 shadow-xl bg-slate-950/40 backdrop-blur-md flex gap-3">
                     <div 
-                      className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center font-black border border-white/10 select-none text-sm"
+                      className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center font-black border border-white/10 select-none text-xs"
                       style={{ background: getAvatarGradient(currentUser) }}
                     >
                       {currentUser.charAt(0).toUpperCase()}
                     </div>
                     
-                    <div className="flex-1 flex flex-col gap-3">
+                    <div className="flex-1 flex flex-col gap-2.5">
                       <textarea
                         value={newPostText}
                         onChange={handleComposerChange}
                         placeholder="Hãy chia sẻ suy nghĩ, đội hình lý tưởng hay kinh nghiệm trận mạc bóng đá của bạn... ⚽"
                         maxLength={280}
-                        rows={3}
-                        className="w-full bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-2xl p-3 text-xs font-semibold placeholder-gray-500 focus:outline-none resize-none transition-colors leading-relaxed text-white"
+                        rows={2}
+                        className="w-full bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-xl p-2.5 text-xs font-semibold placeholder-gray-500 focus:outline-none resize-none transition-colors leading-normal text-white"
                       />
 
                       {/* Mention Autocomplete Dropdown */}
                       {showMentionDropdown && (
                         <div className="relative">
-                          <div className="absolute top-0 left-0 z-[60] bg-slate-900/95 border border-white/10 rounded-xl p-1.5 flex flex-col gap-1 w-48 shadow-2xl backdrop-blur-md animate-fade-in">
+                          <div className="absolute top-0 left-0 z-[60] bg-slate-900/95 border border-white/10 rounded-xl p-1.5 flex flex-col gap-1 w-44 shadow-2xl backdrop-blur-md animate-fade-in">
                             <div className="text-[8px] font-black text-gray-500 uppercase tracking-widest px-1.5 py-0.5 border-b border-white/5">Nhắc tên HLV:</div>
                             {getAutocompleteSuggestions().map(name => (
                               <button
@@ -5078,21 +5116,21 @@ export default function App() {
                               </button>
                             ))}
                             {getAutocompleteSuggestions().length === 0 && (
-                              <span className="text-[9px] text-gray-500 italic px-2 py-1">Không tìm thấy HLV nào</span>
+                              <span className="text-[9px] text-gray-500 italic px-2 py-1">Không tìm thấy HLV</span>
                             )}
                           </div>
                         </div>
                       )}
 
                       {/* Emoji & Quick Toolbar */}
-                      <div className="flex items-center gap-1.5 flex-wrap py-1 border-t border-white/5">
-                        <span className="text-[9px] text-gray-500 font-bold uppercase mr-1">Sinh động:</span>
+                      <div className="flex items-center gap-1 flex-wrap py-1 border-t border-white/5">
+                        <span className="text-[8px] text-gray-500 font-bold uppercase mr-1">Sinh động:</span>
                         {['⚽', '🏆', '👑', '🔥', '🎯', '🤝', '💬', '🚀', '🌟', '👏'].map(emoji => (
                           <button
                             key={emoji}
                             type="button"
                             onClick={() => insertEmoji(emoji)}
-                            className="w-6 h-6 rounded-md hover:bg-white/10 text-xs flex items-center justify-center transition-all hover:scale-110 cursor-pointer"
+                            className="w-5.5 h-5.5 rounded hover:bg-white/10 text-xs flex items-center justify-center transition-all hover:scale-110 cursor-pointer"
                           >
                             {emoji}
                           </button>
@@ -5100,7 +5138,7 @@ export default function App() {
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <span className={`text-[10px] font-bold tracking-widest ${
+                        <span className={`text-[9px] font-bold tracking-wider ${
                           newPostText.length > 250 ? 'text-red-400' : newPostText.length > 200 ? 'text-yellow-400' : 'text-gray-500'
                         }`}>
                           {newPostText.length} / 280
@@ -5109,7 +5147,7 @@ export default function App() {
                         <button
                           onClick={handleCreatePost}
                           disabled={!newPostText.trim() || newPostText.length > 280}
-                          className={`btn !py-2 !px-5 text-xs font-black uppercase tracking-wider rounded-full shadow-lg transition-all active:scale-95 cursor-pointer ${
+                          className={`btn !py-1.5 !px-4 text-[10px] font-black uppercase tracking-wider rounded-full shadow-lg transition-all active:scale-95 cursor-pointer ${
                             !newPostText.trim() || newPostText.length > 280
                               ? 'opacity-40 !bg-gray-800 cursor-not-allowed text-gray-500 shadow-none'
                               : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-cyan-900/30'
@@ -5124,27 +5162,27 @@ export default function App() {
 
                 {/* 2. Composer for global tab (everyone can post globally) */}
                 {socialWallTab === 'global' && (
-                  <div className="glass-panel rounded-[2rem] p-5 border border-white/10 shadow-xl bg-slate-950/40 backdrop-blur-md flex gap-3.5">
+                  <div className="glass-panel rounded-2xl p-4 border border-white/10 shadow-xl bg-slate-950/40 backdrop-blur-md flex gap-3">
                     <div
-                      className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center font-black border border-white/10 select-none text-sm"
+                      className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center font-black border border-white/10 select-none text-xs"
                       style={{ background: getAvatarGradient(currentUser) }}
                     >
                       {currentUser.charAt(0).toUpperCase()}
                     </div>
-                    <div className="flex-1 flex flex-col gap-3">
+                    <div className="flex-1 flex flex-col gap-2.5">
                        <textarea
                         value={newPostText}
                         onChange={handleComposerChange}
                         placeholder="Chia sẻ với cộng đồng HLV toàn cầu... ⚽🌍"
                         maxLength={280}
-                        rows={3}
-                        className="w-full bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-2xl p-3 text-xs font-semibold placeholder-gray-500 focus:outline-none resize-none transition-colors leading-relaxed text-white"
+                        rows={2}
+                        className="w-full bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-xl p-2.5 text-xs font-semibold placeholder-gray-500 focus:outline-none resize-none transition-colors leading-normal text-white"
                       />
 
                       {/* Mention Autocomplete Dropdown */}
                       {showMentionDropdown && (
                         <div className="relative">
-                          <div className="absolute top-0 left-0 z-[60] bg-slate-900/95 border border-white/10 rounded-xl p-1.5 flex flex-col gap-1 w-48 shadow-2xl backdrop-blur-md animate-fade-in">
+                          <div className="absolute top-0 left-0 z-[60] bg-slate-900/95 border border-white/10 rounded-xl p-1.5 flex flex-col gap-1 w-44 shadow-2xl backdrop-blur-md animate-fade-in">
                             <div className="text-[8px] font-black text-gray-500 uppercase tracking-widest px-1.5 py-0.5 border-b border-white/5">Nhắc tên HLV:</div>
                             {getAutocompleteSuggestions().map(name => (
                               <button
@@ -5157,7 +5195,7 @@ export default function App() {
                               </button>
                             ))}
                             {getAutocompleteSuggestions().length === 0 && (
-                              <span className="text-[9px] text-gray-500 italic px-2 py-1">Không tìm thấy HLV nào</span>
+                              <span className="text-[9px] text-gray-500 italic px-2 py-1">Không tìm thấy HLV</span>
                             )}
                           </div>
                         </div>
@@ -5165,13 +5203,13 @@ export default function App() {
 
                       {/* Emoji & Quick Toolbar */}
                       <div className="flex items-center gap-1.5 flex-wrap py-1 border-t border-white/5">
-                        <span className="text-[9px] text-gray-500 font-bold uppercase mr-1">Sinh động:</span>
+                        <span className="text-[8px] text-gray-500 font-bold uppercase mr-1">Sinh động:</span>
                         {['⚽', '🏆', '👑', '🔥', '🎯', '🤝', '💬', '🚀', '🌟', '👏'].map(emoji => (
                           <button
                             key={emoji}
                             type="button"
                             onClick={() => insertEmoji(emoji)}
-                            className="w-6 h-6 rounded-md hover:bg-white/10 text-xs flex items-center justify-center transition-all hover:scale-110 cursor-pointer"
+                            className="w-5.5 h-5.5 rounded hover:bg-white/10 text-xs flex items-center justify-center transition-all hover:scale-110 cursor-pointer"
                           >
                             {emoji}
                           </button>
@@ -5179,11 +5217,11 @@ export default function App() {
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <span className={`text-[10px] font-bold tracking-widest ${ newPostText.length > 250 ? 'text-red-400' : newPostText.length > 200 ? 'text-yellow-400' : 'text-gray-500' }`}>{newPostText.length} / 280</span>
+                        <span className={`text-[9px] font-bold tracking-wider ${ newPostText.length > 250 ? 'text-red-400' : newPostText.length > 200 ? 'text-yellow-400' : 'text-gray-500' }`}>{newPostText.length} / 280</span>
                         <button
                           onClick={handleCreatePost}
                           disabled={!newPostText.trim() || newPostText.length > 280}
-                          className={`btn !py-2 !px-5 text-xs font-black uppercase tracking-wider rounded-full shadow-lg transition-all active:scale-95 cursor-pointer ${ !newPostText.trim() || newPostText.length > 280 ? 'opacity-40 !bg-gray-800 cursor-not-allowed text-gray-500 shadow-none' : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-cyan-900/30' }`}
+                          className={`btn !py-1.5 !px-4 text-[10px] font-black uppercase tracking-wider rounded-full shadow-lg transition-all active:scale-95 cursor-pointer ${ !newPostText.trim() || newPostText.length > 280 ? 'opacity-40 !bg-gray-800 cursor-not-allowed text-gray-500 shadow-none' : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-cyan-900/30' }`}
                         >
                           🌍 Đăng Toàn Cầu
                         </button>
@@ -5205,8 +5243,8 @@ export default function App() {
                   {(() => {
                     const displayPosts = socialWallTab === 'global' ? globalPosts : userWallPosts;
                     if (displayPosts.length === 0) return (
-                      <div className="glass-panel rounded-[2rem] p-12 text-center border border-white/5 bg-slate-900/10">
-                        <div className="text-3xl mb-2">{socialWallTab === 'global' ? '🌍' : '📭'}</div>
+                      <div className="glass-panel rounded-xl p-6 sm:p-10 text-center border border-white/5 bg-slate-900/10">
+                        <div className="text-2xl mb-1.5">{socialWallTab === 'global' ? '🌍' : '📭'}</div>
                         <div className="text-xs text-gray-400 font-bold uppercase mb-1">{socialWallTab === 'global' ? 'Feed toàn cầu chưa có bài viết' : 'HLV chưa đăng bài nào'}</div>
                         <p className="text-[10px] text-gray-500 font-medium">{socialWallTab === 'global' ? 'Hãy là người đầu tiên chia sẻ với cộng đồng!' : 'Hãy chuyển sang tab Khám Phá để xem feed toàn cầu.'}</p>
                       </div>
@@ -5222,13 +5260,13 @@ export default function App() {
                       return (
                         <div
                           key={post.id}
-                          className={`glass-panel rounded-3xl p-5 flex flex-col gap-4 hover:border-white/15 transition-all duration-300 shadow-sm ${
+                          className={`glass-panel rounded-xl p-3.5 sm:p-4.5 flex flex-col gap-3 hover:border-white/15 transition-all duration-300 shadow-sm ${
                             isMyPost ? 'border border-cyan-500/20 bg-cyan-950/10' : 'border border-white/5 bg-slate-950/20'
                           }`}
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2 sm:gap-3">
                             <button
-                              className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-sm font-black border border-white/5 select-none cursor-pointer hover:opacity-80 transition-opacity"
+                              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full shrink-0 flex items-center justify-center text-xs sm:text-sm font-black border border-white/5 select-none cursor-pointer hover:opacity-80 transition-opacity"
                               style={{ background: getAvatarGradient(post.author) }}
                               onClick={() => { if (post.author !== userWallTarget) { setUserWallTarget(post.author); setSocialWallTab('owner'); } }}
                               title={`Xem tường của ${post.author}`}
@@ -5238,58 +5276,58 @@ export default function App() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <button
-                                  className="font-extrabold text-sm text-white hover:text-cyan-400 transition-colors cursor-pointer"
+                                  className="font-extrabold text-xs sm:text-sm text-white hover:text-cyan-400 transition-colors cursor-pointer"
                                   onClick={() => { setUserWallTarget(post.author); setSocialWallTab('owner'); }}
                                 >
                                   {post.author}
                                 </button>
-                                <span className="text-[9px] bg-white/10 text-gray-400 px-1.5 py-0.5 rounded border border-white/10 font-bold shrink-0">Lv.{post.authorLevel || 1}</span>
-                                {isMyPost && <span className="text-[9px] bg-cyan-950/40 text-cyan-400 border border-cyan-500/20 px-1.5 py-0.5 rounded font-extrabold">Bạn</span>}
+                                <span className="text-[8px] bg-white/10 text-gray-400 px-1 py-0.5 rounded border border-white/10 font-bold shrink-0">Lv.{post.authorLevel || 1}</span>
+                                {isMyPost && <span className="text-[8px] bg-cyan-950/40 text-cyan-400 border border-cyan-500/20 px-1 py-0.5 rounded font-extrabold">Bạn</span>}
                               </div>
-                              <span className="text-[9px] text-gray-500 font-bold font-mono block mt-0.5">{getRelativeTime(post.timestamp)}</span>
+                              <span className="text-[8px] text-gray-500 font-bold font-mono block mt-0.5">{getRelativeTime(post.timestamp)}</span>
                             </div>
                           </div>
 
-                          <p className="text-xs sm:text-sm text-gray-100 font-medium leading-relaxed whitespace-pre-wrap px-1">
+                          <p className="text-xs sm:text-sm text-gray-100 font-medium leading-relaxed whitespace-pre-wrap px-0.5">
                             {renderPostText(post.content)}
                           </p>
 
-                          <div className="flex items-center gap-6 border-t border-b border-white/5 py-2 px-1">
+                          <div className="flex items-center gap-4 sm:gap-6 border-t border-b border-white/5 py-1.5 px-0.5">
                             <button
                               onClick={() => handleLikePost(post.id)}
                               className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-75 hover:opacity-80 cursor-pointer ${ hasLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-400' }`}
                             >
-                              <span className="text-base select-none">{hasLiked ? '❤️' : '🤍'}</span>
-                              <span className="text-[11px] font-extrabold">{likesCount} Thích</span>
+                              <span className="text-sm select-none">{hasLiked ? '❤️' : '🤍'}</span>
+                              <span className="text-[10px] font-extrabold">{likesCount} Thích</span>
                             </button>
                             <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500">
-                              <span className="text-base select-none">💬</span>
-                              <span className="text-[11px] font-extrabold">{commentsList.length} Bình luận</span>
+                              <span className="text-sm select-none">💬</span>
+                              <span className="text-[10px] font-extrabold">{commentsList.length} Bình luận</span>
                             </div>
                           </div>
 
                           {commentsList.length > 0 && (
-                            <div className="flex flex-col gap-2 pl-3 sm:pl-4 border-l-2 border-white/5 mt-1">
+                            <div className="flex flex-col gap-1.5 pl-2 sm:pl-3 border-l border-white/10 mt-0.5">
                               {commentsList.map((comm) => (
-                                <div key={comm.id} className="flex gap-2.5 items-start text-xs bg-black/10 p-2.5 rounded-xl border border-white/5 animate-fade-in">
-                                  <div className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[9px] font-black border border-white/5 select-none" style={{ background: getAvatarGradient(comm.author) }}>
+                                <div key={comm.id} className="flex gap-2 items-start text-xs bg-black/10 p-2 rounded-xl border border-white/5 animate-fade-in">
+                                  <div className="w-5.5 h-5.5 rounded-full shrink-0 flex items-center justify-center text-[8px] font-black border border-white/5 select-none" style={{ background: getAvatarGradient(comm.author) }}>
                                     {comm.author.charAt(0).toUpperCase()}
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                      <span className="font-extrabold text-[11px] text-white">{comm.author}</span>
-                                      <span className="text-[8px] bg-white/10 text-gray-400 px-1 rounded border border-white/10 font-bold">Lv.{comm.authorLevel || 1}</span>
-                                      <span className="text-[8px] text-gray-500 font-bold font-mono ml-auto">{getRelativeTime(comm.timestamp)}</span>
+                                    <div className="flex items-center gap-1 flex-wrap">
+                                      <span className="font-extrabold text-[10px] text-white">{comm.author}</span>
+                                      <span className="text-[7px] bg-white/10 text-gray-400 px-1 rounded border border-white/10 font-bold">Lv.{comm.authorLevel || 1}</span>
+                                      <span className="text-[7px] text-gray-500 font-bold font-mono ml-auto">{getRelativeTime(comm.timestamp)}</span>
                                     </div>
-                                    <p className="text-[11px] text-gray-300 font-semibold leading-relaxed mt-1 whitespace-pre-wrap">{renderPostText(comm.content)}</p>
+                                    <p className="text-[10px] text-gray-300 font-semibold leading-relaxed mt-0.5 whitespace-pre-wrap">{renderPostText(comm.content)}</p>
                                   </div>
                                 </div>
                               ))}
                             </div>
                           )}
 
-                          <div className="flex gap-3 items-center mt-1 border-t border-white/5 pt-3">
-                            <div className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[10px] font-black border border-white/5 select-none" style={{ background: getAvatarGradient(currentUser) }}>
+                          <div className="flex gap-2.5 items-center mt-0.5 border-t border-white/5 pt-2">
+                            <div className="w-6.5 h-6.5 rounded-full shrink-0 flex items-center justify-center text-[8px] font-black border border-white/5 select-none" style={{ background: getAvatarGradient(currentUser) }}>
                               {currentUser.charAt(0).toUpperCase()}
                             </div>
                             <form onSubmit={(e) => { e.preventDefault(); handleCreateComment(post.id); }} className="flex-1 flex gap-2">
@@ -5299,7 +5337,7 @@ export default function App() {
                                 onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))}
                                 placeholder="Bình luận ngắn... ✍️"
                                 maxLength={200}
-                                className="flex-1 bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-full px-3 py-1.5 text-xs font-semibold focus:outline-none placeholder-gray-500 transition-colors text-white"
+                                className="flex-1 bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-full px-3 py-1 text-xs font-semibold focus:outline-none placeholder-gray-500 transition-colors text-white"
                               />
                               <button
                                 type="submit"
