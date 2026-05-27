@@ -117,6 +117,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
   const [opponentDeckCount, setOpponentDeckCount] = useState(squad.length);
   const [myScore, setMyScore] = useState(0);
   const [opponentScore, setOpponentScore] = useState(0);
+  const [opponentUsername, setOpponentUsername] = useState('Đối Thủ');
 
   // Simultaneous PvP state variables
   const [phase, setPhase] = useState('select_card'); // 'waiting_start', 'select_card', 'waiting', 'result'
@@ -511,6 +512,9 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
   const handleNetworkData = useCallback((data) => {
     if (data.type === 'ready') {
       console.log('[PVP] Guest connected and ready! Initializing first round...');
+      if (data.username) {
+        setOpponentUsername(data.username);
+      }
       if (data.squad) {
         setOpponentSquad(data.squad);
         opponentSquadRef.current = data.squad;
@@ -528,10 +532,13 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       updateActiveStat(firstStat);
       updatePhase('select_card');
       setTimeout(() => {
-        sendData({ type: 'start_round', stat: firstStat, roundIndex: 0, weatherIdx, timeIdx, seed: roundSeed, squad: squad });
+        sendData({ type: 'start_round', stat: firstStat, roundIndex: 0, weatherIdx, timeIdx, seed: roundSeed, squad: squad, username: currentUser });
       }, 300);
     }
     else if (data.type === 'start_round') {
+      if (data.username) {
+        setOpponentUsername(data.username);
+      }
       if (roundTimeoutRef.current) {
         clearTimeout(roundTimeoutRef.current);
         roundTimeoutRef.current = null;
@@ -704,7 +711,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
             setupConnectionHandlers(conn);
             // GUEST sends ready signal once open!
             setTimeout(() => {
-              conn.send({ type: 'ready', squad: squad });
+              conn.send({ type: 'ready', squad: squad, username: currentUser });
             }, 500);
           });
         } else {
@@ -837,7 +844,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       setupConnectionHandlers(conn);
       // GUEST sends ready signal on manual connect
       setTimeout(() => {
-        conn.send({ type: 'ready', squad: squad });
+        conn.send({ type: 'ready', squad: squad, username: currentUser });
       }, 500);
     });
   };
@@ -1036,7 +1043,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
             <User className="text-red-400 w-5 h-5" />
           </div>
           <div>
-            <div className="text-[9px] font-bold text-red-400 uppercase tracking-widest">Đối Thủ ({opponentDeckCount} lá)</div>
+            <div className="text-[9px] font-bold text-red-400 uppercase tracking-widest">{opponentUsername} ({opponentDeckCount} lá)</div>
             <div className="text-3xl sm:text-4xl font-black text-white leading-none">{opponentScore}</div>
           </div>
         </div>
@@ -1109,7 +1116,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
               </button>
               <button 
                 className="flex-[0.6] flex items-center justify-center gap-2 bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 font-bold tracking-widest text-[10px] sm:text-xs py-3.5 px-4 rounded-2xl border border-rose-500/20 transition-all cursor-pointer active:scale-95" 
-                onClick={() => onExit(myScore === opponentScore ? 'draw' : 'lose')}
+                onClick={() => onExit(myScore === opponentScore ? 'draw' : 'lose', opponentUsername, myScore, opponentScore)}
               >
                 THOÁT
               </button>
@@ -1117,7 +1124,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
             {myScore > opponentScore && (
               <button 
                 className="w-full mt-3 flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-600 to-yellow-400 hover:from-yellow-500 hover:to-amber-400 text-black font-black tracking-widest text-xs sm:text-sm py-4 px-4 rounded-2xl border border-yellow-400 shadow-[0_0_20px_rgba(234,179,8,0.4)] transition-all cursor-pointer active:scale-95 animate-pulse" 
-                onClick={() => { onWin(); onExit('win'); }}
+                onClick={() => { onWin(); onExit('win', opponentUsername, myScore, opponentScore); }}
               >
                 🎁 NHẬN PHẦN THƯỞNG
               </button>
