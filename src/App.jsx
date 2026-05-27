@@ -3193,7 +3193,7 @@ export default function App() {
           {/* Top Nav */}
           <nav className="landing-nav">
             <div className="landing-nav-logo">
-              <div className="landing-nav-logo-badge">⚽</div>
+              <img src="/favicon.png" alt="Logo" className="w-8 h-8 rounded-lg object-contain shadow-md mr-1.5" />
               <div>
                 <span className="landing-nav-logo-text">Ultimate Card</span>
                 <span className="landing-nav-logo-sub">World Cup 2026</span>
@@ -3720,8 +3720,9 @@ export default function App() {
 
           <div className={`app-container relative z-10 ${gameState === 'lobby' ? 'lg:max-w-none lg:w-full lg:mx-0 lg:pr-0 lg:pl-8' : ''}`}>
             {gameState !== 'lobby' && (
-              <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-gray-100 to-gray-400 drop-shadow-[0_5px_15px_rgba(0,0,0,0.8)] text-center mb-8 uppercase cursor-pointer" onClick={() => setGameState('lobby')}>
-                WC 2026 PANINI
+              <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-gray-100 to-gray-400 drop-shadow-[0_5px_15px_rgba(0,0,0,0.8)] text-center mb-8 uppercase cursor-pointer flex items-center justify-center gap-3" onClick={() => setGameState('lobby')}>
+                <img src="/favicon.png" alt="Logo" className="w-8 h-8 md:w-10 md:h-10 rounded-lg object-contain shadow-[0_0_10px_rgba(255,255,255,0.15)] border border-white/10" />
+                <span>WC 2026 PANINI</span>
               </h1>
             )}
 
