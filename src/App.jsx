@@ -473,7 +473,12 @@ const BANNERS = [
   "/wc2026_kids_banner.png",
   "/wc2026_banner_2.png",
   "/wc2026_banner_3.png",
-  "/wc2026_banner_4.png"
+  "/wc2026_banner_4.png",
+  "/wc2026_banner_5.png",
+  "/wc2026_banner_6.png",
+  "/wc2026_banner_7.png",
+  "/wc2026_banner_8.png",
+  "/wc2026_banner_9.png"
 ];
 
 // --- Main App Component ---
