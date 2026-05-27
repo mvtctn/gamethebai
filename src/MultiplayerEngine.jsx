@@ -473,7 +473,14 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
           roundSeedRef.current = roundSeed;
           updateActiveStat(nextStat);
           updatePhase('select_card');
-          sendData({ type: 'start_round', stat: nextStat, roundIndex: roundCountRef.current, seed: roundSeed });
+          sendData({ 
+            type: 'start_round', 
+            stat: nextStat, 
+            roundIndex: roundCountRef.current, 
+            seed: roundSeed,
+            weatherIdx: ENV_WEATHER.indexOf(matchEnvironment.weather),
+            timeIdx: ENV_TIME.indexOf(matchEnvironment.time)
+          });
         } else {
           if (phaseRef.current === 'result') {
             updatePhase('waiting_start');
@@ -584,6 +591,9 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       setOpponentDeckCount(data.opponentDeckCount);
       updateActiveStat(data.activeStat);
       updatePhase(data.phase);
+      if (data.weatherIdx !== undefined && data.timeIdx !== undefined) {
+        setMatchEnvironment({ weather: ENV_WEATHER[data.weatherIdx], time: ENV_TIME[data.timeIdx] });
+      }
       setIsReconnecting(false);
       setRoundResultMsg('Đã kết nối lại thành công! Tiếp tục trận đấu.');
       playFx('winPoint');
@@ -635,7 +645,9 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
           opponentScore: opponentScoreRef.current,
           opponentDeckCount: myDeckRef.current.length,
           activeStat: activeStatRef.current,
-          phase: phaseRef.current
+          phase: phaseRef.current,
+          weatherIdx: ENV_WEATHER.indexOf(matchEnvironment.weather),
+          timeIdx: ENV_TIME.indexOf(matchEnvironment.time)
         });
       }
       setRoundResultMsg('Đã kết nối lại thành công! Trận đấu tiếp tục.');
@@ -935,10 +947,20 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     );
   }
 
+  // Dynamic background
+  const getArenaBg = () => {
+    switch (matchEnvironment.time.key) {
+      case 'Night': return 'linear-gradient(180deg, #0d0015 0%, #080818 50%, #000d1a 100%)';
+      case 'Noon': return 'linear-gradient(180deg, #0ea5e9 0%, #38bdf8 50%, #7dd3fc 100%)';
+      case 'Sunset': return 'linear-gradient(180deg, #c2410c 0%, #ea580c 50%, #f97316 100%)';
+      default: return 'linear-gradient(180deg, #0d0015 0%, #080818 50%, #000d1a 100%)';
+    }
+  };
+
   // ===== MÀN HÌNH THI ĐẤU =====
   return (
     <div className="w-full h-[100dvh] flex flex-col overflow-hidden animate-fade-in relative z-10"
-      style={{ background: 'linear-gradient(180deg, #0d0015 0%, #080818 50%, #000d1a 100%)' }}>
+      style={{ background: getArenaBg() }}>
 
       {/* HUD điểm số */}
       <div className="flex-none flex items-center justify-between px-4 py-2 sm:py-3 border-b border-white/10 bg-black/80 shrink-0">

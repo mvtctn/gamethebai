@@ -6268,11 +6268,22 @@ export default function App() {
         </div>
       )}
 
+  // Dynamic background for AI match
+  const getArenaBg = () => {
+    switch (matchEnvironment.time.key) {
+      case 'Night': return 'linear-gradient(180deg, #0d0015 0%, #080818 50%, #000d1a 100%)';
+      case 'Noon': return 'linear-gradient(180deg, #0ea5e9 0%, #38bdf8 50%, #7dd3fc 100%)';
+      case 'Sunset': return 'linear-gradient(180deg, #c2410c 0%, #ea580c 50%, #f97316 100%)';
+      default: return 'linear-gradient(180deg, #0d0015 0%, #080818 50%, #000d1a 100%)';
+    }
+  };
+
       {gameState === 'matchEngine' && (
         <div 
-          className={`w-full h-[100dvh] flex flex-col overflow-hidden bg-black/50 animate-fade-in relative z-10 ${
+          className={`w-full h-[100dvh] flex flex-col overflow-hidden animate-fade-in relative z-10 ${
             matchPhase === 'roundResult' && playedCardIds.length < 11 ? 'cursor-pointer' : ''
           }`}
+          style={{ background: getArenaBg() }}
           onClick={dismissRoundResult}
         >
           
