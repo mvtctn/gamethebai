@@ -3093,15 +3093,15 @@ export default function App() {
         setSelectedStat(null);
         setCurrentAiCard(null);
         
-        // Fix: Automatically trigger AI attack if next turn is AI's turn
+        // If the next round is an AI-initiated turn (odd rounds), pre-trigger AI attack selection
         const nextRoundPlayedCount = playedCardIds.length;
-        if (nextRoundPlayedCount % 2 === 0) {
-          setTimeout(() => triggerAiAttack(nextRoundPlayedCount), 500);
+        if (nextRoundPlayedCount % 2 !== 0) {
+          triggerAiTurn(playedCardIds, aiHand);
         }
       }, 6000);
       return () => clearTimeout(timer);
     }
-  }, [gameState, matchPhase, playedCardIds.length]);
+  }, [gameState, matchPhase, playedCardIds.length, aiHand]);
 
   const dismissRoundResult = () => {
     if (matchPhase === 'roundResult' && playedCardIds.length < 11) {
@@ -6560,7 +6560,7 @@ export default function App() {
                   {playedCardIds.length >= 11 ? (
                     <button className="mt-4 px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-slate-950 font-black tracking-widest uppercase rounded-full shadow-lg pointer-events-auto cursor-pointer" onClick={(e) => { e.stopPropagation(); playFx('click'); nextRound(); }}>XEM KẾT QUẢ 🏆</button>
                   ) : (
-                    <div className="mt-4 text-amber-400 text-[10px] font-bold tracking-widest uppercase bg-black/85 px-6 py-2.5 rounded-full border border-amber-500/30 shadow-lg pointer-events-auto cursor-pointer animate-pulse">CHẠM ĐỂ TIẾP TỤC ⚽</div>
+                    <div className="mt-4 text-amber-400 text-[10px] font-bold tracking-widest uppercase bg-black/85 px-6 py-2.5 rounded-full border border-amber-500/30 shadow-lg pointer-events-auto cursor-pointer animate-pulse" onClick={(e) => { e.stopPropagation(); dismissRoundResult(); }}>CHẠM ĐỂ TIẾP TỤC ⚽</div>
                   )}
                 </div>
               )}
