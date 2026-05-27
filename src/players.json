@@ -6,8 +6,8 @@
     "type": "Golden Baller",
     "stats": {
       "attack": 97,
-      "defense": 63,
-      "control": 93
+      "defense": 40,
+      "control": 79
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/6/6b/Lionel_Messi_White_House_2026_%283x4_cropped%29.jpg"
   },
@@ -18,8 +18,8 @@
     "type": "Base",
     "stats": {
       "attack": 82,
-      "defense": 48,
-      "control": 78
+      "defense": 34,
+      "control": 67
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/6/6b/Lionel_Messi_White_House_2026_%283x4_cropped%29.jpg"
   },
@@ -30,8 +30,8 @@
     "type": "Golden Baller",
     "stats": {
       "attack": 96,
-      "defense": 57,
-      "control": 94
+      "defense": 40,
+      "control": 78
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/6/66/Picture_with_Mbapp%C3%A9_%28cropped_and_rotated%29.jpg"
   },
@@ -42,8 +42,8 @@
     "type": "Base",
     "stats": {
       "attack": 81,
-      "defense": 42,
-      "control": 79
+      "defense": 34,
+      "control": 66
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/6/66/Picture_with_Mbapp%C3%A9_%28cropped_and_rotated%29.jpg"
   },
@@ -54,8 +54,8 @@
     "type": "Golden Baller",
     "stats": {
       "attack": 98,
-      "defense": 61,
-      "control": 92
+      "defense": 41,
+      "control": 80
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/71/Erling_Haaland_June_2025.jpg"
   },
@@ -66,8 +66,8 @@
     "type": "Base",
     "stats": {
       "attack": 83,
-      "defense": 46,
-      "control": 77
+      "defense": 34,
+      "control": 68
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/71/Erling_Haaland_June_2025.jpg"
   },
@@ -77,8 +77,8 @@
     "nation": "gb-eng",
     "type": "Golden Baller",
     "stats": {
-      "attack": 96,
-      "defense": 53,
+      "attack": 82,
+      "defense": 55,
       "control": 96
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/f/f9/25th_Laureus_World_Sports_Awards_-_Red_Carpet_-_Jude_Bellingham_-_240422_190551-2_%28cropped%29.jpg"
@@ -89,8 +89,8 @@
     "nation": "gb-eng",
     "type": "Base",
     "stats": {
-      "attack": 81,
-      "defense": 38,
+      "attack": 69,
+      "defense": 46,
       "control": 81
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/f/f9/25th_Laureus_World_Sports_Awards_-_Red_Carpet_-_Jude_Bellingham_-_240422_190551-2_%28cropped%29.jpg"
@@ -102,8 +102,8 @@
     "type": "Golden Baller",
     "stats": {
       "attack": 95,
-      "defense": 53,
-      "control": 91
+      "defense": 39,
+      "control": 77
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/c/c6/2023_05_06_Final_de_la_Copa_del_Rey_-_52879242230_%28cropped%29.jpg"
   },
@@ -114,8 +114,8 @@
     "type": "Base",
     "stats": {
       "attack": 80,
-      "defense": 38,
-      "control": 76
+      "defense": 33,
+      "control": 65
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/c/c6/2023_05_06_Final_de_la_Copa_del_Rey_-_52879242230_%28cropped%29.jpg"
   },
@@ -125,9 +125,9 @@
     "nation": "be",
     "type": "Golden Baller",
     "stats": {
-      "attack": 96,
-      "defense": 67,
-      "control": 91
+      "attack": 82,
+      "defense": 55,
+      "control": 96
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/40/Kevin_De_Bruyne_USMNT_v_Belgium_Mar_28_2026-64_%28cropped%29.jpg"
   },
@@ -137,9 +137,9 @@
     "nation": "be",
     "type": "Base",
     "stats": {
-      "attack": 81,
-      "defense": 52,
-      "control": 76
+      "attack": 69,
+      "defense": 46,
+      "control": 81
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/40/Kevin_De_Bruyne_USMNT_v_Belgium_Mar_28_2026-64_%28cropped%29.jpg"
   },
@@ -150,8 +150,8 @@
     "type": "Golden Baller",
     "stats": {
       "attack": 97,
-      "defense": 53,
-      "control": 92
+      "defense": 40,
+      "control": 79
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/9/91/Harry_Kane_on_October_10%2C_2023.jpg"
   },
@@ -162,8 +162,8 @@
     "type": "Base",
     "stats": {
       "attack": 82,
-      "defense": 38,
-      "control": 77
+      "defense": 34,
+      "control": 67
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/9/91/Harry_Kane_on_October_10%2C_2023.jpg"
   },
@@ -174,8 +174,8 @@
     "type": "Golden Baller",
     "stats": {
       "attack": 98,
-      "defense": 51,
-      "control": 91
+      "defense": 41,
+      "control": 80
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Mohamed_Salah_2018.jpg"
   },
@@ -186,8 +186,8 @@
     "type": "Base",
     "stats": {
       "attack": 83,
-      "defense": 36,
-      "control": 76
+      "defense": 34,
+      "control": 68
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Mohamed_Salah_2018.jpg"
   },
@@ -198,8 +198,8 @@
     "type": "Golden Baller",
     "stats": {
       "attack": 96,
-      "defense": 66,
-      "control": 95
+      "defense": 40,
+      "control": 78
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/c/cd/1_bukayo_saka_arsenal_2025_%28cropped%29.jpg"
   },
@@ -210,8 +210,8 @@
     "type": "Base",
     "stats": {
       "attack": 81,
-      "defense": 51,
-      "control": 80
+      "defense": 34,
+      "control": 66
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/c/cd/1_bukayo_saka_arsenal_2025_%28cropped%29.jpg"
   },
@@ -221,9 +221,9 @@
     "nation": "hr",
     "type": "Icon",
     "stats": {
-      "attack": 91,
-      "defense": 85,
-      "control": 87
+      "attack": 78,
+      "defense": 52,
+      "control": 91
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/1/1b/Ofrenda_de_la_Liga_y_la_Champions-57-L.Mill%C3%A1n_%2852109310843%29_%28Luka_Modri%C4%87%29.jpg"
   },
@@ -233,9 +233,9 @@
     "nation": "br",
     "type": "Icon",
     "stats": {
-      "attack": 90,
-      "defense": 67,
-      "control": 96
+      "attack": 96,
+      "defense": 40,
+      "control": 78
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Neymar_Jr._with_Al_Hilal%2C_3_October_2023_-_03_%28cropped%29.jpg"
   },
@@ -245,9 +245,9 @@
     "nation": "sn",
     "type": "Icon",
     "stats": {
-      "attack": 92,
-      "defense": 65,
-      "control": 93
+      "attack": 93,
+      "defense": 39,
+      "control": 76
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Sadio_Mane_Al-Nassr.jpg"
   },
@@ -258,8 +258,8 @@
     "type": "Icon",
     "stats": {
       "attack": 94,
-      "defense": 80,
-      "control": 89
+      "defense": 39,
+      "control": 77
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/45/Mahrez_2021.jpg"
   },
@@ -269,9 +269,9 @@
     "nation": "fr",
     "type": "Icon",
     "stats": {
-      "attack": 92,
+      "attack": 60,
       "defense": 79,
-      "control": 91
+      "control": 92
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/05/N%27Golo_Kant%C3%A9_%28cropped%29.jpg"
   },
@@ -282,8 +282,8 @@
     "type": "Icon",
     "stats": {
       "attack": 91,
-      "defense": 60,
-      "control": 89
+      "defense": 38,
+      "control": 74
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Raheem_Sterling_2018.jpg"
   },
@@ -294,8 +294,8 @@
     "type": "Icon",
     "stats": {
       "attack": 92,
-      "defense": 66,
-      "control": 91
+      "defense": 38,
+      "control": 75
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/a/a4/ManCity20240722-017_%28cropped%29.jpg"
   },
@@ -305,9 +305,9 @@
     "nation": "gb-eng",
     "type": "Icon",
     "stats": {
-      "attack": 92,
-      "defense": 88,
-      "control": 95
+      "attack": 36,
+      "defense": 95,
+      "control": 72
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/5/5d/Trent_Alexander-Arnold_2018_%28cropped%29.jpg"
   },
@@ -317,9 +317,9 @@
     "nation": "gb-sct",
     "type": "Icon",
     "stats": {
-      "attack": 90,
-      "defense": 73,
-      "control": 87
+      "attack": 34,
+      "defense": 90,
+      "control": 68
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/40/First_Minister_meets_with_Scottish_National_Football_Team_%28cropped_2%29.jpg"
   },
@@ -329,9 +329,9 @@
     "nation": "ca",
     "type": "Icon",
     "stats": {
-      "attack": 94,
-      "defense": 64,
-      "control": 88
+      "attack": 35,
+      "defense": 94,
+      "control": 71
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/f/ff/Alphonso_Davies_in_2022.jpg"
   },
@@ -341,9 +341,9 @@
     "nation": "ma",
     "type": "Icon",
     "stats": {
-      "attack": 91,
-      "defense": 78,
-      "control": 96
+      "attack": 36,
+      "defense": 96,
+      "control": 72
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/77/Achraf_Hakimi_%28cropped%29.jpg"
   },
@@ -353,9 +353,9 @@
     "nation": "ma",
     "type": "Icon",
     "stats": {
-      "attack": 90,
-      "defense": 70,
-      "control": 93
+      "attack": 93,
+      "defense": 39,
+      "control": 76
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/e/e1/Hakim_Ziyech_2021.jpg"
   },
@@ -366,8 +366,8 @@
     "type": "Icon",
     "stats": {
       "attack": 97,
-      "defense": 79,
-      "control": 90
+      "defense": 40,
+      "control": 79
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/00/20180610_FIFA_Friendly_Match_Austria_vs._Brazil_Roberto_Firmino_850_1557.jpg"
   },
@@ -377,9 +377,9 @@
     "nation": "co",
     "type": "Icon",
     "stats": {
-      "attack": 91,
-      "defense": 87,
-      "control": 86
+      "attack": 78,
+      "defense": 52,
+      "control": 91
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/79/James_Rodriguez_2018.jpg"
   },
@@ -390,8 +390,8 @@
     "type": "Icon",
     "stats": {
       "attack": 94,
-      "defense": 67,
-      "control": 93
+      "defense": 39,
+      "control": 77
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/73/Christian_Pulisic_USMNT_v_Belgium_Mar_28_2026-105.jpg"
   },
@@ -401,8 +401,8 @@
     "nation": "us",
     "type": "Icon",
     "stats": {
-      "attack": 95,
-      "defense": 89,
+      "attack": 81,
+      "defense": 55,
       "control": 95
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/d/d5/Weston_McKennie_USMNT_v_Belgium_Mar_28_2026-68_%28cropped%29.jpg"
@@ -413,9 +413,9 @@
     "nation": "us",
     "type": "Icon",
     "stats": {
-      "attack": 96,
-      "defense": 71,
-      "control": 91
+      "attack": 82,
+      "defense": 55,
+      "control": 96
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/2/25/Gio_Reyna_USMNT_v_Belgium_Mar_28_2026-60_%28cropped%29.jpg"
   },
@@ -425,9 +425,9 @@
     "nation": "mx",
     "type": "Icon",
     "stats": {
-      "attack": 93,
-      "defense": 68,
-      "control": 85
+      "attack": 20,
+      "defense": 93,
+      "control": 44
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Mex-Kor_%281%29_%28cropped%29.jpg"
   },
@@ -437,9 +437,9 @@
     "nation": "cr",
     "type": "Icon",
     "stats": {
-      "attack": 92,
-      "defense": 61,
-      "control": 85
+      "attack": 20,
+      "defense": 92,
+      "control": 44
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/d/dc/Keylor_Navas_2018_%28cropped%29.jpg"
   },
@@ -449,9 +449,9 @@
     "nation": "dk",
     "type": "Icon",
     "stats": {
-      "attack": 92,
-      "defense": 69,
-      "control": 85
+      "attack": 79,
+      "defense": 53,
+      "control": 92
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/d/d8/EriksenTottenham2016%28cropped%29_2.jpg"
   },
@@ -461,9 +461,9 @@
     "nation": "dk",
     "type": "Icon",
     "stats": {
-      "attack": 90,
-      "defense": 83,
-      "control": 89
+      "attack": 19,
+      "defense": 90,
+      "control": 43
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/9/95/Kasper_Schmeichel_Celtic-20240722_%28cropped%29.jpg"
   },
@@ -473,8 +473,8 @@
     "nation": "ch",
     "type": "Icon",
     "stats": {
-      "attack": 91,
-      "defense": 80,
+      "attack": 61,
+      "defense": 79,
       "control": 93
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/01/Granit_Xhaka_%28cropped%29.jpg"
@@ -486,8 +486,8 @@
     "type": "Icon",
     "stats": {
       "attack": 96,
-      "defense": 62,
-      "control": 92
+      "defense": 40,
+      "control": 78
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/2/2a/Xherdan_Shaqiri_2018.jpg"
   },
@@ -498,8 +498,8 @@
     "type": "Icon",
     "stats": {
       "attack": 92,
-      "defense": 79,
-      "control": 86
+      "defense": 38,
+      "control": 75
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/8/85/Ivan_Peri%C5%A1i%C4%87_%28cropped%29.jpg"
   },
@@ -509,9 +509,9 @@
     "nation": "hr",
     "type": "Icon",
     "stats": {
-      "attack": 96,
-      "defense": 88,
-      "control": 87
+      "attack": 63,
+      "defense": 82,
+      "control": 96
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/c/c9/Marcelo_Brozovi%C4%87_2021_%28cropped%29.jpg"
   },
@@ -521,9 +521,9 @@
     "nation": "ar",
     "type": "Icon",
     "stats": {
-      "attack": 90,
-      "defense": 78,
-      "control": 85
+      "attack": 34,
+      "defense": 90,
+      "control": 68
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/6/61/Lisandro_Martinez_2022.jpg"
   },
@@ -533,9 +533,9 @@
     "nation": "fr",
     "type": "Icon",
     "stats": {
-      "attack": 95,
-      "defense": 86,
-      "control": 88
+      "attack": 81,
+      "defense": 55,
+      "control": 95
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Paul_Pogba_at_the_2025_Cannes_Film_Festival_02.jpg"
   },
@@ -545,9 +545,9 @@
     "nation": "gb-eng",
     "type": "Icon",
     "stats": {
-      "attack": 93,
-      "defense": 74,
-      "control": 96
+      "attack": 96,
+      "defense": 40,
+      "control": 78
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/43/Manchester_United_v_Liverpool%2C_22_August_2022_%2833%29_%28cropped%29.jpg"
   },
@@ -557,9 +557,9 @@
     "nation": "gb-eng",
     "type": "Icon",
     "stats": {
-      "attack": 92,
-      "defense": 69,
-      "control": 86
+      "attack": 79,
+      "defense": 53,
+      "control": 92
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/32/Mountbrightonoct3_2019_%28cropped%29.jpg"
   },
@@ -569,9 +569,9 @@
     "nation": "gb-eng",
     "type": "Icon",
     "stats": {
-      "attack": 91,
-      "defense": 80,
-      "control": 85
+      "attack": 34,
+      "defense": 91,
+      "control": 69
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/f/ff/Reece_James_FIFA_Club_World_Cup_final_extraction.jpg"
   },
@@ -581,9 +581,9 @@
     "nation": "gb-eng",
     "type": "Icon",
     "stats": {
-      "attack": 95,
-      "defense": 75,
-      "control": 87
+      "attack": 36,
+      "defense": 95,
+      "control": 72
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Ben_Chilwell_2020.jpg"
   },
@@ -593,8 +593,8 @@
     "nation": "gb-sct",
     "type": "Icon",
     "stats": {
-      "attack": 92,
-      "defense": 66,
+      "attack": 79,
+      "defense": 53,
       "control": 93
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/a/a5/First_Minister_meets_with_Scottish_National_Football_Team_%282%29_%28cropped%29.jpg"
@@ -605,9 +605,9 @@
     "nation": "gb-sct",
     "type": "Icon",
     "stats": {
-      "attack": 93,
-      "defense": 69,
-      "control": 89
+      "attack": 61,
+      "defense": 79,
+      "control": 93
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/72/Manchester_United_v_Liverpool%2C_22_August_2022_%2821%29_%28Scott_McTominay%29.jpg"
   },
@@ -617,9 +617,9 @@
     "nation": "gb-sct",
     "type": "Icon",
     "stats": {
-      "attack": 93,
-      "defense": 77,
-      "control": 90
+      "attack": 35,
+      "defense": 93,
+      "control": 70
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/f/f3/Kieran_Tierney_%28close-up_image%29.jpg"
   },
@@ -630,8 +630,8 @@
     "type": "Icon",
     "stats": {
       "attack": 92,
-      "defense": 61,
-      "control": 85
+      "defense": 38,
+      "control": 75
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/d/dc/Brennan_Johnson_%28cropped%29.jpg"
   },
@@ -641,9 +641,9 @@
     "nation": "br",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 88,
-      "defense": 56,
-      "control": 92
+      "attack": 92,
+      "defense": 38,
+      "control": 75
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/3d/Richarlison_%C3%A9_homenageado_na_ALES_%2810.July.2019%29_01_%28cropped%29.jpg"
   },
@@ -653,8 +653,8 @@
     "nation": "br",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 85,
-      "defense": 76,
+      "attack": 73,
+      "defense": 49,
       "control": 85
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/d/dc/Lucas_Paquet%C3%A1_of_West_Ham.jpeg"
@@ -666,8 +666,8 @@
     "type": "Fan Favourite",
     "stats": {
       "attack": 92,
-      "defense": 78,
-      "control": 91
+      "defense": 38,
+      "control": 75
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/a/a9/Antony_2022.jpg"
   },
@@ -678,8 +678,8 @@
     "type": "Fan Favourite",
     "stats": {
       "attack": 90,
-      "defense": 78,
-      "control": 86
+      "defense": 37,
+      "control": 73
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/d/df/1_Gabriel_Martinelli_arsenal_2025_%28cropped%29.jpg"
   },
@@ -690,8 +690,8 @@
     "type": "Fan Favourite",
     "stats": {
       "attack": 91,
-      "defense": 55,
-      "control": 85
+      "defense": 38,
+      "control": 74
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/8/87/20180610_FIFA_Friendly_Match_Austria_vs._Brazil_Gabriel_Jesus_850_1688.jpg"
   },
@@ -702,8 +702,8 @@
     "type": "Fan Favourite",
     "stats": {
       "attack": 85,
-      "defense": 57,
-      "control": 82
+      "defense": 35,
+      "control": 69
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Alejandro_Garnacho_7_August_2022_%28cropped%29.jpg"
   },
@@ -713,9 +713,9 @@
     "nation": "ar",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 92,
-      "defense": 72,
-      "control": 89
+      "attack": 34,
+      "defense": 92,
+      "control": 69
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/9/9a/Cristian_Romero_WC2022.jpg"
   },
@@ -725,8 +725,8 @@
     "nation": "ar",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 89,
-      "defense": 64,
+      "attack": 76,
+      "defense": 51,
       "control": 89
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/e/e6/Emilano_Buendia_April_2026_%28cropped%29.jpg"
@@ -737,9 +737,9 @@
     "nation": "ar",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 92,
-      "defense": 69,
-      "control": 90
+      "attack": 60,
+      "defense": 79,
+      "control": 92
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/d/df/Rodrigo_De_Paul_NYCFC_Miami_24_Sep_2025-018_%28cropped%29.jpg"
   },
@@ -749,8 +749,8 @@
     "nation": "ar",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 88,
-      "defense": 58,
+      "attack": 58,
+      "defense": 75,
       "control": 88
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/1/13/Leandro_Paredes_2018_%28cropped%29.jpg"
@@ -762,8 +762,8 @@
     "type": "Fan Favourite",
     "stats": {
       "attack": 91,
-      "defense": 51,
-      "control": 84
+      "defense": 38,
+      "control": 74
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/f/fc/Argentina_national_football_team_-_2_-_2022_%28%C3%81ngel_Correa%29.jpg"
   },
@@ -774,8 +774,8 @@
     "type": "Fan Favourite",
     "stats": {
       "attack": 91,
-      "defense": 63,
-      "control": 83
+      "defense": 38,
+      "control": 74
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/b/b3/%D0%9C%D0%B0%D1%82%D1%87_%C2%AB%D0%94%D0%B8%D0%BD%D0%B0%D0%BC%D0%BE%C2%BB_-_%C2%AB%D0%AE%D0%B2%D0%B5%D0%BD%D1%82%D1%83%D1%81%C2%BB_0-2._20_%D0%BE%D0%BA%D1%82%D1%8F%D0%B1%D1%80%D1%8F_2020_%D0%B3%D0%BE%D0%B4%D0%B0_%E2%80%94_1153905_%28cropped%29.jpg"
   },
@@ -786,8 +786,8 @@
     "type": "Fan Favourite",
     "stats": {
       "attack": 91,
-      "defense": 76,
-      "control": 91
+      "defense": 38,
+      "control": 74
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/5/55/Jo%C3%A3o_F%C3%A9lix_USMNT_v_Portugal_Mar_31_2026-22_%28cropped%29.jpg"
   },
@@ -797,9 +797,9 @@
     "nation": "pt",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 90,
-      "defense": 61,
-      "control": 93
+      "attack": 93,
+      "defense": 39,
+      "control": 76
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/c/ce/Gon%C3%A7alo_Ramos_USMNT_v_Portugal_Mar_31_2026-32_%28cropped%29.jpg"
   },
@@ -809,9 +809,9 @@
     "nation": "pt",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 90,
-      "defense": 66,
-      "control": 86
+      "attack": 34,
+      "defense": 90,
+      "control": 68
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/2/28/Jo%C3%A3o_Cancelo_USMNT_v_Portugal_Mar_31_2026-30_%28cropped%29.jpg"
   },
@@ -821,8 +821,8 @@
     "nation": "pt",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 85,
-      "defense": 76,
+      "attack": 60,
+      "defense": 78,
       "control": 91
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/b/b8/Ruben_Neves_USMNT_v_Portugal_Mar_31_2026-25.jpg"
@@ -833,8 +833,8 @@
     "nation": "pt",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 88,
-      "defense": 57,
+      "attack": 79,
+      "defense": 53,
       "control": 93
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Vitinha_USMNT_v_Portugal_Mar_31_2026-50.jpg"
@@ -845,9 +845,9 @@
     "nation": "pt",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 90,
-      "defense": 63,
-      "control": 88
+      "attack": 34,
+      "defense": 90,
+      "control": 68
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/7b/Portugal_national_football_team_0866_%28cropped%29.jpg"
   },
@@ -857,9 +857,9 @@
     "nation": "es",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 86,
-      "defense": 51,
-      "control": 93
+      "attack": 35,
+      "defense": 93,
+      "control": 70
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/c/ca/Pau_Torres_April_2026_%28cropped%29.jpg"
   },
@@ -869,8 +869,8 @@
     "nation": "es",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 86,
-      "defense": 73,
+      "attack": 76,
+      "defense": 51,
       "control": 89
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/e/e0/Dani_Olmo_2022.jpg"
@@ -882,8 +882,8 @@
     "type": "Fan Favourite",
     "stats": {
       "attack": 92,
-      "defense": 73,
-      "control": 88
+      "defense": 38,
+      "control": 75
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/f/f1/UEFA_EURO_qualifiers_Sweden_vs_Spain_20191015_108_%28cropped%29.jpg"
   },
@@ -894,8 +894,8 @@
     "type": "Fan Favourite",
     "stats": {
       "attack": 90,
-      "defense": 79,
-      "control": 89
+      "defense": 37,
+      "control": 73
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/1/1e/Ferran_Torres_2019.png"
   },
@@ -906,8 +906,8 @@
     "type": "Fan Favourite",
     "stats": {
       "attack": 86,
-      "defense": 50,
-      "control": 83
+      "defense": 36,
+      "control": 70
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/e/ef/%D0%9C%D0%B0%D1%82%D1%87_%C2%AB%D0%94%D0%B8%D0%BD%D0%B0%D0%BC%D0%BE%C2%BB_-_%C2%AB%D0%91%D0%B0%D1%80%D1%81%D0%B5%D0%BB%D0%BE%D0%BD%D0%B0%C2%BB_0-1._2_%D0%BB%D0%B8%D1%81%D1%82%D0%BE%D0%BF%D0%B0%D0%B4%D0%B0_2021_%D1%80%D0%BE%D0%BA%D1%83_%E2%80%94_1289339_%28cropped%29.jpg"
   },
@@ -917,9 +917,9 @@
     "nation": "es",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 86,
-      "defense": 66,
-      "control": 89
+      "attack": 33,
+      "defense": 89,
+      "control": 67
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/9/93/Esapana-inglaterra-74_%2848899354493%29.jpg"
   },
@@ -930,8 +930,8 @@
     "type": "Fan Favourite",
     "stats": {
       "attack": 85,
-      "defense": 55,
-      "control": 85
+      "defense": 35,
+      "control": 69
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/1/1d/ATHLETIC-OSASUNA_SEMIFINAL._MAIDER_GOIKOETXEA_%28168%29_%28cropped%29.jpg"
   },
@@ -942,8 +942,8 @@
     "type": "Fan Favourite",
     "stats": {
       "attack": 89,
-      "defense": 78,
-      "control": 83
+      "defense": 37,
+      "control": 72
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/e/e3/Lamine_Yamal_in_2025.jpg"
   },
@@ -953,8 +953,8 @@
     "nation": "de",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 88,
-      "defense": 63,
+      "attack": 79,
+      "defense": 53,
       "control": 92
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/e/e8/2019-06-11_Fu%C3%9Fball%2C_M%C3%A4nner%2C_L%C3%A4nderspiel%2C_Deutschland-Estland_StP_2059_LR10_by_Stepro.jpg"
@@ -966,8 +966,8 @@
     "type": "Fan Favourite",
     "stats": {
       "attack": 85,
-      "defense": 78,
-      "control": 85
+      "defense": 35,
+      "control": 69
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/b/b8/NiclasF%C3%BCllkrug_%28cropped%29.jpg"
   },
@@ -977,8 +977,8 @@
     "nation": "de",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 85,
-      "defense": 71,
+      "attack": 78,
+      "defense": 52,
       "control": 91
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/9/96/2019-06-11_Fu%C3%9Fball%2C_M%C3%A4nner%2C_L%C3%A4nderspiel%2C_Deutschland-Estland_StP_2066_LR10_by_Stepro.jpg"
@@ -989,9 +989,9 @@
     "nation": "de",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 89,
-      "defense": 55,
-      "control": 92
+      "attack": 34,
+      "defense": 92,
+      "control": 69
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/b/ba/2023-08-12_TSV_Schott_Mainz_gegen_Borussia_Dortmund_%28DFB-Pokal_2023-24%29_by_Sandro_Halank%E2%80%93069.jpg"
   },
@@ -1001,9 +1001,9 @@
     "nation": "de",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 90,
-      "defense": 58,
-      "control": 93
+      "attack": 35,
+      "defense": 93,
+      "control": 70
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/a/a8/2023-10-04_Fu%C3%9Fball%2C_M%C3%A4nner%2C_UEFA_Champions_League%2C_RB_Leipzig_-_Manchester_City_FC_1DX_2658_%28cropped%29.jpg"
   },
@@ -1013,9 +1013,9 @@
     "nation": "nl",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 92,
-      "defense": 59,
-      "control": 84
+      "attack": 34,
+      "defense": 92,
+      "control": 69
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Jeremie_Frimpong_04012026_%283%29_%28cropped%29.jpg"
   },
@@ -1025,9 +1025,9 @@
     "nation": "nl",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 91,
-      "defense": 54,
-      "control": 85
+      "attack": 78,
+      "defense": 52,
+      "control": 91
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/6/6d/Xavi_Simons%2C_Nick_Verhagen_in_duel_met_Xavi_Simons.jpg"
   },
@@ -1037,9 +1037,9 @@
     "nation": "nl",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 86,
-      "defense": 67,
-      "control": 90
+      "attack": 34,
+      "defense": 90,
+      "control": 68
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/c/c9/2022-07-30_Fu%C3%9Fball%2C_M%C3%A4nner%2C_DFL-Supercup%2C_RB_Leipzig_-_FC_Bayern_M%C3%BCnchen_Matthijs_de_Ligt_%28cropped%29.jpg"
   },
@@ -1049,9 +1049,9 @@
     "nation": "nl",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 87,
-      "defense": 68,
-      "control": 88
+      "attack": 33,
+      "defense": 88,
+      "control": 66
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/34/Yokohama_F._Marinos_-_Manchester_City_%283-5%29_-_53075276224_%28Nathan_Ake%29.jpg"
   },
@@ -1061,9 +1061,9 @@
     "nation": "nl",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 88,
-      "defense": 58,
-      "control": 87
+      "attack": 33,
+      "defense": 88,
+      "control": 66
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/b/b7/Edison_ndreca_inter_egnati_%28cropped_Denzel_Dumfries%29.jpg"
   },
@@ -1073,8 +1073,8 @@
     "nation": "nl",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 90,
-      "defense": 57,
+      "attack": 78,
+      "defense": 52,
       "control": 91
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/6/61/Teun_Koopmeiners_Manchester_United_v_Atalanta_BC%2C_20_October_2021_%2812%29_%28cropped%29.jpg"
@@ -1086,8 +1086,8 @@
     "type": "Fan Favourite",
     "stats": {
       "attack": 91,
-      "defense": 52,
-      "control": 87
+      "defense": 38,
+      "control": 74
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/1/1c/Memphis_Depay_2019.jpg"
   },
@@ -1098,8 +1098,8 @@
     "type": "Fan Favourite",
     "stats": {
       "attack": 92,
-      "defense": 56,
-      "control": 85
+      "defense": 38,
+      "control": 75
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/d/dc/Romelu_Lukaku_2021.jpg"
   },
@@ -1110,8 +1110,8 @@
     "type": "Fan Favourite",
     "stats": {
       "attack": 92,
-      "defense": 53,
-      "control": 90
+      "defense": 38,
+      "control": 75
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/06/J%C3%A9r%C3%A9my_Doku_USMNT_v_Belgium_Mar_28_2026-27_%28cropped%29.jpg"
   },
@@ -1122,8 +1122,8 @@
     "type": "Fan Favourite",
     "stats": {
       "attack": 91,
-      "defense": 56,
-      "control": 84
+      "defense": 38,
+      "control": 74
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/7b/RC_Lens_-_Arsenal_FC_%2803-10-2023%29_26_%28cropped%29.jpg"
   },
@@ -1133,9 +1133,9 @@
     "nation": "be",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 89,
-      "defense": 71,
-      "control": 82
+      "attack": 76,
+      "defense": 51,
+      "control": 89
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/f/ff/Youri_Tielemans_USMNT_v_Belgium_Mar_28_2026-20_%28cropped%29.jpg"
   },
@@ -1145,9 +1145,9 @@
     "nation": "be",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 92,
-      "defense": 74,
-      "control": 86
+      "attack": 60,
+      "defense": 79,
+      "control": 92
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/36/Amadou_Onana_USMNT_v_Belgium_Mar_28_2026-96_%28cropped%29.jpg"
   },
@@ -1157,9 +1157,9 @@
     "nation": "be",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 86,
-      "defense": 79,
-      "control": 90
+      "attack": 90,
+      "defense": 37,
+      "control": 73
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/a/ac/Lo%C3%AFs_Openda_USMNT_v_Belgium_Mar_28_2026-19_%28cropped%29.jpg"
   },
@@ -1169,9 +1169,9 @@
     "nation": "be",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 86,
-      "defense": 76,
-      "control": 82
+      "attack": 32,
+      "defense": 86,
+      "control": 65
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/d/d9/Timothy_Castagne_USMNT_v_Belgium_Mar_28_2026-17_%28cropped%29.jpg"
   },
@@ -1181,9 +1181,9 @@
     "nation": "be",
     "type": "Fan Favourite",
     "stats": {
-      "attack": 87,
-      "defense": 78,
-      "control": 86
+      "attack": 33,
+      "defense": 87,
+      "control": 66
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/9/96/Arthur_Theate_USMNT_v_Belgium_Mar_28_2026-22_%28cropped%29.jpg"
   },
@@ -1193,9 +1193,9 @@
     "nation": "ar",
     "type": "Top Keeper",
     "stats": {
-      "attack": 27,
+      "attack": 20,
       "defense": 92,
-      "control": 75
+      "control": 44
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/41/St._Louis_City_vs_Aston_Villa_%28Jul_2025%29_14_%28Emiliano_Mart%C3%ADnez%29.jpg"
   },
@@ -1205,9 +1205,9 @@
     "nation": "ar",
     "type": "Base",
     "stats": {
-      "attack": 12,
+      "attack": 16,
       "defense": 77,
-      "control": 60
+      "control": 36
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/41/St._Louis_City_vs_Aston_Villa_%28Jul_2025%29_14_%28Emiliano_Mart%C3%ADnez%29.jpg"
   },
@@ -1217,9 +1217,9 @@
     "nation": "br",
     "type": "Top Keeper",
     "stats": {
-      "attack": 23,
+      "attack": 20,
       "defense": 94,
-      "control": 84
+      "control": 45
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/4f/20180610_FIFA_Friendly_Match_Austria_vs._Brazil_850_1625.jpg"
   },
@@ -1229,9 +1229,9 @@
     "nation": "br",
     "type": "Base",
     "stats": {
-      "attack": 10,
+      "attack": 17,
       "defense": 79,
-      "control": 69
+      "control": 37
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/4f/20180610_FIFA_Friendly_Match_Austria_vs._Brazil_850_1625.jpg"
   },
@@ -1243,7 +1243,7 @@
     "stats": {
       "attack": 21,
       "defense": 97,
-      "control": 79
+      "control": 46
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/c/c4/Courtois_2018_%28cropped%29.jpg"
   },
@@ -1253,9 +1253,9 @@
     "nation": "be",
     "type": "Base",
     "stats": {
-      "attack": 10,
+      "attack": 18,
       "defense": 82,
-      "control": 64
+      "control": 39
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/c/c4/Courtois_2018_%28cropped%29.jpg"
   },
@@ -1265,9 +1265,9 @@
     "nation": "fr",
     "type": "Top Keeper",
     "stats": {
-      "attack": 25,
+      "attack": 20,
       "defense": 94,
-      "control": 83
+      "control": 45
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/e/e1/Mike_Maignan_2022_Salzburg_vs_AC_Milan_2022-09-06.jpg"
   },
@@ -1277,9 +1277,9 @@
     "nation": "fr",
     "type": "Base",
     "stats": {
-      "attack": 10,
+      "attack": 17,
       "defense": 79,
-      "control": 68
+      "control": 37
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/e/e1/Mike_Maignan_2022_Salzburg_vs_AC_Milan_2022-09-06.jpg"
   },
@@ -1289,9 +1289,9 @@
     "nation": "br",
     "type": "Top Keeper",
     "stats": {
-      "attack": 21,
+      "attack": 20,
       "defense": 91,
-      "control": 79
+      "control": 43
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/73/Ederson_%28cropped%29.png"
   },
@@ -1301,9 +1301,9 @@
     "nation": "br",
     "type": "Base",
     "stats": {
-      "attack": 10,
+      "attack": 16,
       "defense": 76,
-      "control": 64
+      "control": 36
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/73/Ederson_%28cropped%29.png"
   },
@@ -1313,9 +1313,9 @@
     "nation": "si",
     "type": "Top Keeper",
     "stats": {
-      "attack": 24,
+      "attack": 20,
       "defense": 91,
-      "control": 84
+      "control": 43
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/a/a1/Jan_Oblak_2019.jpg"
   },
@@ -1325,9 +1325,9 @@
     "nation": "si",
     "type": "Base",
     "stats": {
-      "attack": 10,
+      "attack": 16,
       "defense": 76,
-      "control": 69
+      "control": 36
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/a/a1/Jan_Oblak_2019.jpg"
   },
@@ -1337,9 +1337,9 @@
     "nation": "de",
     "type": "Top Keeper",
     "stats": {
-      "attack": 29,
+      "attack": 21,
       "defense": 97,
-      "control": 82
+      "control": 46
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/9/97/Marc-Andre_Ter_Stegen_ACCI_FCBARCELONA_Turisme_Catalunya_gira_pretemporada_CATPRESS.jpg"
   },
@@ -1349,9 +1349,9 @@
     "nation": "de",
     "type": "Base",
     "stats": {
-      "attack": 14,
+      "attack": 18,
       "defense": 82,
-      "control": 67
+      "control": 39
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/9/97/Marc-Andre_Ter_Stegen_ACCI_FCBARCELONA_Turisme_Catalunya_gira_pretemporada_CATPRESS.jpg"
   },
@@ -1361,9 +1361,9 @@
     "nation": "nl",
     "type": "Defensive Rock",
     "stats": {
-      "attack": 48,
+      "attack": 36,
       "defense": 97,
-      "control": 76
+      "control": 73
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/5/5d/20160604_AUT_NED_8876_%28cropped%29.jpg"
   },
@@ -1373,9 +1373,9 @@
     "nation": "nl",
     "type": "Base",
     "stats": {
-      "attack": 33,
+      "attack": 31,
       "defense": 82,
-      "control": 61
+      "control": 62
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/5/5d/20160604_AUT_NED_8876_%28cropped%29.jpg"
   },
@@ -1385,9 +1385,9 @@
     "nation": "pt",
     "type": "Defensive Rock",
     "stats": {
-      "attack": 49,
+      "attack": 34,
       "defense": 91,
-      "control": 84
+      "control": 69
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/9/9a/Portugal_national_football_team_0866_%28R%C3%BAben_Dias%29.jpg"
   },
@@ -1397,9 +1397,9 @@
     "nation": "pt",
     "type": "Base",
     "stats": {
-      "attack": 34,
+      "attack": 28,
       "defense": 76,
-      "control": 69
+      "control": 57
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/9/9a/Portugal_national_football_team_0866_%28R%C3%BAben_Dias%29.jpg"
   },
@@ -1409,9 +1409,9 @@
     "nation": "fr",
     "type": "Defensive Rock",
     "stats": {
-      "attack": 62,
+      "attack": 36,
       "defense": 97,
-      "control": 81
+      "control": 73
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/8/8a/1_william_saliba_arsenal_2025_%28cropped%29.jpg"
   },
@@ -1421,9 +1421,9 @@
     "nation": "fr",
     "type": "Base",
     "stats": {
-      "attack": 47,
+      "attack": 31,
       "defense": 82,
-      "control": 66
+      "control": 62
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/8/8a/1_william_saliba_arsenal_2025_%28cropped%29.jpg"
   },
@@ -1433,9 +1433,9 @@
     "nation": "de",
     "type": "Defensive Rock",
     "stats": {
-      "attack": 56,
+      "attack": 36,
       "defense": 95,
-      "control": 77
+      "control": 72
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/08/2025_04_26_Final_de_la_Copa_del_Rey_-_54482387776_%28Elenco_do_Real_Madrid%29_%28Antonio_R%C3%BCdiger%29.jpg"
   },
@@ -1445,9 +1445,9 @@
     "nation": "de",
     "type": "Base",
     "stats": {
-      "attack": 41,
+      "attack": 30,
       "defense": 80,
-      "control": 62
+      "control": 60
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/08/2025_04_26_Final_de_la_Copa_del_Rey_-_54482387776_%28Elenco_do_Real_Madrid%29_%28Antonio_R%C3%BCdiger%29.jpg"
   },
@@ -1457,9 +1457,9 @@
     "nation": "br",
     "type": "Defensive Rock",
     "stats": {
-      "attack": 63,
+      "attack": 36,
       "defense": 95,
-      "control": 82
+      "control": 72
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/d/dc/FC_Salzburg_gegen_Paris_Saint-Germain_UEFA_Champions_League_49_%28cropped%29.jpg"
   },
@@ -1469,9 +1469,9 @@
     "nation": "br",
     "type": "Base",
     "stats": {
-      "attack": 48,
+      "attack": 30,
       "defense": 80,
-      "control": 67
+      "control": 60
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/d/dc/FC_Salzburg_gegen_Paris_Saint-Germain_UEFA_Champions_League_49_%28cropped%29.jpg"
   },
@@ -1481,9 +1481,9 @@
     "nation": "uy",
     "type": "Defensive Rock",
     "stats": {
-      "attack": 55,
+      "attack": 36,
       "defense": 97,
-      "control": 84
+      "control": 73
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/3f/FC_Red_Bull_Salzburg_gegen_CF_Barcelona_%28Testspiel_4._August_2021%29_45_%28cropped%29.jpg"
   },
@@ -1493,9 +1493,9 @@
     "nation": "uy",
     "type": "Base",
     "stats": {
-      "attack": 40,
+      "attack": 31,
       "defense": 82,
-      "control": 69
+      "control": 62
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/3f/FC_Red_Bull_Salzburg_gegen_CF_Barcelona_%28Testspiel_4._August_2021%29_45_%28cropped%29.jpg"
   },
@@ -1505,9 +1505,9 @@
     "nation": "br",
     "type": "Defensive Rock",
     "stats": {
-      "attack": 52,
+      "attack": 34,
       "defense": 91,
-      "control": 80
+      "control": 69
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/38/Eder_Militao_2021.jpg"
   },
@@ -1517,9 +1517,9 @@
     "nation": "br",
     "type": "Base",
     "stats": {
-      "attack": 37,
+      "attack": 28,
       "defense": 76,
-      "control": 65
+      "control": 57
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/38/Eder_Militao_2021.jpg"
   },
@@ -1529,9 +1529,9 @@
     "nation": "gb-eng",
     "type": "Defensive Rock",
     "stats": {
-      "attack": 46,
+      "attack": 34,
       "defense": 90,
-      "control": 82
+      "control": 68
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/b/be/John_Stones_2018-06-24_1.jpg"
   },
@@ -1541,9 +1541,9 @@
     "nation": "gb-eng",
     "type": "Base",
     "stats": {
-      "attack": 31,
+      "attack": 28,
       "defense": 75,
-      "control": 67
+      "control": 57
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/b/be/John_Stones_2018-06-24_1.jpg"
   },
@@ -1553,8 +1553,8 @@
     "nation": "es",
     "type": "Midfield Maestro",
     "stats": {
-      "attack": 88,
-      "defense": 83,
+      "attack": 62,
+      "defense": 80,
       "control": 94
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/41/RODRI_-_SWE_vs_ESP_-_UEFA_EURO_2020_QUALIFIERS_-_2019.10.15_%28cropped%29.jpg"
@@ -1565,8 +1565,8 @@
     "nation": "es",
     "type": "Base",
     "stats": {
-      "attack": 73,
-      "defense": 68,
+      "attack": 52,
+      "defense": 67,
       "control": 79
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/41/RODRI_-_SWE_vs_ESP_-_UEFA_EURO_2020_QUALIFIERS_-_2019.10.15_%28cropped%29.jpg"
@@ -1577,8 +1577,8 @@
     "nation": "es",
     "type": "Midfield Maestro",
     "stats": {
-      "attack": 86,
-      "defense": 84,
+      "attack": 82,
+      "defense": 55,
       "control": 96
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/1/13/Pedri.jpg"
@@ -1589,8 +1589,8 @@
     "nation": "es",
     "type": "Base",
     "stats": {
-      "attack": 71,
-      "defense": 69,
+      "attack": 69,
+      "defense": 46,
       "control": 81
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/1/13/Pedri.jpg"
@@ -1601,8 +1601,8 @@
     "nation": "de",
     "type": "Midfield Maestro",
     "stats": {
-      "attack": 86,
-      "defense": 81,
+      "attack": 81,
+      "defense": 55,
       "control": 95
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/44/Jamal_Musiala_2022_%28cropped%29.jpg"
@@ -1613,8 +1613,8 @@
     "nation": "de",
     "type": "Base",
     "stats": {
-      "attack": 71,
-      "defense": 66,
+      "attack": 68,
+      "defense": 46,
       "control": 80
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/44/Jamal_Musiala_2022_%28cropped%29.jpg"
@@ -1625,8 +1625,8 @@
     "nation": "de",
     "type": "Midfield Maestro",
     "stats": {
-      "attack": 85,
-      "defense": 75,
+      "attack": 79,
+      "defense": 53,
       "control": 93
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/5/5d/Florian_Wirtz%2C_2022-07-31%2C_Saisoner%C3%B6ffnung_Bayer_04%2C_Leverkusen_%281%29_%28cropped%29.jpg"
@@ -1637,8 +1637,8 @@
     "nation": "de",
     "type": "Base",
     "stats": {
-      "attack": 70,
-      "defense": 60,
+      "attack": 67,
+      "defense": 45,
       "control": 78
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/5/5d/Florian_Wirtz%2C_2022-07-31%2C_Saisoner%C3%B6ffnung_Bayer_04%2C_Leverkusen_%281%29_%28cropped%29.jpg"
@@ -1650,7 +1650,7 @@
     "type": "Midfield Maestro",
     "stats": {
       "attack": 83,
-      "defense": 80,
+      "defense": 56,
       "control": 97
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/73/Federico_Valverde_2021_%28cropped%29.jpg"
@@ -1661,8 +1661,8 @@
     "nation": "uy",
     "type": "Base",
     "stats": {
-      "attack": 68,
-      "defense": 65,
+      "attack": 70,
+      "defense": 47,
       "control": 82
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/73/Federico_Valverde_2021_%28cropped%29.jpg"
@@ -1673,8 +1673,8 @@
     "nation": "gb-eng",
     "type": "Midfield Maestro",
     "stats": {
-      "attack": 88,
-      "defense": 76,
+      "attack": 63,
+      "defense": 82,
       "control": 96
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/e/ea/1_declan_rice_arsenal_2025_%28cropped%29.jpg"
@@ -1685,8 +1685,8 @@
     "nation": "gb-eng",
     "type": "Base",
     "stats": {
-      "attack": 73,
-      "defense": 61,
+      "attack": 53,
+      "defense": 69,
       "control": 81
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/e/ea/1_declan_rice_arsenal_2025_%28cropped%29.jpg"
@@ -1697,8 +1697,8 @@
     "nation": "pt",
     "type": "Midfield Maestro",
     "stats": {
-      "attack": 87,
-      "defense": 83,
+      "attack": 83,
+      "defense": 56,
       "control": 97
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/c/c7/Bruno_Fernandes_USMNT_v_Portugal_Mar_31_2026-27_%28cropped%29.jpg"
@@ -1709,8 +1709,8 @@
     "nation": "pt",
     "type": "Base",
     "stats": {
-      "attack": 72,
-      "defense": 68,
+      "attack": 70,
+      "defense": 47,
       "control": 82
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/c/c7/Bruno_Fernandes_USMNT_v_Portugal_Mar_31_2026-27_%28cropped%29.jpg"
@@ -1721,8 +1721,8 @@
     "nation": "no",
     "type": "Midfield Maestro",
     "stats": {
-      "attack": 83,
-      "defense": 83,
+      "attack": 82,
+      "defense": 55,
       "control": 96
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/a/aa/Norway_Italy_-_June_2025_E_04.jpg"
@@ -1733,8 +1733,8 @@
     "nation": "no",
     "type": "Base",
     "stats": {
-      "attack": 68,
-      "defense": 68,
+      "attack": 69,
+      "defense": 46,
       "control": 81
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/a/aa/Norway_Italy_-_June_2025_E_04.jpg"
@@ -1745,8 +1745,8 @@
     "nation": "pt",
     "type": "Midfield Maestro",
     "stats": {
-      "attack": 82,
-      "defense": 77,
+      "attack": 79,
+      "defense": 53,
       "control": 93
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/c/cf/Bernardo_Silva_%28Isto_%C3%89_Gozar_Com_Quem_Trabalha%2C_2024%29.png"
@@ -1758,7 +1758,7 @@
     "type": "Base",
     "stats": {
       "attack": 67,
-      "defense": 62,
+      "defense": 45,
       "control": 78
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/c/cf/Bernardo_Silva_%28Isto_%C3%89_Gozar_Com_Quem_Trabalha%2C_2024%29.png"
@@ -1769,8 +1769,8 @@
     "nation": "fr",
     "type": "Midfield Maestro",
     "stats": {
-      "attack": 86,
-      "defense": 75,
+      "attack": 62,
+      "defense": 80,
       "control": 94
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/0f/2025_04_26_Final_de_la_Copa_del_Rey_-_Aur%C3%A9lien_Tchouam%C3%A9ni.jpg"
@@ -1781,8 +1781,8 @@
     "nation": "fr",
     "type": "Base",
     "stats": {
-      "attack": 71,
-      "defense": 60,
+      "attack": 52,
+      "defense": 67,
       "control": 79
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/0f/2025_04_26_Final_de_la_Copa_del_Rey_-_Aur%C3%A9lien_Tchouam%C3%A9ni.jpg"
@@ -1793,8 +1793,8 @@
     "nation": "fr",
     "type": "Midfield Maestro",
     "stats": {
-      "attack": 83,
-      "defense": 76,
+      "attack": 61,
+      "defense": 79,
       "control": 93
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/05/Ofrenda_de_la_Liga_y_la_Champions-13-L.Mill%C3%A1n_%2852109790215%29_%28cropped%29.jpg"
@@ -1805,8 +1805,8 @@
     "nation": "fr",
     "type": "Base",
     "stats": {
-      "attack": 68,
-      "defense": 61,
+      "attack": 51,
+      "defense": 67,
       "control": 78
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/05/Ofrenda_de_la_Liga_y_la_Champions-13-L.Mill%C3%A1n_%2852109790215%29_%28cropped%29.jpg"
@@ -1817,8 +1817,8 @@
     "nation": "de",
     "type": "Midfield Maestro",
     "stats": {
-      "attack": 81,
-      "defense": 81,
+      "attack": 64,
+      "defense": 83,
       "control": 97
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/48/2019-06-11_Fu%C3%9Fball%2C_M%C3%A4nner%2C_L%C3%A4nderspiel%2C_Deutschland-Estland_StP_2078_LR10_by_Stepro_%28cropped%29.jpg"
@@ -1829,8 +1829,8 @@
     "nation": "de",
     "type": "Base",
     "stats": {
-      "attack": 66,
-      "defense": 66,
+      "attack": 54,
+      "defense": 70,
       "control": 82
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/48/2019-06-11_Fu%C3%9Fball%2C_M%C3%A4nner%2C_L%C3%A4nderspiel%2C_Deutschland-Estland_StP_2078_LR10_by_Stepro_%28cropped%29.jpg"
@@ -1841,8 +1841,8 @@
     "nation": "nl",
     "type": "Midfield Maestro",
     "stats": {
-      "attack": 88,
-      "defense": 84,
+      "attack": 63,
+      "defense": 82,
       "control": 96
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/42/%D0%9C%D0%B0%D1%82%D1%87_%C2%AB%D0%94%D0%B8%D0%BD%D0%B0%D0%BC%D0%BE%C2%BB_-_%C2%AB%D0%91%D0%B0%D1%80%D1%81%D0%B5%D0%BB%D0%BE%D0%BD%D0%B0%C2%BB_0-1._2_%D0%BD%D0%BE%D1%8F%D0%B1%D1%80%D1%8F_2021_%D0%B3%D0%BE%D0%B4%D0%B0._II_%E2%80%94_1289671_%28cropped%29.jpg"
@@ -1853,7 +1853,7 @@
     "nation": "nl",
     "type": "Base",
     "stats": {
-      "attack": 73,
+      "attack": 53,
       "defense": 69,
       "control": 81
     },
@@ -1865,8 +1865,8 @@
     "nation": "de",
     "type": "Midfield Maestro",
     "stats": {
-      "attack": 89,
-      "defense": 79,
+      "attack": 82,
+      "defense": 55,
       "control": 96
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/c/c7/20180602_FIFA_Friendly_Match_Austria_vs._Germany_%C4%B0lkay_G%C3%BCndo%C4%9Fan_850_0728.jpg"
@@ -1877,8 +1877,8 @@
     "nation": "de",
     "type": "Base",
     "stats": {
-      "attack": 74,
-      "defense": 64,
+      "attack": 69,
+      "defense": 46,
       "control": 81
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/c/c7/20180602_FIFA_Friendly_Match_Austria_vs._Germany_%C4%B0lkay_G%C3%BCndo%C4%9Fan_850_0728.jpg"
@@ -1889,8 +1889,8 @@
     "nation": "ar",
     "type": "Midfield Maestro",
     "stats": {
-      "attack": 84,
-      "defense": 81,
+      "attack": 82,
+      "defense": 55,
       "control": 96
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/49/Alexis_Mac_Allister_WC_2022.jpg"
@@ -1902,7 +1902,7 @@
     "type": "Base",
     "stats": {
       "attack": 69,
-      "defense": 66,
+      "defense": 46,
       "control": 81
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/49/Alexis_Mac_Allister_WC_2022.jpg"
@@ -1913,8 +1913,8 @@
     "nation": "es",
     "type": "Midfield Maestro",
     "stats": {
-      "attack": 82,
-      "defense": 77,
+      "attack": 80,
+      "defense": 54,
       "control": 94
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/1/1e/Jugadors_pretemporada_pels_Estats_Units_%28cropped%292.jpg"
@@ -1926,7 +1926,7 @@
     "type": "Base",
     "stats": {
       "attack": 67,
-      "defense": 62,
+      "defense": 45,
       "control": 79
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/1/1e/Jugadors_pretemporada_pels_Estats_Units_%28cropped%292.jpg"
@@ -1937,8 +1937,8 @@
     "nation": "hu",
     "type": "Midfield Maestro",
     "stats": {
-      "attack": 84,
-      "defense": 78,
+      "attack": 80,
+      "defense": 54,
       "control": 94
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/5/52/Dominik_Szoboszlai_04012026_%281%29.jpg"
@@ -1949,8 +1949,8 @@
     "nation": "hu",
     "type": "Base",
     "stats": {
-      "attack": 69,
-      "defense": 63,
+      "attack": 67,
+      "defense": 45,
       "control": 79
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/5/52/Dominik_Szoboszlai_04012026_%281%29.jpg"
@@ -1963,7 +1963,7 @@
     "stats": {
       "attack": 96,
       "defense": 40,
-      "control": 85
+      "control": 78
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/2/26/2019147183134_2019-05-27_Fussball_1.FC_Kaiserslautern_vs_FC_Bayern_M%C3%BCnchen_-_Sven_-_1D_X_MK_II_-_0228_-_B70I8527_%28cropped%29.jpg"
   },
@@ -1974,8 +1974,8 @@
     "type": "Base",
     "stats": {
       "attack": 81,
-      "defense": 25,
-      "control": 70
+      "defense": 34,
+      "control": 66
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/2/26/2019147183134_2019-05-27_Fussball_1.FC_Kaiserslautern_vs_FC_Bayern_M%C3%BCnchen_-_Sven_-_1D_X_MK_II_-_0228_-_B70I8527_%28cropped%29.jpg"
   },
@@ -1986,8 +1986,8 @@
     "type": "Goal Machine",
     "stats": {
       "attack": 95,
-      "defense": 44,
-      "control": 91
+      "defense": 39,
+      "control": 77
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/2/2e/Lautaro_Martinez_ARGENTINA_VS_VENEZUELA_2017.jpg"
   },
@@ -1998,8 +1998,8 @@
     "type": "Base",
     "stats": {
       "attack": 80,
-      "defense": 29,
-      "control": 76
+      "defense": 33,
+      "control": 65
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/2/2e/Lautaro_Martinez_ARGENTINA_VS_VENEZUELA_2017.jpg"
   },
@@ -2010,8 +2010,8 @@
     "type": "Goal Machine",
     "stats": {
       "attack": 92,
-      "defense": 46,
-      "control": 91
+      "defense": 38,
+      "control": 75
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/34/Victor-osimhen-nigeria-2024-3-4.jpg"
   },
@@ -2022,8 +2022,8 @@
     "type": "Base",
     "stats": {
       "attack": 77,
-      "defense": 31,
-      "control": 76
+      "defense": 32,
+      "control": 63
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/34/Victor-osimhen-nigeria-2024-3-4.jpg"
   },
@@ -2034,8 +2034,8 @@
     "type": "Goal Machine",
     "stats": {
       "attack": 94,
-      "defense": 49,
-      "control": 86
+      "defense": 39,
+      "control": 77
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/b/b0/BFA_2023_-2_Heung-Min_Son_%28cropped%29.jpg"
   },
@@ -2046,8 +2046,8 @@
     "type": "Base",
     "stats": {
       "attack": 79,
-      "defense": 34,
-      "control": 71
+      "defense": 33,
+      "control": 64
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/b/b0/BFA_2023_-2_Heung-Min_Son_%28cropped%29.jpg"
   },
@@ -2057,9 +2057,9 @@
     "nation": "fr",
     "type": "Goal Machine",
     "stats": {
-      "attack": 93,
-      "defense": 47,
-      "control": 91
+      "attack": 79,
+      "defense": 53,
+      "control": 93
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/6/6e/FRA-ARG_%2810%29_%28cropped%29.jpg"
   },
@@ -2069,9 +2069,9 @@
     "nation": "fr",
     "type": "Base",
     "stats": {
-      "attack": 78,
-      "defense": 32,
-      "control": 76
+      "attack": 67,
+      "defense": 45,
+      "control": 78
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/6/6e/FRA-ARG_%2810%29_%28cropped%29.jpg"
   },
@@ -2082,8 +2082,8 @@
     "type": "Goal Machine",
     "stats": {
       "attack": 93,
-      "defense": 49,
-      "control": 89
+      "defense": 39,
+      "control": 76
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/02/RafaelLe%C3%A3oPortugal23.jpg"
   },
@@ -2094,8 +2094,8 @@
     "type": "Base",
     "stats": {
       "attack": 78,
-      "defense": 34,
-      "control": 74
+      "defense": 32,
+      "control": 63
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/02/RafaelLe%C3%A3oPortugal23.jpg"
   },
@@ -2106,8 +2106,8 @@
     "type": "Goal Machine",
     "stats": {
       "attack": 96,
-      "defense": 48,
-      "control": 85
+      "defense": 40,
+      "control": 78
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/5/5a/Kvaratskhelia_asse_psg_2425_%28cropped_2%29.png"
   },
@@ -2118,8 +2118,8 @@
     "type": "Base",
     "stats": {
       "attack": 81,
-      "defense": 33,
-      "control": 70
+      "defense": 34,
+      "control": 66
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/5/5a/Kvaratskhelia_asse_psg_2425_%28cropped_2%29.png"
   },
@@ -2130,8 +2130,8 @@
     "type": "Goal Machine",
     "stats": {
       "attack": 94,
-      "defense": 49,
-      "control": 88
+      "defense": 39,
+      "control": 77
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/1/11/Marcus_Rashford_in_2023.jpg"
   },
@@ -2142,8 +2142,8 @@
     "type": "Base",
     "stats": {
       "attack": 79,
-      "defense": 34,
-      "control": 73
+      "defense": 33,
+      "control": 64
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/1/11/Marcus_Rashford_in_2023.jpg"
   },
@@ -2154,8 +2154,8 @@
     "type": "Goal Machine",
     "stats": {
       "attack": 95,
-      "defense": 41,
-      "control": 91
+      "defense": 39,
+      "control": 77
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Ousmane_Demb%C3%A9l%C3%A9_2018_%28cropped%29.jpg"
   },
@@ -2166,8 +2166,8 @@
     "type": "Base",
     "stats": {
       "attack": 80,
-      "defense": 26,
-      "control": 76
+      "defense": 33,
+      "control": 65
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Ousmane_Demb%C3%A9l%C3%A9_2018_%28cropped%29.jpg"
   },
@@ -2178,8 +2178,8 @@
     "type": "Goal Machine",
     "stats": {
       "attack": 93,
-      "defense": 43,
-      "control": 92
+      "defense": 39,
+      "control": 76
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/05/Rodrygo_2023_%28cropped%29.jpg"
   },
@@ -2190,8 +2190,8 @@
     "type": "Base",
     "stats": {
       "attack": 78,
-      "defense": 28,
-      "control": 77
+      "defense": 32,
+      "control": 63
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/05/Rodrygo_2023_%28cropped%29.jpg"
   },
@@ -2202,8 +2202,8 @@
     "type": "Goal Machine",
     "stats": {
       "attack": 95,
-      "defense": 46,
-      "control": 89
+      "defense": 39,
+      "control": 77
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/03/Argentina_national_football_team_-_2_-_2022_%28Juli%C3%A1n_%C3%81lvarez%29.jpg"
   },
@@ -2214,8 +2214,8 @@
     "type": "Base",
     "stats": {
       "attack": 80,
-      "defense": 31,
-      "control": 74
+      "defense": 33,
+      "control": 65
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/03/Argentina_national_football_team_-_2_-_2022_%28Juli%C3%A1n_%C3%81lvarez%29.jpg"
   },
@@ -2225,9 +2225,9 @@
     "nation": "gb-eng",
     "type": "Goal Machine",
     "stats": {
-      "attack": 95,
-      "defense": 54,
-      "control": 89
+      "attack": 81,
+      "defense": 55,
+      "control": 95
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/5/53/2023-10-04_Fu%C3%9Fball%2C_M%C3%A4nner%2C_UEFA_Champions_League%2C_RB_Leipzig_-_Manchester_City_FC_1DX_2613%2C_Phil_Foden.jpg"
   },
@@ -2237,9 +2237,9 @@
     "nation": "gb-eng",
     "type": "Base",
     "stats": {
-      "attack": 80,
-      "defense": 39,
-      "control": 74
+      "attack": 68,
+      "defense": 46,
+      "control": 80
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/5/53/2023-10-04_Fu%C3%9Fball%2C_M%C3%A4nner%2C_UEFA_Champions_League%2C_RB_Leipzig_-_Manchester_City_FC_1DX_2613%2C_Phil_Foden.jpg"
   },
@@ -2250,8 +2250,8 @@
     "type": "Goal Machine",
     "stats": {
       "attack": 92,
-      "defense": 45,
-      "control": 89
+      "defense": 38,
+      "control": 75
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/b/bf/FC_Red_Bull_Salzburg_gegen_Bayern_M%C3%BCnchen_%282025-01-06_Testspiel%29_22.jpg"
   },
@@ -2262,8 +2262,8 @@
     "type": "Base",
     "stats": {
       "attack": 77,
-      "defense": 30,
-      "control": 74
+      "defense": 32,
+      "control": 63
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/b/bf/FC_Red_Bull_Salzburg_gegen_Bayern_M%C3%BCnchen_%282025-01-06_Testspiel%29_22.jpg"
   },
@@ -2274,8 +2274,8 @@
     "type": "Goal Machine",
     "stats": {
       "attack": 93,
-      "defense": 50,
-      "control": 88
+      "defense": 39,
+      "control": 76
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/e/ef/Kingsley_Coman_%282019%29_%28cropped%29.jpg"
   },
@@ -2286,8 +2286,8 @@
     "type": "Base",
     "stats": {
       "attack": 78,
-      "defense": 35,
-      "control": 73
+      "defense": 32,
+      "control": 63
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/e/ef/Kingsley_Coman_%282019%29_%28cropped%29.jpg"
   },
@@ -2298,8 +2298,8 @@
     "type": "Goal Machine",
     "stats": {
       "attack": 95,
-      "defense": 49,
-      "control": 89
+      "defense": 39,
+      "control": 77
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Cody_Gakpo_06042025_%282%29_%28cropped%29.jpg"
   },
@@ -2310,8 +2310,8 @@
     "type": "Base",
     "stats": {
       "attack": 80,
-      "defense": 34,
-      "control": 74
+      "defense": 33,
+      "control": 65
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Cody_Gakpo_06042025_%282%29_%28cropped%29.jpg"
   },
@@ -2322,8 +2322,8 @@
     "type": "Goal Machine",
     "stats": {
       "attack": 95,
-      "defense": 44,
-      "control": 89
+      "defense": 39,
+      "control": 77
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/d/d9/Incontro_con_le_squadre_finaliste_della_Coppa_Italia_di_calcio_Frecciarossa_Atalanta_-_Juventus_05_%28Du%C5%A1an_Vlahovi%C4%87%29.jpg"
   },
@@ -2334,8 +2334,8 @@
     "type": "Base",
     "stats": {
       "attack": 80,
-      "defense": 29,
-      "control": 74
+      "defense": 33,
+      "control": 65
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/d/d9/Incontro_con_le_squadre_finaliste_della_Coppa_Italia_di_calcio_Frecciarossa_Atalanta_-_Juventus_05_%28Du%C5%A1an_Vlahovi%C4%87%29.jpg"
   },
@@ -2347,7 +2347,7 @@
     "stats": {
       "attack": 97,
       "defense": 40,
-      "control": 88
+      "control": 79
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/00/UEFA_EURO_qualifiers_Sweden_vs_Spain_20191015_Alexander_Isak_56_%28cropped%29.jpg"
   },
@@ -2358,8 +2358,8 @@
     "type": "Base",
     "stats": {
       "attack": 82,
-      "defense": 25,
-      "control": 73
+      "defense": 34,
+      "control": 67
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/00/UEFA_EURO_qualifiers_Sweden_vs_Spain_20191015_Alexander_Isak_56_%28cropped%29.jpg"
   },
@@ -2370,8 +2370,8 @@
     "type": "Goal Machine",
     "stats": {
       "attack": 95,
-      "defense": 52,
-      "control": 86
+      "defense": 39,
+      "control": 77
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/e/e1/Manchester_United_v_Aston_Villa%2C_25_September_2021_%2817%29_%28cropped%29.jpg"
   },
@@ -2382,8 +2382,8 @@
     "type": "Base",
     "stats": {
       "attack": 80,
-      "defense": 37,
-      "control": 71
+      "defense": 33,
+      "control": 65
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/e/e1/Manchester_United_v_Aston_Villa%2C_25_September_2021_%2817%29_%28cropped%29.jpg"
   },
@@ -2394,8 +2394,8 @@
     "type": "Goal Machine",
     "stats": {
       "attack": 96,
-      "defense": 42,
-      "control": 88
+      "defense": 40,
+      "control": 78
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/1/11/Darwin_N%C3%BA%C3%B1ez_%28cropped%29.jpg"
   },
@@ -2406,8 +2406,8 @@
     "type": "Base",
     "stats": {
       "attack": 81,
-      "defense": 27,
-      "control": 73
+      "defense": 34,
+      "control": 66
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/1/11/Darwin_N%C3%BA%C3%B1ez_%28cropped%29.jpg"
   },
@@ -2417,9 +2417,9 @@
     "nation": "us",
     "type": "Base",
     "stats": {
-      "attack": 49,
+      "attack": 25,
       "defense": 56,
-      "control": 40
+      "control": 42
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Miles_Robinson_USMNT_v_Belgium_Mar_28_2026-40_%28cropped%29.jpg"
   },
@@ -2429,9 +2429,9 @@
     "nation": "us",
     "type": "Base",
     "stats": {
-      "attack": 58,
-      "defense": 46,
-      "control": 50
+      "attack": 25,
+      "defense": 58,
+      "control": 44
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/3f/2022_FIFA_World_Cup_England_0-0_USA_-_Walker_Zimmerman_%28cropped%29.jpg"
   },
@@ -2441,9 +2441,9 @@
     "nation": "us",
     "type": "Base",
     "stats": {
-      "attack": 58,
-      "defense": 57,
-      "control": 59
+      "attack": 59,
+      "defense": 24,
+      "control": 48
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/a/a5/Jes%C3%BAs_Ferreira_NYCFC.Seattle.18.Oct.2025-098_%28cropped%29.jpg"
   },
@@ -2453,9 +2453,9 @@
     "nation": "us",
     "type": "Base",
     "stats": {
-      "attack": 45,
-      "defense": 53,
-      "control": 47
+      "attack": 50,
+      "defense": 30,
+      "control": 53
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/7f/Cristian_Roldan_USMNT_v_Belgium_Mar_28_2026-50_%28cropped%29.jpg"
   },
@@ -2465,9 +2465,9 @@
     "nation": "us",
     "type": "Base",
     "stats": {
-      "attack": 41,
+      "attack": 25,
       "defense": 55,
-      "control": 53
+      "control": 41
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png"
   },
@@ -2477,9 +2477,9 @@
     "nation": "us",
     "type": "Base",
     "stats": {
-      "attack": 63,
-      "defense": 47,
-      "control": 42
+      "attack": 15,
+      "defense": 63,
+      "control": 30
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/a/af/Sean_Johnson_Minnesota_United_-_MNUFC_v_NYCFC_NEW_YORK_CITY_FOOTBALL_CLUB_-_ALLIANZ_FIELD_-_St._PAUL_MINNESOTA_%2846878992964%29_%28cropped_2%29.jpg"
   },
@@ -2489,9 +2489,9 @@
     "nation": "us",
     "type": "Base",
     "stats": {
-      "attack": 43,
-      "defense": 47,
-      "control": 54
+      "attack": 25,
+      "defense": 54,
+      "control": 41
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/e/e6/DeAndre_Yedlin_2021.jpg"
   },
@@ -2501,9 +2501,9 @@
     "nation": "us",
     "type": "Base",
     "stats": {
-      "attack": 59,
-      "defense": 50,
-      "control": 44
+      "attack": 50,
+      "defense": 34,
+      "control": 59
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/0b/Kellyn_Acosta_Philadelphia_Chicago_10.26.25-015_%28cropped%29.jpg"
   },
@@ -2514,8 +2514,8 @@
     "type": "Base",
     "stats": {
       "attack": 64,
-      "defense": 48,
-      "control": 60
+      "defense": 26,
+      "control": 52
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/d/de/Jordan_Morris_NYCFC.Seattle.18.Oct.2025-043_%28cropped%29.jpg"
   },
@@ -2525,9 +2525,9 @@
     "nation": "ca",
     "type": "Base",
     "stats": {
-      "attack": 53,
-      "defense": 44,
-      "control": 58
+      "attack": 15,
+      "defense": 58,
+      "control": 30
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/c/c8/Milan_Borjan_2018_crop.jpg"
   },
@@ -2537,8 +2537,8 @@
     "nation": "ca",
     "type": "Base",
     "stats": {
-      "attack": 43,
-      "defense": 45,
+      "attack": 50,
+      "defense": 30,
       "control": 52
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/09/Sam_Piette_CF_Montreal_NYCFC_6.28.25-152_%28cropped%29.jpg"
@@ -2549,9 +2549,9 @@
     "nation": "ca",
     "type": "Base",
     "stats": {
-      "attack": 44,
-      "defense": 53,
-      "control": 40
+      "attack": 53,
+      "defense": 22,
+      "control": 45
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/8/8e/David_Hoilett_WC2022.jpg"
   },
@@ -2562,8 +2562,8 @@
     "type": "Base",
     "stats": {
       "attack": 59,
-      "defense": 42,
-      "control": 54
+      "defense": 24,
+      "control": 48
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/1/1d/Lucas_Cavallini_2018.jpg"
   },
@@ -2573,9 +2573,9 @@
     "nation": "ca",
     "type": "Base",
     "stats": {
-      "attack": 57,
+      "attack": 25,
       "defense": 63,
-      "control": 43
+      "control": 47
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/6/6b/A_Johnston_Canada_national_football_team_WC2022_%28cropped%29.jpg"
   },
@@ -2585,9 +2585,9 @@
     "nation": "ca",
     "type": "Base",
     "stats": {
-      "attack": 58,
-      "defense": 40,
-      "control": 57
+      "attack": 25,
+      "defense": 58,
+      "control": 44
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/f/fb/Kamal_Miller_WC2022.jpg"
   },
@@ -2597,9 +2597,9 @@
     "nation": "ca",
     "type": "Base",
     "stats": {
-      "attack": 64,
-      "defense": 59,
-      "control": 52
+      "attack": 25,
+      "defense": 64,
+      "control": 48
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/d/db/CINvOCB_2017-05-13_-_Richie_Laryea_%2834525525311%29_%28cropped%29.jpg"
   },
@@ -2609,9 +2609,9 @@
     "nation": "mx",
     "type": "Base",
     "stats": {
-      "attack": 45,
+      "attack": 25,
       "defense": 59,
-      "control": 40
+      "control": 44
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/1/1e/Jes%C3%BAs_Gallardo.png"
   },
@@ -2621,9 +2621,9 @@
     "nation": "mx",
     "type": "Base",
     "stats": {
-      "attack": 50,
-      "defense": 46,
-      "control": 45
+      "attack": 25,
+      "defense": 50,
+      "control": 40
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/a/a9/C%C3%A9sar_Montes.png"
   },
@@ -2633,9 +2633,9 @@
     "nation": "mx",
     "type": "Base",
     "stats": {
-      "attack": 42,
-      "defense": 62,
-      "control": 55
+      "attack": 53,
+      "defense": 35,
+      "control": 62
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/73/Luis_Romo.png"
   },
@@ -2646,8 +2646,8 @@
     "type": "Base",
     "stats": {
       "attack": 64,
-      "defense": 57,
-      "control": 54
+      "defense": 26,
+      "control": 52
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png"
   },
@@ -2658,8 +2658,8 @@
     "type": "Base",
     "stats": {
       "attack": 63,
-      "defense": 63,
-      "control": 42
+      "defense": 26,
+      "control": 51
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/38/Roberto_Alvarado.png"
   },
@@ -2669,9 +2669,9 @@
     "nation": "mx",
     "type": "Base",
     "stats": {
-      "attack": 59,
-      "defense": 63,
-      "control": 52
+      "attack": 63,
+      "defense": 26,
+      "control": 51
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/30/Henry_Martin_2.png"
   },
@@ -2681,9 +2681,9 @@
     "nation": "mx",
     "type": "Base",
     "stats": {
-      "attack": 64,
-      "defense": 61,
-      "control": 42
+      "attack": 55,
+      "defense": 37,
+      "control": 64
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/c/cd/Luis_Ch%C3%A1vez_WC_2022_-_01.jpg"
   },
@@ -2693,9 +2693,9 @@
     "nation": "jp",
     "type": "Base",
     "stats": {
-      "attack": 60,
-      "defense": 45,
-      "control": 52
+      "attack": 15,
+      "defense": 60,
+      "control": 30
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/32/FC_Liefering_vs._SV_Horn_%28November_2016%29_04.jpg"
   },
@@ -2705,9 +2705,9 @@
     "nation": "jp",
     "type": "Base",
     "stats": {
-      "attack": 60,
-      "defense": 42,
-      "control": 62
+      "attack": 25,
+      "defense": 62,
+      "control": 47
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/d/de/Miki_Yamane_%28cropped%29.jpg"
   },
@@ -2717,9 +2717,9 @@
     "nation": "jp",
     "type": "Base",
     "stats": {
-      "attack": 48,
-      "defense": 56,
-      "control": 62
+      "attack": 25,
+      "defense": 62,
+      "control": 47
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/d/d6/Shogo_Taniguchi.jpg"
   },
@@ -2729,9 +2729,9 @@
     "nation": "jp",
     "type": "Base",
     "stats": {
-      "attack": 49,
-      "defense": 64,
-      "control": 62
+      "attack": 55,
+      "defense": 37,
+      "control": 64
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/2/29/Gaku_Shibasaki.jpg"
   },
@@ -2741,8 +2741,8 @@
     "nation": "jp",
     "type": "Base",
     "stats": {
-      "attack": 44,
-      "defense": 45,
+      "attack": 52,
+      "defense": 35,
       "control": 61
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/0b/Yuki_Soma_%28cropped%29.jpg"
@@ -2753,9 +2753,9 @@
     "nation": "jp",
     "type": "Base",
     "stats": {
-      "attack": 53,
-      "defense": 53,
-      "control": 63
+      "attack": 63,
+      "defense": 26,
+      "control": 51
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/9/99/Go_Ahead_Eagles_-_Feyenoord_-_53679351240_%28Ayase_Ueda%29.jpg"
   },
@@ -2765,9 +2765,9 @@
     "nation": "jp",
     "type": "Base",
     "stats": {
-      "attack": 64,
-      "defense": 41,
-      "control": 63
+      "attack": 25,
+      "defense": 64,
+      "control": 48
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/5/52/Lens_-_Marseille_%2803-02-2021%29_55.jpg"
   },
@@ -2777,9 +2777,9 @@
     "nation": "kr",
     "type": "Base",
     "stats": {
-      "attack": 55,
-      "defense": 40,
-      "control": 40
+      "attack": 15,
+      "defense": 55,
+      "control": 30
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/8/89/Rus-SK2017_%2822%29.jpg"
   },
@@ -2789,9 +2789,9 @@
     "nation": "kr",
     "type": "Base",
     "stats": {
-      "attack": 54,
-      "defense": 51,
-      "control": 64
+      "attack": 25,
+      "defense": 64,
+      "control": 48
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/1/18/240611_%EB%8C%80%ED%95%9C%EB%AF%BC%EA%B5%AD_vs_%EC%A4%91%EA%B5%AD_%28%EA%B9%80%EC%A7%84%EC%88%98%29.jpg"
   },
@@ -2801,9 +2801,9 @@
     "nation": "kr",
     "type": "Base",
     "stats": {
-      "attack": 44,
+      "attack": 25,
       "defense": 54,
-      "control": 44
+      "control": 41
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/d/da/191202_K%EB%A6%AC%EA%B7%B8_%EC%8B%9C%EC%83%81%EC%8B%9D%2C_%EA%B9%80%EB%AC%B8%ED%99%98_3.jpg"
   },
@@ -2813,8 +2813,8 @@
     "nation": "kr",
     "type": "Base",
     "stats": {
-      "attack": 44,
-      "defense": 42,
+      "attack": 41,
+      "defense": 54,
       "control": 63
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/77/Rus-SK2017_%2819%29_%28cropped%29.jpg"
@@ -2825,8 +2825,8 @@
     "nation": "kr",
     "type": "Base",
     "stats": {
-      "attack": 46,
-      "defense": 41,
+      "attack": 50,
+      "defense": 30,
       "control": 53
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/9/94/220528_FC_%EC%84%9C%EC%9A%B8_vs_%EA%B9%80%EC%B2%9C_%EC%83%81%EB%AC%B4_FC_%28%EA%B6%8C%EC%B0%BD%ED%9B%88%29.jpg"
@@ -2837,8 +2837,8 @@
     "nation": "kr",
     "type": "Base",
     "stats": {
-      "attack": 47,
-      "defense": 45,
+      "attack": 50,
+      "defense": 30,
       "control": 50
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/f/f2/231022_FC_%EC%84%9C%EC%9A%B8_vs_%EA%B0%95%EC%9B%90_FC_%28%EB%82%98%EC%83%81%ED%98%B8%29.jpg"
@@ -2850,8 +2850,8 @@
     "type": "Base",
     "stats": {
       "attack": 64,
-      "defense": 50,
-      "control": 46
+      "defense": 26,
+      "control": 52
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/a/a7/191130_%EB%B6%80%EC%82%B0%EC%95%84%EC%9D%B4%ED%8C%8C%ED%81%AC_VS_FC%EC%95%88%EC%96%91_%ED%94%8C%EB%A0%88%EC%9D%B4%EC%98%A4%ED%94%84%2C_%EC%A1%B0%EA%B7%9C%EC%84%B1_2.jpg"
   },
@@ -2862,8 +2862,8 @@
     "type": "Base",
     "stats": {
       "attack": 57,
-      "defense": 53,
-      "control": 48
+      "defense": 23,
+      "control": 46
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/7d/230624_%EC%88%98%EC%9B%90_%EC%82%BC%EC%84%B1_%EB%B8%94%EB%A3%A8%EC%9C%99%EC%A6%88_vs_FC_%EC%84%9C%EC%9A%B8_%28%ED%99%A9%EC%9D%98%EC%A1%B0%29.jpg"
   },
@@ -2873,9 +2873,9 @@
     "nation": "au",
     "type": "Base",
     "stats": {
-      "attack": 60,
-      "defense": 52,
-      "control": 48
+      "attack": 15,
+      "defense": 60,
+      "control": 30
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/1/18/Ryan_rcl_asse_2425.png"
   },
@@ -2885,9 +2885,9 @@
     "nation": "au",
     "type": "Base",
     "stats": {
-      "attack": 60,
-      "defense": 53,
-      "control": 58
+      "attack": 25,
+      "defense": 60,
+      "control": 45
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/00/Kye_Rowles_NYCFC_vs_DC_United_on_Aug_30_2025-016_%28cropped%29.jpg"
   },
@@ -2897,9 +2897,9 @@
     "nation": "au",
     "type": "Base",
     "stats": {
-      "attack": 60,
-      "defense": 47,
-      "control": 40
+      "attack": 25,
+      "defense": 60,
+      "control": 45
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/5/5e/20180601_FIFA_Friendly_Match_Czech_Republic_vs._Australia_Aziz_Behich_850_0277.jpg"
   },
@@ -2909,9 +2909,9 @@
     "nation": "au",
     "type": "Base",
     "stats": {
-      "attack": 59,
-      "defense": 41,
-      "control": 51
+      "attack": 38,
+      "defense": 50,
+      "control": 59
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/6/66/4822293_AE7I6590_%28Jackson_Irvine%29.jpg"
   },
@@ -2921,9 +2921,9 @@
     "nation": "au",
     "type": "Base",
     "stats": {
-      "attack": 40,
-      "defense": 53,
-      "control": 47
+      "attack": 35,
+      "defense": 50,
+      "control": 53
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/f/f5/20180601_FIFA_Friendly_Match_Czech_Republic_vs._Australia_Aaron_Mooy_850_0283.jpg"
   },
@@ -2933,9 +2933,9 @@
     "nation": "au",
     "type": "Base",
     "stats": {
-      "attack": 53,
-      "defense": 51,
-      "control": 62
+      "attack": 62,
+      "defense": 26,
+      "control": 50
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/30/Craig_Goodwin_ADL.jpg"
   },
@@ -2946,8 +2946,8 @@
     "type": "Base",
     "stats": {
       "attack": 54,
-      "defense": 47,
-      "control": 44
+      "defense": 22,
+      "control": 45
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/00/Mitchell_Duke_2020.png"
   },
@@ -2957,8 +2957,8 @@
     "nation": "au",
     "type": "Base",
     "stats": {
-      "attack": 46,
-      "defense": 48,
+      "attack": 50,
+      "defense": 30,
       "control": 52
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/2/2e/Riley_McGree.jpg"
@@ -2969,9 +2969,9 @@
     "nation": "sa",
     "type": "Base",
     "stats": {
-      "attack": 50,
+      "attack": 15,
       "defense": 58,
-      "control": 40
+      "control": 30
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/b/bc/Mohammed_Al-Owais_2018.jpg"
   },
@@ -2981,9 +2981,9 @@
     "nation": "sa",
     "type": "Base",
     "stats": {
-      "attack": 41,
-      "defense": 40,
-      "control": 55
+      "attack": 25,
+      "defense": 55,
+      "control": 41
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/8/85/Saudi_Arabia_v_Oman_%2813%29_%28cropped%29.jpg"
   },
@@ -2993,9 +2993,9 @@
     "nation": "sa",
     "type": "Base",
     "stats": {
-      "attack": 60,
+      "attack": 25,
       "defense": 63,
-      "control": 51
+      "control": 47
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/1/16/Saudi_Arabia_v_Oman_%282%29_%28cropped%29.jpg"
   },
@@ -3005,9 +3005,9 @@
     "nation": "sa",
     "type": "Base",
     "stats": {
-      "attack": 54,
-      "defense": 61,
-      "control": 49
+      "attack": 40,
+      "defense": 52,
+      "control": 61
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/0c/Group_photographs_of_Al_Hilal%2C_Al_Hilal_SFC_vs_Chelsea_F.C.%2C_9_February_2022_%28cropped%29.jpg"
   },
@@ -3017,8 +3017,8 @@
     "nation": "sa",
     "type": "Base",
     "stats": {
-      "attack": 58,
-      "defense": 47,
+      "attack": 50,
+      "defense": 34,
       "control": 59
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/6/6d/Salem_Al-Dawsari_2018.jpg"
@@ -3029,9 +3029,9 @@
     "nation": "sa",
     "type": "Base",
     "stats": {
-      "attack": 45,
-      "defense": 41,
-      "control": 48
+      "attack": 48,
+      "defense": 20,
+      "control": 45
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/06/Firas_Al-Buraikan_2026.jpg"
   },
@@ -3041,9 +3041,9 @@
     "nation": "sa",
     "type": "Base",
     "stats": {
-      "attack": 46,
-      "defense": 60,
-      "control": 56
+      "attack": 60,
+      "defense": 25,
+      "control": 49
     },
     "image": "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png"
   }
