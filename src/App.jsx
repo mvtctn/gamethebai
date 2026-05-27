@@ -6337,10 +6337,10 @@ export default function App() {
           }`}
           style={{ background: (() => {
             switch (matchEnvironment.time.key) {
-              case 'Night': return 'linear-gradient(180deg, #0d0015 0%, #080818 50%, #000d1a 100%)';
-              case 'Noon': return 'linear-gradient(180deg, #0ea5e9 0%, #38bdf8 50%, #7dd3fc 100%)';
-              case 'Sunset': return 'linear-gradient(180deg, #c2410c 0%, #ea580c 50%, #f97316 100%)';
-              default: return 'linear-gradient(180deg, #0d0015 0%, #080818 50%, #000d1a 100%)';
+              case 'Night': return 'radial-gradient(circle at 50% -20%, rgba(96, 165, 250, 0.18) 0%, transparent 60%), linear-gradient(180deg, #090a1b 0%, #050510 50%, #010207 100%)';
+              case 'Noon': return 'radial-gradient(circle at 50% -20%, rgba(52, 211, 153, 0.18) 0%, transparent 60%), linear-gradient(180deg, #041a12 0%, #020f0a 50%, #010604 100%)';
+              case 'Sunset': return 'radial-gradient(circle at 50% -20%, rgba(251, 191, 36, 0.15) 0%, transparent 60%), linear-gradient(180deg, #1a0815 0%, #0f030c 50%, #060108 100%)';
+              default: return 'radial-gradient(circle at 50% -20%, rgba(96, 165, 250, 0.18) 0%, transparent 60%), linear-gradient(180deg, #090a1b 0%, #050510 50%, #010207 100%)';
             }
           })() }}
           onClick={dismissRoundResult}
