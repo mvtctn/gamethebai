@@ -1507,15 +1507,15 @@ export default function App() {
   const handleSendGift = async () => {
     if (!currentUser || !userWallTarget || currentUser === userWallTarget) return;
     if (level < 2) {
-      alert("Bạn phải đạt Cấp 2 trở lên mới có thể tặng Xu!");
+      showAlert("Cấp Độ Chưa Đạt", "Bạn phải đạt Cấp 2 trở lên mới có thể tặng Xu!");
       return;
     }
     if (giftAmount < 10 || giftAmount > 200) {
-      alert("Số lượng xu không hợp lệ (10 - 200).");
+      showAlert("Lỗi Số Lượng", "Số lượng xu không hợp lệ (10 - 200).");
       return;
     }
     if (coins < giftAmount) {
-      alert("Bạn không đủ Xu để tặng!");
+      showAlert("Không Đủ Xu", "Bạn không đủ Xu để tặng!");
       return;
     }
 
@@ -1531,7 +1531,7 @@ export default function App() {
       ]);
 
       if (!targetSnap.exists() || !meSnap.exists()) {
-        alert("Lỗi dữ liệu người dùng.");
+        showAlert("Lỗi Hệ Thống", "Lỗi dữ liệu người dùng.");
         return;
       }
 
@@ -1542,11 +1542,11 @@ export default function App() {
       const targetReceivedToday = targetData.giftLimits?.[today]?.receivedCoins || 0;
 
       if (mySentToday + giftAmount > 500) {
-        alert(`Hôm nay bạn đã tặng ${mySentToday} xu. Giới hạn là 500 xu/ngày!`);
+        showAlert("Vượt Quá Giới Hạn", `Hôm nay bạn đã tặng ${mySentToday} xu. Giới hạn là 500 xu/ngày!`);
         return;
       }
       if (targetReceivedToday + giftAmount > 1000) {
-        alert(`Người này đã nhận ${targetReceivedToday} xu hôm nay. Giới hạn nhận của họ là 1000 xu/ngày để chống spam!`);
+        showAlert("Người Nhận Đã Đạt Giới Hạn", `Người này đã nhận ${targetReceivedToday} xu hôm nay. Giới hạn nhận của họ là 1000 xu/ngày để chống spam!`);
         return;
       }
 
@@ -1568,12 +1568,12 @@ export default function App() {
       };
       push(chatRef, newMsg);
 
-      alert(`Đã tặng ${giftAmount} xu cho ${userWallTarget} thành công!`);
+      showAlert("Thành Công", `Đã tặng ${giftAmount} xu cho ${userWallTarget} thành công!`);
       setShowGiftModal(false);
       setGiftAmount(10);
     } catch (error) {
       console.error("Gift error:", error);
-      alert("Có lỗi xảy ra khi tặng xu!");
+      showAlert("Lỗi", "Có lỗi xảy ra khi tặng xu!");
     } finally {
       setGiftLoading(false);
     }
