@@ -2981,44 +2981,9 @@ export default function App() {
     setCurrentAiCard(null);
   };
 
-  const [showFooter, setShowFooter] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const threshold = 30; // px tolerance
-      const windowHeight = window.innerHeight;
-      const docHeight = Math.max(
-        document.body.scrollHeight,
-        document.documentElement.scrollHeight,
-        document.body.offsetHeight,
-        document.documentElement.offsetHeight,
-        document.body.clientHeight,
-        document.documentElement.clientHeight
-      );
-      
-      const scrollY = window.scrollY || window.pageYOffset;
-      
-      // If the content is too small to scroll, show it. Otherwise check bottom proximity.
-      if (docHeight <= windowHeight + 10) {
-        setShowFooter(true);
-      } else if (docHeight - (scrollY + windowHeight) <= threshold) {
-        setShowFooter(true);
-      } else {
-        setShowFooter(false);
-      }
-    };
 
-    window.addEventListener('scroll', handleScroll);
-    window.addEventListener('resize', handleScroll);
-    
-    // FIX GPU: Bỏ setInterval polling 5 lần/giây — chỉ cần event listeners là đủ
-    handleScroll(); // chạy 1 lần khi mount để khởi tạo state
 
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleScroll);
-    };
-  }, []);
 
   const [gameAlert, setGameAlert] = useState(null); // Custom in-game dialog alert: { title, message }
   const showAlert = (title, message) => {
@@ -3467,13 +3432,24 @@ export default function App() {
                 className="htp-cta-btn"
                 onClick={() => {
                   setGameState('lobby');
-                  if (!currentUser) {
-                    // scroll to login - just go back to landing
-                  }
                 }}
               >
                 ⚡ {currentUser ? 'Về Trang Chủ' : 'Đăng Ký Ngay'}
               </button>
+            </div>
+
+            {/* About Section */}
+            <div className="mt-8 pt-8 border-t border-white/10 text-center flex flex-col items-center justify-center gap-2 pb-4">
+              <h3 className="text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 uppercase tracking-widest mb-1">
+                Bản Quyền & Tác Giả
+              </h3>
+              <p className="text-xs text-gray-400 max-w-sm leading-relaxed">
+                Bản quyền, ý tưởng game thuộc về <strong className="text-white">Mai Quang Vinh</strong><br/>
+                Tiểu học Nghĩa Tân, Phường Nghĩa Đô, TP Hà Nội
+              </p>
+              <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/5 mt-2">
+                Vibecoding với Antigravity
+              </div>
             </div>
 
           </div>
@@ -6610,20 +6586,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Professional Footer */}
-      <footer className={`mt-auto pt-12 pb-4 border-t border-white/5 text-center flex flex-col sm:flex-row items-center justify-between gap-4 w-full relative z-20 transition-all duration-500 ${showFooter ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-10 pointer-events-none'}`}>
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_#22c55e]"></span>
-          <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">Máy Chủ Trực Tuyến Hợp Lệ</span>
-        </div>
-        <div className="text-[10px] sm:text-xs font-bold text-gray-400 tracking-wider">
-          © 2026 WC Ultimate Card - Bản quyền thuộc về <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 font-extrabold">Mai Quang Vinh</span> (Tiểu học Nghĩa Tân)
-        </div>
-        <div className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/5">
-          Vibecoding với Antigravity
-        </div>
-      </footer>
-    </div>
+
         </>
       )}
 

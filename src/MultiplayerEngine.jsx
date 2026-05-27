@@ -655,9 +655,27 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       });
 
       peer.on('connection', (conn) => {
+        // Prevent cross-connection double-host bug and third-party interruptions
+        if (!isHostRef.current && remotePeerId && conn.peer.includes(remotePeerId.trim().toLowerCase().replace(/[^a-z0-9]/g, ''))) {
+          // Tie-breaker: Compare Peer IDs
+          const myId = peer.id || '';
+          const remoteId = conn.peer || '';
+          if (myId.localeCompare(remoteId) > 0) {
+            console.warn('[PVP] Cross-connection resolved: I become HOST.');
+            isHostRef.current = true;
+          } else {
+            console.warn('[PVP] Cross-connection resolved: I remain GUEST.');
+            isHostRef.current = false;
+          }
+        } else if (isHostRef.current && connRef.current && connRef.current.open) {
+          console.warn('[PVP] Ignoring connection from third party:', conn.peer);
+          return;
+        } else {
+          isHostRef.current = true;
+        }
+
         connRef.current = conn;
         setStatus('playing');
-        isHostRef.current = true;
         setupConnectionHandlers(conn);
       });
 
