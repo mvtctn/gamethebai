@@ -1018,7 +1018,7 @@ export default function App() {
 
   // Fetch Global Leaderboard
   useEffect(() => {
-    if (gameState === 'leaderboard') {
+    if (gameState === 'leaderboard' || gameState === 'userWall') {
       setLoadingLeaderboard(true);
       const lbRef = ref(database, 'leaderboard');
       get(lbRef).then((snapshot) => {
@@ -4883,7 +4883,7 @@ export default function App() {
               </button>
               <button
                 onClick={() => { playFx('click'); setSocialWallTab('owner'); }}
-                className={`pb-2 text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 border-b-2 ${
+                className={`pb-2 text-xs sm:text-sm font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 border-b-2 ${
                   socialWallTab === 'owner'
                     ? 'border-fuchsia-400 text-fuchsia-400'
                     : 'border-transparent text-gray-500 hover:text-gray-300'
@@ -4899,7 +4899,7 @@ export default function App() {
             <div className="flex lg:hidden gap-1 w-full bg-slate-900/40 rounded-lg p-0.5 border border-white/5 mb-4">
               <button
                 onClick={() => { playFx('click'); setMobileSubTab('feed'); }}
-                className={`flex-1 py-1.5 rounded-md text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                className={`flex-1 py-1.5 rounded-md text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1 ${
                   mobileSubTab === 'feed'
                     ? 'bg-white/15 text-white'
                     : 'text-gray-500 hover:text-gray-300'
@@ -4909,7 +4909,7 @@ export default function App() {
               </button>
               <button
                 onClick={() => { playFx('click'); setMobileSubTab('search'); }}
-                className={`flex-1 py-1.5 rounded-md text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                className={`flex-1 py-1.5 rounded-md text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1 ${
                   mobileSubTab === 'search'
                     ? 'bg-white/15 text-white'
                     : 'text-gray-500 hover:text-gray-300'
@@ -4919,7 +4919,7 @@ export default function App() {
               </button>
               <button
                 onClick={() => { playFx('click'); setMobileSubTab('profile'); }}
-                className={`flex-1 py-1.5 rounded-md text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                className={`flex-1 py-1.5 rounded-md text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1 ${
                   mobileSubTab === 'profile'
                     ? 'bg-white/15 text-white'
                     : 'text-gray-500 hover:text-gray-300'
@@ -5262,7 +5262,7 @@ export default function App() {
                         placeholder="Chia sẻ đội hình, chiến thuật... ⚽"
                         maxLength={280}
                         rows={2}
-                        className="w-full bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-xl p-2 text-xs font-semibold placeholder-gray-500 focus:outline-none resize-none transition-colors leading-relaxed text-white"
+                        className="w-full bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-xl p-2 text-sm font-semibold placeholder-gray-500 focus:outline-none resize-none transition-colors leading-relaxed text-white"
                       />
 
                       {/* Mention Autocomplete Dropdown */}
@@ -5340,7 +5340,7 @@ export default function App() {
                         placeholder="Chia sẻ với cộng đồng HLV toàn cầu... 🌍"
                         maxLength={280}
                         rows={2}
-                        className="w-full bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-xl p-2 text-xs font-semibold placeholder-gray-500 focus:outline-none resize-none transition-colors leading-relaxed text-white"
+                        className="w-full bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-xl p-2 text-sm font-semibold placeholder-gray-500 focus:outline-none resize-none transition-colors leading-relaxed text-white"
                       />
 
                       {/* Mention Autocomplete Dropdown */}
@@ -5450,7 +5450,7 @@ export default function App() {
                             </div>
                           </div>
 
-                          <p className="text-xs text-gray-100 font-medium leading-relaxed whitespace-pre-wrap px-0.5">
+                          <p className="text-sm text-gray-100 font-medium leading-relaxed whitespace-pre-wrap px-0.5">
                             {renderPostText(post.content)}
                           </p>
 
