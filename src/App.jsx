@@ -1503,6 +1503,82 @@ export default function App() {
     }
   };
 
+  // ================= TẶNG XU =================
+  const handleSendGift = async () => {
+    if (!currentUser || !userWallTarget || currentUser === userWallTarget) return;
+    if (level < 2) {
+      alert("Bạn phải đạt Cấp 2 trở lên mới có thể tặng Xu!");
+      return;
+    }
+    if (giftAmount < 10 || giftAmount > 200) {
+      alert("Số lượng xu không hợp lệ (10 - 200).");
+      return;
+    }
+    if (coins < giftAmount) {
+      alert("Bạn không đủ Xu để tặng!");
+      return;
+    }
+
+    setGiftLoading(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const targetUserRef = ref(database, `/users/${userWallTarget}`);
+      const meRef = ref(database, `/users/${currentUser}`);
+      
+      const [targetSnap, meSnap] = await Promise.all([
+        get(targetUserRef),
+        get(meRef)
+      ]);
+
+      if (!targetSnap.exists() || !meSnap.exists()) {
+        alert("Lỗi dữ liệu người dùng.");
+        return;
+      }
+
+      const targetData = targetSnap.val();
+      const meData = meSnap.val();
+
+      const mySentToday = meData.giftLimits?.[today]?.sentCoins || 0;
+      const targetReceivedToday = targetData.giftLimits?.[today]?.receivedCoins || 0;
+
+      if (mySentToday + giftAmount > 500) {
+        alert(`Hôm nay bạn đã tặng ${mySentToday} xu. Giới hạn là 500 xu/ngày!`);
+        return;
+      }
+      if (targetReceivedToday + giftAmount > 1000) {
+        alert(`Người này đã nhận ${targetReceivedToday} xu hôm nay. Giới hạn nhận của họ là 1000 xu/ngày để chống spam!`);
+        return;
+      }
+
+      const updates = {};
+      updates[`/users/${currentUser}/coins`] = (meData.coins || 0) - giftAmount;
+      updates[`/users/${currentUser}/giftLimits/${today}/sentCoins`] = mySentToday + giftAmount;
+      updates[`/users/${userWallTarget}/coins`] = (targetData.coins || 0) + giftAmount;
+      updates[`/users/${userWallTarget}/giftLimits/${today}/receivedCoins`] = targetReceivedToday + giftAmount;
+
+      await update(ref(database), updates);
+
+      // Send a system message to global chat
+      const chatRef = ref(database, '/chat');
+      const newMsg = {
+        sender: 'HỆ THỐNG',
+        text: `🎁 ${currentUser} vừa hào phóng tặng cho ${userWallTarget} ${giftAmount} xu!`,
+        timestamp: serverTimestamp(),
+        type: 'gift'
+      };
+      push(chatRef, newMsg);
+
+      alert(`Đã tặng ${giftAmount} xu cho ${userWallTarget} thành công!`);
+      setShowGiftModal(false);
+      setGiftAmount(10);
+    } catch (error) {
+      console.error("Gift error:", error);
+      alert("Có lỗi xảy ra khi tặng xu!");
+    } finally {
+      setGiftLoading(false);
+    }
+  };
+
   // Like / Unlike Post — operates on global_posts
   const handleLikePost = async (postId) => {
     playFx('click');
