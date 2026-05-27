@@ -84,7 +84,7 @@ body {
 .glass-panel {
   background: rgba(15, 23, 42, 0.6);
   /* backdrop-filter removed for GPU perf */
-  -webkit-/* backdrop-filter removed for GPU perf */
+  /* -webkit-backdrop-filter removed */
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
 }
@@ -1154,7 +1154,7 @@ h2 {
 .landing-glass-panel {
   background: rgba(15, 23, 42, 0.85);
   /* backdrop-filter removed for GPU perf */
-  -webkit-/* backdrop-filter removed for GPU perf */
+  /* -webkit-backdrop-filter removed */
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-top: 1px solid rgba(196, 240, 0, 0.3);
   border-radius: 1.5rem;
