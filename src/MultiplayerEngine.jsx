@@ -105,7 +105,7 @@ const playFx = (type) => {
   }
 };
 
-export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, initialJoinId, CardComponent }) {
+export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, initialJoinId, CardComponent, onShare }) {
   const [peerId, setPeerId] = useState('');
   const [remotePeerId, setRemotePeerId] = useState(initialJoinId || '');
   const [status, setStatus] = useState('lobby'); // 'lobby', 'connecting', 'playing', 'gameover'
@@ -1107,6 +1107,19 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
                 : <span className="text-yellow-400">Hòa Trận!</span>}
             </h2>
             <p className="text-xl mb-8 text-gray-300">Tỉ số: <span className="font-black text-white text-2xl">{myScore} – {opponentScore}</span></p>
+            {/* Share PVP Result Button */}
+            <button 
+              className="w-full mb-3 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-black tracking-widest text-xs py-3.5 px-4 rounded-2xl border border-emerald-400/20 shadow-[0_0_15px_rgba(16,185,129,0.2)] transition-all cursor-pointer active:scale-95 animate-pulse" 
+              onClick={() => {
+                playFx('click');
+                if (onShare) {
+                  onShare(myScore === opponentScore ? 'draw' : myScore > opponentScore ? 'win' : 'lose', opponentUsername, myScore, opponentScore);
+                }
+              }}
+            >
+              📢 KHOE CHIẾN TÍCH SIÊU CẤP
+            </button>
+
             <div className="flex flex-col sm:flex-row gap-3 w-full">
               <button 
                 className="flex-1 flex items-center justify-center gap-2 bg-slate-800/80 hover:bg-slate-700 text-white font-bold tracking-widest text-[10px] sm:text-xs py-3.5 px-4 rounded-2xl border border-white/10 transition-all cursor-pointer active:scale-95 shadow-inner" 
