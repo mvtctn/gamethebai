@@ -122,6 +122,9 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
   const [phase, setPhase] = useState('select_card'); // 'waiting_start', 'select_card', 'waiting', 'result'
   const [activeStat, setActiveStat] = useState('attack'); // 'attack', 'control', 'defense'
   const [myPlayedCard, setMyPlayedCard] = useState(null);
+  const [selectedPlayerCard, setSelectedPlayerCard] = useState(null);
+  const [myPlayedStat, setMyPlayedStat] = useState(null);
+  const myPlayedStatRef = useRef(null);
   const [opponentPlayedCard, setOpponentPlayedCard] = useState(null);
   const [roundResultMsg, setRoundResultMsg] = useState('');
   const [roundWinner, setRoundWinner] = useState(null); // 'me', 'opponent', 'draw'
@@ -182,6 +185,10 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     activeStatRef.current = stat;
   };
 
+  const isMyAttackTurn = isHostRef.current
+    ? (roundCount % 2 === 0)
+    : (roundCount % 2 !== 0);
+
   const updatePhase = (newPhase) => {
     setPhase(newPhase);
     phaseRef.current = newPhase;
@@ -194,11 +201,12 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       console.warn('[PVP] sendData: connection not ready');
     }
   }, []);
-  const calculateRoundResult = useCallback((myCard, opCard) => {
+  const calculateRoundResult = useCallback((myCard, opCard, hostStatInput, guestStatInput) => {
     // Guard: only process once, and ONLY host calculates
     if (phaseRef.current === 'result') return;
     
-    const currentStat = activeStatRef.current;
+    const hostStat = hostStatInput || activeStatRef.current || 'attack';
+    const guestStat = guestStatInput || activeStatRef.current || 'defense';
 
     const getPlayerAttr = (player) => {
       if (!player || !player.stats) return { key: 'speed', name: 'Tốc Độ', emoji: '⚡' };
@@ -271,8 +279,8 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
 
     const hostLvlBonus = ((hostCard.level || 1) - 1) * 2;
     const guestLvlBonus = ((guestCard.level || 1) - 1) * 2;
-    const hostVal = hostCard.stats[currentStat] + hostLvlBonus;
-    const guestVal = guestCard.stats[currentStat] + guestLvlBonus;
+    const hostVal = hostCard.stats[hostStat] + hostLvlBonus;
+    const guestVal = guestCard.stats[guestStat] + guestLvlBonus;
 
     // --- CRITICAL STRIKE (Đột Biến / Bạo Kích) ---
     const rngCrit1 = seededRNG(roundCountRef.current * 10 + 3);
@@ -348,11 +356,11 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       : `HÒA! ⚖️ (${guestFinal}${guestBonusDetails} = ${hostFinal}${hostBonusDetails})`;
 
     const historyEntry = {
-      myStat: currentStat,
+      myStat: hostStat,
       myCardName: hostCard.name,
       myBonusDetails: hostBonusDetails,
       myFinalVal: hostFinal,
-      opStat: currentStat,
+      opStat: guestStat,
       opCardName: guestCard.name,
       opBonusDetails: guestBonusDetails,
       opFinalVal: guestFinal,
@@ -376,16 +384,18 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       newHostScore,         // authoritative host score
       newGuestScore,        // authoritative guest score
       resultMsg: guestResultMsg,
-      stat: currentStat,
+      stat: hostStat,
       hostFinal,
       guestFinal,
       roundIndex: roundCountRef.current,
       historyEntry: {
         ...historyEntry,
         // Mirror for guest view
+        myStat: guestStat,
         myCardName: guestCard.name,
         myBonusDetails: guestBonusDetails,
         myFinalVal: guestFinal,
+        opStat: hostStat,
         opCardName: hostCard.name,
         opBonusDetails: hostBonusDetails,
         opFinalVal: hostFinal,
@@ -460,9 +470,11 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
 
     roundTimeoutRef.current = setTimeout(() => {
       myPlayedCardRef.current = null;
+      myPlayedStatRef.current = null;
       opponentPlayedCardRef.current = null;
       opponentPlayedStatRef.current = null;
       setMyPlayedCard(null);
+      setMyPlayedStat(null);
       setOpponentPlayedCard(null);
       setRoundResultMsg('');
       setRoundWinner(null);
@@ -537,9 +549,11 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       roundCountRef.current = data.roundIndex;
       setRoundCount(data.roundIndex);
       myPlayedCardRef.current = null;
+      myPlayedStatRef.current = null;
       opponentPlayedCardRef.current = null;
       opponentPlayedStatRef.current = null;
       setMyPlayedCard(null);
+      setMyPlayedStat(null);
       setOpponentPlayedCard(null);
       setRoundWinner(null);
       updateActiveStat(data.stat);
@@ -558,7 +572,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
 
       // HOST ONLY: trigger calculation when both cards are played
       if (isHostRef.current && myPlayedCardRef.current) {
-        calculateRoundResult(myPlayedCardRef.current, data.card);
+        calculateRoundResult(myPlayedCardRef.current, data.card, myPlayedStatRef.current, data.stat);
       }
       // Guest does NOT calculate — waits for 'round_result' from host
     }
@@ -828,31 +842,79 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     });
   };
 
+  const playRoundPvp = (stat) => {
+    if (!selectedPlayerCard) return;
+    const card = selectedPlayerCard;
+    setSelectedPlayerCard(null);
+
+    playFx('click');
+    const newDeck = myDeckRef.current.filter(c => c.id !== card.id);
+    myDeckRef.current = newDeck;
+    myPlayedCardRef.current = card;
+    myPlayedStatRef.current = stat;
+    setMyPlayedCard(card);
+    setMyPlayedStat(stat);
+    setMyDeck(newDeck);
+
+    // Broadcast played card and chosen stat
+    sendData({ type: 'play_card', card, roundIndex: roundCountRef.current, stat });
+
+    if (isHostRef.current) {
+      if (opponentPlayedCardRef.current) {
+        calculateRoundResult(card, opponentPlayedCardRef.current, stat, opponentPlayedStatRef.current);
+      } else {
+        updatePhase('waiting');
+        setRoundResultMsg('Đang chờ đối thủ ra bài...');
+      }
+    } else {
+      updatePhase('waiting');
+      setRoundResultMsg('Đang chờ đối thủ ra bài...');
+    }
+  };
+
   function handleCardSelect(card) {
     if (!card) return;
-    if (phase === 'select_card' && !myPlayedCard) {
+    if (phase !== 'select_card' || myPlayedCard) return;
+
+    if (isMyAttackTurn) {
+      // Attacker: open the stat selection modal
       playFx('click');
+      setSelectedPlayerCard(card);
+    } else {
+      // Defender: plays automatically using counter-stat of opponent's attack!
+      // But they can only play if the opponent has already played!
+      if (!opponentPlayedCardRef.current) {
+        setPvpAlert({
+          title: '⏳ Hãy Chờ',
+          message: 'Đang trong lượt phòng thủ! Bạn cần chờ đối thủ của mình chọn cầu thủ và chỉ số tấn công trước nhé.'
+        });
+        return;
+      }
+
+      playFx('click');
+      let defendStat = 'defense';
+      const opStat = opponentPlayedStatRef.current;
+      if (opStat === 'defense') defendStat = 'attack';
+      else if (opStat === 'control') defendStat = 'control';
+
       const newDeck = myDeckRef.current.filter(c => c.id !== card.id);
       myDeckRef.current = newDeck;
       myPlayedCardRef.current = card;
+      myPlayedStatRef.current = defendStat;
       setMyPlayedCard(card);
+      setMyPlayedStat(defendStat);
       setMyDeck(newDeck);
 
-      // Broadcast play card to opponent
-      sendData({ type: 'play_card', card, roundIndex: roundCountRef.current, stat: activeStatRef.current });
+      // Broadcast played card and computed defendStat
+      sendData({ type: 'play_card', card, roundIndex: roundCountRef.current, stat: defendStat });
 
       if (isHostRef.current) {
-        // HOST: check if opponent already played — if so, calculate
         if (opponentPlayedCardRef.current) {
-          calculateRoundResult(card, opponentPlayedCardRef.current);
-        } else {
-          updatePhase('waiting');
-          setRoundResultMsg('Đang chờ đối thủ ra bài...');
+          calculateRoundResult(card, opponentPlayedCardRef.current, defendStat, opponentPlayedStatRef.current);
         }
       } else {
-        // GUEST: always wait for host's round_result broadcast
         updatePhase('waiting');
-        setRoundResultMsg('Đang chờ đối thủ ra bài...');
+        setRoundResultMsg('Đang chờ máy chủ tính kết quả...');
       }
     }
   }
@@ -1205,9 +1267,21 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
               ) : (
                 <div className="bg-black/90 border border-white/15 px-6 py-2.5 md:px-8 md:py-3.5 rounded-full text-xs sm:text-sm md:text-base font-black uppercase tracking-wider flex items-center gap-2 shadow-lg">
                   {phase === 'select_card' && (
-                    <span className="text-yellow-400 flex items-center gap-1.5">
-                      ⚡ Vòng này đọ: <span className="bg-gradient-to-r from-yellow-300 to-amber-500 text-black px-2.5 py-0.5 rounded text-[10px] md:text-xs font-extrabold">{statInfo.emoji} {statInfo.name}</span>
-                    </span>
+                    isMyAttackTurn ? (
+                      <span className="text-yellow-400 flex items-center gap-1.5 animate-pulse">
+                        ⚔️ LƯỢT BẠN TẤN CÔNG! Hãy chọn cầu thủ & chỉ số
+                      </span>
+                    ) : (
+                      opponentPlayedCard ? (
+                        <span className="text-red-400 flex items-center gap-1.5 animate-pulse">
+                          🛡️ ĐỐI THỦ TẤN CÔNG BẰNG {opponentPlayedStatRef.current?.toUpperCase()}! Chọn thẻ để thủ.
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 flex items-center gap-1.5 animate-pulse">
+                          🛡️ LƯỢT BẠN PHÒNG THỦ! Đang chờ đối thủ chọn bài & chỉ số...
+                        </span>
+                      )
+                    )
                   )}
                   {phase === 'waiting_start' && <span className="text-slate-400 animate-pulse">⏳ Chờ máy chủ cấp chỉ số mới...</span>}
                   {phase === 'waiting' && <span className="text-cyan-400 animate-pulse">⏳ Đã ra bài, chờ đối thủ...</span>}
@@ -1264,6 +1338,51 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
                 })}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chọn chỉ số tấn công Modal */}
+      {selectedPlayerCard && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in pointer-events-auto">
+          <div className="glass-panel p-6 sm:p-8 rounded-[2rem] max-w-sm sm:max-w-md w-full flex flex-col items-center border border-white/10 shadow-[0_0_50px_rgba(251,191,36,0.2)] animate-scale-in relative">
+            <button 
+              className="absolute top-4 right-4 text-gray-400 hover:text-white bg-black/40 hover:bg-black/80 p-2 rounded-full w-8 h-8 flex items-center justify-center transition-colors cursor-pointer"
+              onClick={() => setSelectedPlayerCard(null)}
+            >
+              ✕
+            </button>
+
+            <h2 className="text-sm sm:text-base font-black text-amber-400 mb-6 uppercase tracking-widest text-center">Chọn Chỉ Số Tấn Công</h2>
+            
+            <div className="w-40 sm:w-48 mb-8 scale-110 drop-shadow-2xl">
+              <CardComponent player={selectedPlayerCard} />
+            </div>
+
+            <div className="flex gap-3 sm:gap-4 w-full">
+              <button className="flex-1 flex flex-col items-center bg-black/60 hover:bg-red-900/50 border border-red-500/50 hover:border-red-400 rounded-xl py-3 transition-all group shadow-[0_0_15px_rgba(239,68,68,0.3)] hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(239,68,68,0.6)] cursor-pointer" onClick={() => playRoundPvp('attack')}>
+                  <span className="text-[10px] sm:text-xs font-bold text-red-400 tracking-widest uppercase group-hover:text-white transition-colors">ATK</span>
+                  <span className="text-2xl sm:text-3xl font-black text-white">{selectedPlayerCard.stats.attack}</span>
+              </button>
+              <button className="flex-1 flex flex-col items-center bg-black/60 hover:bg-green-900/50 border border-green-500/50 hover:border-green-400 rounded-xl py-3 transition-all group shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(34,197,94,0.6)] cursor-pointer" onClick={() => playRoundPvp('control')}>
+                  <span className="text-[10px] sm:text-xs font-bold text-green-400 tracking-widest uppercase group-hover:text-white transition-colors">CTRL</span>
+                  <span className="text-2xl sm:text-3xl font-black text-white">{selectedPlayerCard.stats.control}</span>
+              </button>
+              <button className="flex-1 flex flex-col items-center bg-black/60 hover:bg-blue-900/50 border border-blue-500/50 hover:border-blue-400 rounded-xl py-3 transition-all group shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(59,130,246,0.6)] cursor-pointer" onClick={() => playRoundPvp('defense')}>
+                  <span className="text-[10px] sm:text-xs font-bold text-blue-400 tracking-widest uppercase group-hover:text-white transition-colors">DEF</span>
+                  <span className="text-2xl sm:text-3xl font-black text-white">{selectedPlayerCard.stats.defense}</span>
+              </button>
+            </div>
+
+            <button 
+              className="mt-6 w-full py-2.5 bg-white/5 hover:bg-white/10 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer border border-white/10 hover:border-white/20 active:scale-[0.98]"
+              onClick={() => {
+                playFx('click');
+                setSelectedPlayerCard(null);
+              }}
+            >
+              ⟲ Chọn Cầu Thủ Khác
+            </button>
           </div>
         </div>
       )}
