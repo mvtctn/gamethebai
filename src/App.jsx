@@ -25,13 +25,13 @@ const triggerConfetti = async (options) => {
 
 const PITCH_POSITIONS = [
   { top: '80%', left: '50%' }, // GK
-  { top: '60%', left: '15%' }, // LB
-  { top: '65%', left: '35%' }, // CB1
-  { top: '65%', left: '65%' }, // CB2
-  { top: '60%', left: '85%' }, // RB
-  { top: '40%', left: '25%' }, // CM1
+  { top: '60%', left: '18%' }, // LB
+  { top: '65%', left: '38%' }, // CB1
+  { top: '65%', left: '62%' }, // CB2
+  { top: '60%', left: '82%' }, // RB
+  { top: '40%', left: '28%' }, // CM1
   { top: '45%', left: '50%' }, // CM2
-  { top: '40%', left: '75%' }, // CM3
+  { top: '40%', left: '72%' }, // CM3
   { top: '20%', left: '25%' }, // LW
   { top: '15%', left: '50%' }, // ST
   { top: '20%', left: '75%' }, // RW
@@ -2944,6 +2944,12 @@ export default function App() {
         setSelectedPlayerCard(null);
         setSelectedStat(null);
         setCurrentAiCard(null);
+        
+        // Fix: Automatically trigger AI attack if next turn is AI's turn
+        const nextRoundPlayedCount = playedCardIds.length;
+        if (nextRoundPlayedCount % 2 === 0) {
+          setTimeout(() => triggerAiAttack(nextRoundPlayedCount), 500);
+        }
       }, 6000);
       return () => clearTimeout(timer);
     }
@@ -4688,53 +4694,60 @@ export default function App() {
       {gameState === 'userWall' && (
         <div className="w-full max-w-5xl mx-auto flex flex-col mt-2 sm:mt-8 animate-fade-in px-2 sm:px-4 text-white">
           {/* Header */}
-          <div className="flex items-center justify-between w-full mb-4">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between w-full mb-3">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <button
-                className="btn !bg-slate-800 hover:!bg-slate-700 transition-colors flex items-center gap-2 cursor-pointer text-xs font-black uppercase tracking-wider !py-2.5 rounded-full border border-white/10"
+                className="w-8 h-8 sm:w-auto sm:h-auto sm:px-4 sm:py-2 bg-slate-800/50 hover:bg-slate-700/80 transition-colors flex items-center justify-center gap-1.5 cursor-pointer text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-full border border-white/10 shrink-0"
                 onClick={() => { playFx('click'); setGameState('lobby'); setUserWallTarget(null); }}
               >
-                ← Sảnh
+                <span>←</span>
+                <span className="hidden sm:inline">Sảnh</span>
               </button>
               {userWallTarget && userWallTarget !== currentUser && (
                 <button
-                  className="btn !bg-indigo-800 hover:!bg-indigo-700 transition-colors flex items-center gap-2 cursor-pointer text-xs font-black uppercase tracking-wider !py-2.5 rounded-full border border-indigo-500/30"
+                  className="w-8 h-8 sm:w-auto sm:h-auto sm:px-4 sm:py-2 bg-indigo-900/40 hover:bg-indigo-800/60 transition-colors flex items-center justify-center gap-1.5 cursor-pointer text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-full border border-indigo-500/20 shrink-0"
                   onClick={() => { playFx('click'); setUserWallTarget(currentUser); setSocialWallTab('owner'); }}
+                  title="Tường Của Tôi"
                 >
-                  👤 Tường Của Tôi
+                  <span>👤</span>
+                  <span className="hidden sm:inline">Của Tôi</span>
                 </button>
               )}
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 uppercase tracking-widest text-center">
-              🐦 Mạng Xã Hội HLV
+            
+            <h2 className="text-sm sm:text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 uppercase tracking-widest text-center truncate px-2">
+              🐦 Mạng Xã Hội
             </h2>
+            
             <button
-              className="btn !bg-gradient-to-r !from-cyan-700 !to-indigo-700 hover:!from-cyan-600 hover:!to-indigo-600 text-xs font-black uppercase tracking-wider !py-2.5 rounded-full border border-cyan-500/30 shadow-md cursor-pointer"
+              className="w-8 h-8 sm:w-auto sm:h-auto sm:px-4 sm:py-2 bg-cyan-900/40 hover:bg-cyan-800/60 transition-colors flex items-center justify-center gap-1.5 cursor-pointer text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-full border border-cyan-500/20 shrink-0 text-cyan-300"
               onClick={() => { playFx('click'); setUserWallTarget(currentUser); setSocialWallTab('global'); }}
+              title="Khám Phá"
             >
-              🌍 Khám Phá
+              <span>🌍</span>
+              <span className="hidden sm:inline">Khám Phá</span>
             </button>
           </div>
 
-          {/* TAB FILTER — X-style */}
+          {/* TAB FILTER — Minimalist Underline Style */}
           {userWallTarget && (
-            <div className="flex gap-0 w-full max-w-md mx-auto mb-4 bg-black/40 rounded-xl p-1 border border-white/5">
+            <div className="flex justify-center gap-6 w-full max-w-md mx-auto mb-4 border-b border-white/10">
               <button
                 onClick={() => { playFx('click'); setSocialWallTab('global'); }}
-                className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`pb-2 text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 border-b-2 ${
                   socialWallTab === 'global'
-                    ? 'bg-gradient-to-r from-cyan-600 to-indigo-600 text-white shadow-md shadow-cyan-900/30'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    ? 'border-cyan-400 text-cyan-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-300'
                 }`}
               >
                 🌍 Khám Phá
               </button>
               <button
                 onClick={() => { playFx('click'); setSocialWallTab('owner'); }}
-                className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`pb-2 text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 border-b-2 ${
                   socialWallTab === 'owner'
-                    ? 'bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white shadow-md shadow-fuchsia-900/30'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    ? 'border-fuchsia-400 text-fuchsia-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-300'
                 }`}
               >
                 👤 {userWallTarget === currentUser ? 'Của Tôi' : userWallTarget}
@@ -4742,35 +4755,35 @@ export default function App() {
             </div>
           )}
 
-          {/* Mobile sub-tabs */}
+          {/* Mobile sub-tabs — Slimmer Pill Style */}
           {userWallTarget && (
-            <div className="flex lg:hidden gap-1 w-full bg-slate-900/60 rounded-xl p-1 border border-white/10 mb-4 shadow-inner">
+            <div className="flex lg:hidden gap-1 w-full bg-slate-900/40 rounded-lg p-0.5 border border-white/5 mb-4">
               <button
                 onClick={() => { playFx('click'); setMobileSubTab('feed'); }}
-                className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-1.5 rounded-md text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1 ${
                   mobileSubTab === 'feed'
-                    ? 'bg-gradient-to-r from-cyan-600 to-indigo-600 text-white shadow'
-                    : 'text-gray-400 hover:text-white'
+                    ? 'bg-white/15 text-white'
+                    : 'text-gray-500 hover:text-gray-300'
                 }`}
               >
                 📰 Bản tin
               </button>
               <button
                 onClick={() => { playFx('click'); setMobileSubTab('search'); }}
-                className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-1.5 rounded-md text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1 ${
                   mobileSubTab === 'search'
-                    ? 'bg-gradient-to-r from-cyan-600 to-indigo-600 text-white shadow'
-                    : 'text-gray-400 hover:text-white'
+                    ? 'bg-white/15 text-white'
+                    : 'text-gray-500 hover:text-gray-300'
                 }`}
               >
                 🔍 Tìm HLV
               </button>
               <button
                 onClick={() => { playFx('click'); setMobileSubTab('profile'); }}
-                className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-1.5 rounded-md text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1 ${
                   mobileSubTab === 'profile'
-                    ? 'bg-gradient-to-r from-cyan-600 to-indigo-600 text-white shadow'
-                    : 'text-gray-400 hover:text-white'
+                    ? 'bg-white/15 text-white'
+                    : 'text-gray-500 hover:text-gray-300'
                 }`}
               >
                 👤 Cá nhân
@@ -5085,35 +5098,35 @@ export default function App() {
                 
                 {/* 1. Composer (Only for the wall owner, when not on global feed tab) */}
                 {userWallTarget === currentUser && socialWallTab !== 'global' && (
-                  <div className="glass-panel rounded-2xl p-4 border border-white/10 shadow-xl bg-slate-950/40  flex gap-3">
+                  <div className="glass-panel rounded-2xl p-3 border border-white/10 shadow-xl bg-slate-950/40 flex gap-2 sm:gap-3">
                     <div 
-                      className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center font-black border border-white/10 select-none text-xs"
+                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-full shrink-0 flex items-center justify-center font-black border border-white/10 select-none text-[10px] sm:text-xs"
                       style={{ background: getAvatarGradient(currentUser) }}
                     >
                       {currentUser.charAt(0).toUpperCase()}
                     </div>
                     
-                    <div className="flex-1 flex flex-col gap-2.5">
+                    <div className="flex-1 flex flex-col gap-2">
                       <textarea
                         value={newPostText}
                         onChange={handleComposerChange}
-                        placeholder="Hãy chia sẻ suy nghĩ, đội hình lý tưởng hay kinh nghiệm trận mạc bóng đá của bạn... ⚽"
+                        placeholder="Chia sẻ đội hình, chiến thuật... ⚽"
                         maxLength={280}
                         rows={2}
-                        className="w-full bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-xl p-2.5 text-xs font-semibold placeholder-gray-500 focus:outline-none resize-none transition-colors leading-normal text-white"
+                        className="w-full bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-xl p-2 text-xs font-semibold placeholder-gray-500 focus:outline-none resize-none transition-colors leading-relaxed text-white"
                       />
 
                       {/* Mention Autocomplete Dropdown */}
                       {showMentionDropdown && (
                         <div className="relative">
-                          <div className="absolute top-0 left-0 z-[60] bg-slate-900/95 border border-white/10 rounded-xl p-1.5 flex flex-col gap-1 w-44 shadow-2xl  animate-fade-in">
+                          <div className="absolute top-0 left-0 z-[60] bg-slate-900/95 border border-white/10 rounded-xl p-1.5 flex flex-col gap-1 w-44 shadow-2xl animate-fade-in">
                             <div className="text-[8px] font-black text-gray-500 uppercase tracking-widest px-1.5 py-0.5 border-b border-white/5">Nhắc tên HLV:</div>
                             {getAutocompleteSuggestions().map(name => (
                               <button
                                 key={name}
                                 type="button"
                                 onClick={() => insertMention(name)}
-                                className="w-full text-left px-2 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:text-white hover:bg-white/5 transition-all flex items-center gap-1.5 cursor-pointer"
+                                className="w-full text-left px-2 py-1 rounded-lg text-xs font-bold text-gray-300 hover:text-white hover:bg-white/5 transition-all flex items-center gap-1.5 cursor-pointer"
                               >
                                 👤 @{name}
                               </button>
@@ -5126,21 +5139,20 @@ export default function App() {
                       )}
 
                       {/* Emoji & Quick Toolbar */}
-                      <div className="flex items-center gap-1 flex-wrap py-1 border-t border-white/5">
-                        <span className="text-[8px] text-gray-500 font-bold uppercase mr-1">Sinh động:</span>
-                        {['⚽', '🏆', '👑', '🔥', '🎯', '🤝', '💬', '🚀', '🌟', '👏'].map(emoji => (
+                      <div className="flex items-center gap-1 flex-wrap pt-1 border-t border-white/5">
+                        {['⚽', '🏆', '👑', '🔥', '🎯', '🤝', '💬', '🚀'].map(emoji => (
                           <button
                             key={emoji}
                             type="button"
                             onClick={() => insertEmoji(emoji)}
-                            className="w-5.5 h-5.5 rounded hover:bg-white/10 text-xs flex items-center justify-center transition-all hover:scale-110 cursor-pointer"
+                            className="w-5 h-5 sm:w-6 sm:h-6 rounded hover:bg-white/10 text-[10px] sm:text-xs flex items-center justify-center transition-all hover:scale-110 cursor-pointer"
                           >
                             {emoji}
                           </button>
                         ))}
                       </div>
                       
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between mt-1">
                         <span className={`text-[9px] font-bold tracking-wider ${
                           newPostText.length > 250 ? 'text-red-400' : newPostText.length > 200 ? 'text-yellow-400' : 'text-gray-500'
                         }`}>
@@ -5150,13 +5162,13 @@ export default function App() {
                         <button
                           onClick={handleCreatePost}
                           disabled={!newPostText.trim() || newPostText.length > 280}
-                          className={`btn !py-1.5 !px-4 text-[10px] font-black uppercase tracking-wider rounded-full shadow-lg transition-all active:scale-95 cursor-pointer ${
+                          className={`btn !py-1 !px-3 text-[9px] sm:text-[10px] font-black uppercase tracking-wider rounded-full shadow-md transition-all active:scale-95 cursor-pointer ${
                             !newPostText.trim() || newPostText.length > 280
                               ? 'opacity-40 !bg-gray-800 cursor-not-allowed text-gray-500 shadow-none'
                               : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-cyan-900/30'
                           }`}
                         >
-                          Đăng Bài 🚀
+                          Đăng Bài
                         </button>
                       </div>
                     </div>
@@ -5165,34 +5177,34 @@ export default function App() {
 
                 {/* 2. Composer for global tab (everyone can post globally) */}
                 {socialWallTab === 'global' && (
-                  <div className="glass-panel rounded-2xl p-4 border border-white/10 shadow-xl bg-slate-950/40  flex gap-3">
+                  <div className="glass-panel rounded-2xl p-3 border border-white/10 shadow-xl bg-slate-950/40 flex gap-2 sm:gap-3">
                     <div
-                      className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center font-black border border-white/10 select-none text-xs"
+                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-full shrink-0 flex items-center justify-center font-black border border-white/10 select-none text-[10px] sm:text-xs"
                       style={{ background: getAvatarGradient(currentUser) }}
                     >
                       {currentUser.charAt(0).toUpperCase()}
                     </div>
-                    <div className="flex-1 flex flex-col gap-2.5">
+                    <div className="flex-1 flex flex-col gap-2">
                        <textarea
                         value={newPostText}
                         onChange={handleComposerChange}
-                        placeholder="Chia sẻ với cộng đồng HLV toàn cầu... ⚽🌍"
+                        placeholder="Chia sẻ với cộng đồng HLV toàn cầu... 🌍"
                         maxLength={280}
                         rows={2}
-                        className="w-full bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-xl p-2.5 text-xs font-semibold placeholder-gray-500 focus:outline-none resize-none transition-colors leading-normal text-white"
+                        className="w-full bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-xl p-2 text-xs font-semibold placeholder-gray-500 focus:outline-none resize-none transition-colors leading-relaxed text-white"
                       />
 
                       {/* Mention Autocomplete Dropdown */}
                       {showMentionDropdown && (
                         <div className="relative">
-                          <div className="absolute top-0 left-0 z-[60] bg-slate-900/95 border border-white/10 rounded-xl p-1.5 flex flex-col gap-1 w-44 shadow-2xl  animate-fade-in">
+                          <div className="absolute top-0 left-0 z-[60] bg-slate-900/95 border border-white/10 rounded-xl p-1.5 flex flex-col gap-1 w-44 shadow-2xl animate-fade-in">
                             <div className="text-[8px] font-black text-gray-500 uppercase tracking-widest px-1.5 py-0.5 border-b border-white/5">Nhắc tên HLV:</div>
                             {getAutocompleteSuggestions().map(name => (
                               <button
                                 key={name}
                                 type="button"
                                 onClick={() => insertMention(name)}
-                                className="w-full text-left px-2 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:text-white hover:bg-white/5 transition-all flex items-center gap-1.5 cursor-pointer"
+                                className="w-full text-left px-2 py-1 rounded-lg text-xs font-bold text-gray-300 hover:text-white hover:bg-white/5 transition-all flex items-center gap-1.5 cursor-pointer"
                               >
                                 👤 @{name}
                               </button>
@@ -5205,28 +5217,27 @@ export default function App() {
                       )}
 
                       {/* Emoji & Quick Toolbar */}
-                      <div className="flex items-center gap-1.5 flex-wrap py-1 border-t border-white/5">
-                        <span className="text-[8px] text-gray-500 font-bold uppercase mr-1">Sinh động:</span>
-                        {['⚽', '🏆', '👑', '🔥', '🎯', '🤝', '💬', '🚀', '🌟', '👏'].map(emoji => (
+                      <div className="flex items-center gap-1 flex-wrap pt-1 border-t border-white/5">
+                        {['⚽', '🏆', '👑', '🔥', '🎯', '🤝', '💬', '🚀'].map(emoji => (
                           <button
                             key={emoji}
                             type="button"
                             onClick={() => insertEmoji(emoji)}
-                            className="w-5.5 h-5.5 rounded hover:bg-white/10 text-xs flex items-center justify-center transition-all hover:scale-110 cursor-pointer"
+                            className="w-5 h-5 sm:w-6 sm:h-6 rounded hover:bg-white/10 text-[10px] sm:text-xs flex items-center justify-center transition-all hover:scale-110 cursor-pointer"
                           >
                             {emoji}
                           </button>
                         ))}
                       </div>
                       
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between mt-1">
                         <span className={`text-[9px] font-bold tracking-wider ${ newPostText.length > 250 ? 'text-red-400' : newPostText.length > 200 ? 'text-yellow-400' : 'text-gray-500' }`}>{newPostText.length} / 280</span>
                         <button
                           onClick={handleCreatePost}
                           disabled={!newPostText.trim() || newPostText.length > 280}
-                          className={`btn !py-1.5 !px-4 text-[10px] font-black uppercase tracking-wider rounded-full shadow-lg transition-all active:scale-95 cursor-pointer ${ !newPostText.trim() || newPostText.length > 280 ? 'opacity-40 !bg-gray-800 cursor-not-allowed text-gray-500 shadow-none' : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-cyan-900/30' }`}
+                          className={`btn !py-1 !px-3 text-[9px] sm:text-[10px] font-black uppercase tracking-wider rounded-full shadow-md transition-all active:scale-95 cursor-pointer ${ !newPostText.trim() || newPostText.length > 280 ? 'opacity-40 !bg-gray-800 cursor-not-allowed text-gray-500 shadow-none' : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-cyan-900/30' }`}
                         >
-                          🌍 Đăng Toàn Cầu
+                          Đăng Bài
                         </button>
                       </div>
                     </div>
@@ -5234,10 +5245,10 @@ export default function App() {
                 )}
 
                 {/* 2b. Timeline Feed */}
-                <div className="flex flex-col gap-4">
-                  <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-white/5 pb-2 px-2 flex justify-between items-center">
+                <div className="flex flex-col gap-3">
+                  <div className="text-[9px] font-black text-gray-500 uppercase tracking-widest border-b border-white/5 pb-1.5 px-2 flex justify-between items-center mt-2">
                     {socialWallTab === 'global' ? (
-                      <><span>🌍 Khám Phá — Feed Toàn Cầu</span><span>{globalPosts.length} bài</span></>
+                      <><span>🌍 Khám Phá — Feed</span><span>{globalPosts.length} bài</span></>
                     ) : (
                       <><span>👤 Bài Đăng Của {userWallTarget}</span><span>{userWallPosts.length} bài</span></>
                     )}
@@ -5246,10 +5257,9 @@ export default function App() {
                   {(() => {
                     const displayPosts = socialWallTab === 'global' ? globalPosts : userWallPosts;
                     if (displayPosts.length === 0) return (
-                      <div className="glass-panel rounded-xl p-6 sm:p-10 text-center border border-white/5 bg-slate-900/10">
-                        <div className="text-2xl mb-1.5">{socialWallTab === 'global' ? '🌍' : '📭'}</div>
-                        <div className="text-xs text-gray-400 font-bold uppercase mb-1">{socialWallTab === 'global' ? 'Feed toàn cầu chưa có bài viết' : 'HLV chưa đăng bài nào'}</div>
-                        <p className="text-[10px] text-gray-500 font-medium">{socialWallTab === 'global' ? 'Hãy là người đầu tiên chia sẻ với cộng đồng!' : 'Hãy chuyển sang tab Khám Phá để xem feed toàn cầu.'}</p>
+                      <div className="glass-panel rounded-xl p-6 text-center border border-white/5 bg-slate-900/10">
+                        <div className="text-xl mb-1">{socialWallTab === 'global' ? '🌍' : '📭'}</div>
+                        <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">{socialWallTab === 'global' ? 'Feed toàn cầu trống' : 'HLV chưa đăng bài'}</div>
                       </div>
                     );
                     return displayPosts.map((post) => {
@@ -5263,13 +5273,13 @@ export default function App() {
                       return (
                         <div
                           key={post.id}
-                          className={`glass-panel rounded-xl p-3.5 sm:p-4.5 flex flex-col gap-3 hover:border-white/15 transition-all duration-300 shadow-sm ${
+                          className={`glass-panel rounded-xl p-3 sm:p-4 flex flex-col gap-2 hover:border-white/15 transition-all duration-300 shadow-sm ${
                             isMyPost ? 'border border-cyan-500/20 bg-cyan-950/10' : 'border border-white/5 bg-slate-950/20'
                           }`}
                         >
-                          <div className="flex items-center gap-2 sm:gap-3">
+                          <div className="flex items-center gap-2">
                             <button
-                              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full shrink-0 flex items-center justify-center text-xs sm:text-sm font-black border border-white/5 select-none cursor-pointer hover:opacity-80 transition-opacity"
+                              className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[10px] font-black border border-white/5 select-none cursor-pointer hover:opacity-80 transition-opacity"
                               style={{ background: getAvatarGradient(post.author) }}
                               onClick={() => { if (post.author !== userWallTarget) { setUserWallTarget(post.author); setSocialWallTab('owner'); } }}
                               title={`Xem tường của ${post.author}`}
@@ -5279,58 +5289,57 @@ export default function App() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <button
-                                  className="font-extrabold text-xs sm:text-sm text-white hover:text-cyan-400 transition-colors cursor-pointer"
+                                  className="font-extrabold text-xs text-white hover:text-cyan-400 transition-colors cursor-pointer"
                                   onClick={() => { setUserWallTarget(post.author); setSocialWallTab('owner'); }}
                                 >
                                   {post.author}
                                 </button>
-                                <span className="text-[8px] bg-white/10 text-gray-400 px-1 py-0.5 rounded border border-white/10 font-bold shrink-0">Lv.{post.authorLevel || 1}</span>
-                                {isMyPost && <span className="text-[8px] bg-cyan-950/40 text-cyan-400 border border-cyan-500/20 px-1 py-0.5 rounded font-extrabold">Bạn</span>}
+                                <span className="text-[7px] bg-white/10 text-gray-400 px-1 py-0.5 rounded border border-white/10 font-bold shrink-0">Lv.{post.authorLevel || 1}</span>
+                                {isMyPost && <span className="text-[7px] bg-cyan-950/40 text-cyan-400 border border-cyan-500/20 px-1 py-0.5 rounded font-extrabold">Bạn</span>}
                               </div>
                               <span className="text-[8px] text-gray-500 font-bold font-mono block mt-0.5">{getRelativeTime(post.timestamp)}</span>
                             </div>
                           </div>
 
-                          <p className="text-xs sm:text-sm text-gray-100 font-medium leading-relaxed whitespace-pre-wrap px-0.5">
+                          <p className="text-xs text-gray-100 font-medium leading-relaxed whitespace-pre-wrap px-0.5">
                             {renderPostText(post.content)}
                           </p>
 
-                          <div className="flex items-center gap-4 sm:gap-6 border-t border-b border-white/5 py-1.5 px-0.5">
+                          <div className="flex items-center gap-4 border-t border-b border-white/5 py-1 px-0.5 mt-1">
                             <button
                               onClick={() => handleLikePost(post.id)}
-                              className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-75 hover:opacity-80 cursor-pointer ${ hasLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-400' }`}
+                              className={`flex items-center gap-1.5 font-bold transition-all active:scale-75 hover:opacity-80 cursor-pointer ${ hasLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-400' }`}
                             >
-                              <span className="text-sm select-none">{hasLiked ? '❤️' : '🤍'}</span>
-                              <span className="text-[10px] font-extrabold">{likesCount} Thích</span>
+                              <span className="text-xs select-none">{hasLiked ? '❤️' : '🤍'}</span>
+                              <span className="text-[9px] font-extrabold">{likesCount} Thích</span>
                             </button>
-                            <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500">
-                              <span className="text-sm select-none">💬</span>
-                              <span className="text-[10px] font-extrabold">{commentsList.length} Bình luận</span>
+                            <div className="flex items-center gap-1.5 font-bold text-gray-500">
+                              <span className="text-xs select-none">💬</span>
+                              <span className="text-[9px] font-extrabold">{commentsList.length} Bình luận</span>
                             </div>
                           </div>
 
                           {commentsList.length > 0 && (
-                            <div className="flex flex-col gap-1.5 pl-2 sm:pl-3 border-l border-white/10 mt-0.5">
+                            <div className="flex flex-col gap-1.5 pl-2 sm:pl-3 border-l border-white/10 mt-1">
                               {commentsList.map((comm) => (
-                                <div key={comm.id} className="flex gap-2 items-start text-xs bg-black/10 p-2 rounded-xl border border-white/5 animate-fade-in">
-                                  <div className="w-5.5 h-5.5 rounded-full shrink-0 flex items-center justify-center text-[8px] font-black border border-white/5 select-none" style={{ background: getAvatarGradient(comm.author) }}>
+                                <div key={comm.id} className="flex gap-1.5 items-start bg-black/10 p-2 rounded-lg border border-white/5 animate-fade-in">
+                                  <div className="w-5 h-5 rounded-full shrink-0 flex items-center justify-center text-[7px] font-black border border-white/5 select-none" style={{ background: getAvatarGradient(comm.author) }}>
                                     {comm.author.charAt(0).toUpperCase()}
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-1 flex-wrap">
-                                      <span className="font-extrabold text-[10px] text-white">{comm.author}</span>
-                                      <span className="text-[7px] bg-white/10 text-gray-400 px-1 rounded border border-white/10 font-bold">Lv.{comm.authorLevel || 1}</span>
+                                      <span className="font-extrabold text-[9px] text-white">{comm.author}</span>
                                       <span className="text-[7px] text-gray-500 font-bold font-mono ml-auto">{getRelativeTime(comm.timestamp)}</span>
                                     </div>
-                                    <p className="text-[10px] text-gray-300 font-semibold leading-relaxed mt-0.5 whitespace-pre-wrap">{renderPostText(comm.content)}</p>
+                                    <p className="text-[9px] text-gray-300 font-semibold leading-relaxed mt-0.5 whitespace-pre-wrap">{renderPostText(comm.content)}</p>
                                   </div>
                                 </div>
                               ))}
                             </div>
                           )}
 
-                          <div className="flex gap-2.5 items-center mt-0.5 border-t border-white/5 pt-2">
-                            <div className="w-6.5 h-6.5 rounded-full shrink-0 flex items-center justify-center text-[8px] font-black border border-white/5 select-none" style={{ background: getAvatarGradient(currentUser) }}>
+                          <div className="flex gap-2 items-center mt-1 pt-1">
+                            <div className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[8px] font-black border border-white/5 select-none" style={{ background: getAvatarGradient(currentUser) }}>
                               {currentUser.charAt(0).toUpperCase()}
                             </div>
                             <form onSubmit={(e) => { e.preventDefault(); handleCreateComment(post.id); }} className="flex-1 flex gap-2">
@@ -5338,9 +5347,9 @@ export default function App() {
                                 type="text"
                                 value={commentInputs[post.id] || ""}
                                 onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))}
-                                placeholder="Bình luận ngắn... ✍️"
+                                placeholder="Bình luận... ✍️"
                                 maxLength={200}
-                                className="flex-1 bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-full px-3 py-1 text-xs font-semibold focus:outline-none placeholder-gray-500 transition-colors text-white"
+                                className="flex-1 bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-full px-2.5 py-1 text-[10px] font-semibold focus:outline-none placeholder-gray-500 transition-colors text-white"
                               />
                               <button
                                 type="submit"
