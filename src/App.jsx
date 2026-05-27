@@ -832,6 +832,11 @@ export default function App() {
   const [newPostText, setNewPostText] = useState("");
   const [commentInputs, setCommentInputs] = useState({});
   const [loadingWall, setLoadingWall] = useState(false);
+  
+  // Gift Coins states
+  const [showGiftModal, setShowGiftModal] = useState(false);
+  const [giftAmount, setGiftAmount] = useState(10);
+  const [giftLoading, setGiftLoading] = useState(false);
   const [loadingGlobalPosts, setLoadingGlobalPosts] = useState(false);
 
   // HLV Social Wall Search & Mention states
@@ -4085,6 +4090,53 @@ export default function App() {
                   </div>
 
                   {/* PVP Join Modal */}
+                  {showGiftModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                      <div className="glass-panel p-6 rounded-2xl max-w-sm w-full border border-yellow-500/30 flex flex-col items-center relative animate-in fade-in zoom-in duration-200">
+                        <button 
+                          className="absolute top-3 right-3 text-gray-400 hover:text-white"
+                          onClick={() => setShowGiftModal(false)}
+                        >
+                          ✕
+                        </button>
+                        <div className="text-4xl mb-2">🎁</div>
+                        <h2 className="text-xl font-black text-yellow-400 mb-2 uppercase text-center">Tặng Xu Cho {userWallTarget}</h2>
+                        <p className="text-xs text-gray-400 text-center mb-6">
+                          Mỗi ngày bạn có thể tặng tối đa <strong className="text-white">500 xu</strong>. Người nhận có thể nhận tối đa <strong className="text-white">1000 xu</strong>. 
+                        </p>
+                        
+                        <div className="w-full flex flex-col items-center gap-4 mb-6">
+                          <div className="text-3xl font-black text-white flex items-center gap-2">
+                            <Coins className="text-yellow-400" /> {giftAmount}
+                          </div>
+                          <input 
+                            type="range" 
+                            min="10" 
+                            max="200" 
+                            step="10"
+                            value={giftAmount} 
+                            onChange={(e) => setGiftAmount(parseInt(e.target.value))}
+                            className="w-full accent-yellow-500"
+                          />
+                          <div className="flex justify-between w-full text-[10px] text-gray-500 font-bold">
+                            <span>10 xu</span>
+                            <span>200 xu</span>
+                          </div>
+                        </div>
+
+                        <button 
+                          onClick={handleSendGift}
+                          disabled={giftLoading || level < 2}
+                          className={`btn w-full !py-3 rounded-xl font-bold uppercase tracking-wider flex items-center justify-center gap-2 ${
+                            giftLoading || level < 2 ? 'bg-gray-600 cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-yellow-600 to-amber-500 hover:from-yellow-500 hover:to-amber-400 text-white shadow-lg shadow-yellow-900/50'
+                          }`}
+                        >
+                          {giftLoading ? 'Đang Xử Lý...' : level < 2 ? 'Cần Level 2' : 'Xác Nhận Tặng'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {showPvpJoinModal && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80  p-4 animate-fade-in">
                       <div className="glass-panel p-8 sm:p-10 rounded-[2rem] max-w-sm w-full flex flex-col items-center bg-gradient-to-t from-red-900/40 to-slate-900 shadow-[0_0_50px_rgba(0,0,0,0.8)] relative border border-white/10">
@@ -4985,6 +5037,16 @@ export default function App() {
                             }}
                           >
                             <Swords size={14} /> Thách Đấu Ngay
+                          </button>
+                          
+                          <button 
+                            className="btn !bg-yellow-600 hover:!bg-yellow-500 w-full flex items-center justify-center gap-2 !py-2.5 font-bold text-xs tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-yellow-900/30"
+                            onClick={() => {
+                              playFx('click');
+                              setShowGiftModal(true);
+                            }}
+                          >
+                            🎁 Tặng Xu
                           </button>
                         </>
                       ) : (
