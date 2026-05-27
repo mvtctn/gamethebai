@@ -3729,7 +3729,7 @@ export default function App() {
                                           }}
                                           title={`Xem Tường nhà ${msg.sender}`}
                                         >
-                                          {msg.sender.charAt(0).toUpperCase()}
+                                          {(msg.sender || '').charAt(0).toUpperCase()}
                                         </div>
                                       )}
 
@@ -3859,7 +3859,7 @@ export default function App() {
                                             }}
                                             title={`Xem Tường nhà ${msg.sender}`}
                                           >
-                                            {msg.sender.charAt(0).toUpperCase()}
+                                            {(msg.sender || '').charAt(0).toUpperCase()}
                                           </div>
                                           <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                                             {msg.senderTitle && (
@@ -4361,7 +4361,7 @@ export default function App() {
                     className="w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center border-4 border-slate-950 shadow-2xl relative z-10 -mt-12 sm:-mt-14"
                     style={{ background: getAvatarGradient(currentUser), boxShadow: '0 0 30px rgba(244,63,94,0.35)' }}
                   >
-                    <span className="text-4xl sm:text-5xl font-black text-white">{currentUser.charAt(0).toUpperCase()}</span>
+                    <span className="text-4xl sm:text-5xl font-black text-white">{(currentUser || '').charAt(0).toUpperCase()}</span>
                     <span className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-500 to-amber-600 text-slate-950 text-[11px] font-black px-2 py-0.5 rounded-full border-2 border-slate-950 shadow-md">Lv.{level}</span>
                   </div>
 
@@ -4824,7 +4824,7 @@ export default function App() {
                         boxShadow: `0 0 20px rgba(${userWallTarget === currentUser ? '244,63,94' : '59,130,246'}, 0.35)`
                       }}
                     >
-                      <span className="text-2xl sm:text-3xl font-black text-white">{userWallTarget.charAt(0).toUpperCase()}</span>
+                      <span className="text-2xl sm:text-3xl font-black text-white">{(userWallTarget || '').charAt(0).toUpperCase()}</span>
                       
                       {/* Floating level badge */}
                       <span className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-500 to-amber-600 text-slate-950 text-[9px] font-black px-1.5 py-0.5 rounded-full border border-slate-950 shadow-md">
@@ -5054,7 +5054,7 @@ export default function App() {
                                 className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-white shrink-0 border border-white/10"
                                 style={{ background: getAvatarGradient(coach.username) }}
                               >
-                                {coach.username.charAt(0).toUpperCase()}
+                                {(coach.username || '').charAt(0).toUpperCase()}
                               </div>
                               <div className="min-w-0">
                                 <div className="flex items-center gap-1.5">
@@ -5095,7 +5095,7 @@ export default function App() {
                       className="w-8 h-8 sm:w-9 sm:h-9 rounded-full shrink-0 flex items-center justify-center font-black border border-white/10 select-none text-[10px] sm:text-xs"
                       style={{ background: getAvatarGradient(currentUser) }}
                     >
-                      {currentUser.charAt(0).toUpperCase()}
+                      {(currentUser || '').charAt(0).toUpperCase()}
                     </div>
                     
                     <div className="flex-1 flex flex-col gap-2">
@@ -5174,7 +5174,7 @@ export default function App() {
                       className="w-8 h-8 sm:w-9 sm:h-9 rounded-full shrink-0 flex items-center justify-center font-black border border-white/10 select-none text-[10px] sm:text-xs"
                       style={{ background: getAvatarGradient(currentUser) }}
                     >
-                      {currentUser.charAt(0).toUpperCase()}
+                      {(currentUser || '').charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 flex flex-col gap-2">
                        <textarea
@@ -5276,7 +5276,7 @@ export default function App() {
                               onClick={() => { if (post.author !== userWallTarget) { setUserWallTarget(post.author); setSocialWallTab('owner'); } }}
                               title={`Xem tường của ${post.author}`}
                             >
-                              {post.author.charAt(0).toUpperCase()}
+                              {(post.author || '').charAt(0).toUpperCase()}
                             </button>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-1.5 flex-wrap">
@@ -5316,7 +5316,7 @@ export default function App() {
                               {commentsList.map((comm) => (
                                 <div key={comm.id} className="flex gap-1.5 items-start bg-black/10 p-2 rounded-lg border border-white/5 animate-fade-in">
                                   <div className="w-5 h-5 rounded-full shrink-0 flex items-center justify-center text-[7px] font-black border border-white/5 select-none" style={{ background: getAvatarGradient(comm.author) }}>
-                                    {comm.author.charAt(0).toUpperCase()}
+                                    {(comm.author || '').charAt(0).toUpperCase()}
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-1 flex-wrap">
@@ -5332,7 +5332,7 @@ export default function App() {
 
                           <div className="flex gap-2 items-center mt-1 pt-1">
                             <div className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[8px] font-black border border-white/5 select-none" style={{ background: getAvatarGradient(currentUser) }}>
-                              {currentUser.charAt(0).toUpperCase()}
+                              {(currentUser || '').charAt(0).toUpperCase()}
                             </div>
                             <form onSubmit={(e) => { e.preventDefault(); handleCreateComment(post.id); }} className="flex-1 flex gap-2">
                               <input
@@ -6501,49 +6501,6 @@ export default function App() {
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Màn hình 2: Đội hình đối thủ (Cột Phải) */}
-              <div className="flex-[0.7] glass-panel p-4 rounded-3xl flex flex-col justify-between bg-black/40 border border-white/5 relative w-full">
-                 <button className="absolute top-4 right-4 z-50 text-gray-500 hover:text-white bg-black/50 p-2 rounded-full border border-white/10 transition-colors" onClick={() => setGameState('lobby')} title="Thoát trận">
-                    <Lock size={16} className="opacity-0 hidden" /> {/* Dummy icon if needed */}
-                    Thoát
-                 </button>
-                 
-                 <div className="flex justify-between items-center mb-6 pr-12">
-                    <h3 className="text-sm font-bold text-red-400 tracking-widest uppercase">Đội Hình AI</h3>
-                    <div className="text-xs text-gray-400 uppercase font-bold tracking-widest bg-black/50 px-3 py-1 rounded-full border border-white/10">Còn lại: {aiHand.length}/11</div>
-                 </div>
-
-                 {/* Sàn đấu trung tâm (Thẻ đang đánh của AI) */}
-                 <div className="flex-1 flex flex-col items-center justify-center relative my-2">
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-red-600/10 rounded-full blur-[50px] pointer-events-none"></div>
-                    <div className="w-40 sm:w-52 aspect-[5/7] relative z-10 transition-all duration-500">
-                      {matchPhase === 'roundResult' && currentAiCard ? (
-                        <div className="w-full h-full animate-fade-in drop-shadow-[0_0_30px_rgba(239,68,68,0.5)] scale-110">
-                           <Card player={currentAiCard} />
-                        </div>
-                      ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-red-400/30 border-2 border-dashed border-red-900/30 rounded-2xl bg-black/50  shadow-inner">
-                           <div className="w-3 h-3 rounded-full bg-red-500/50 animate-ping mb-3"></div>
-                           <span className="text-[10px] font-bold uppercase tracking-widest text-center px-2">Đang chờ<br/>phản hồi</span>
-                        </div>
-                      )}
-                    </div>
-                 </div>
-
-                 {/* Các lá bài chưa đánh của AI xếp dạng Grid nhỏ ở dưới */}
-                 <div className="bg-black/60 p-4 rounded-2xl border border-white/5">
-                   <h4 className="text-[10px] font-bold text-gray-500 tracking-widest uppercase text-center mb-3">Thẻ chưa lật</h4>
-                   <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 sm:gap-3 place-items-center">
-                      {aiHand.map((_, i) => (
-                         <div key={i} className="w-full aspect-[5/7] bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-700 rounded-lg flex items-center justify-center shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] opacity-60">
-                            <span className="text-gray-600 font-black text-xs">?</span>
-                         </div>
-                      ))}
-                   </div>
-                 </div>
-              </div>
             </div>
           )}
         </div>
