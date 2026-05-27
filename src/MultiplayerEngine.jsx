@@ -984,17 +984,28 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
                 : <span className="text-yellow-400">Hòa Trận!</span>}
             </h2>
             <p className="text-xl mb-8 text-gray-300">Tỉ số: <span className="font-black text-white text-2xl">{myScore} – {opponentScore}</span></p>
-            <div className="flex flex-col gap-3">
-              <button className="btn w-full flex items-center justify-center gap-2 !bg-indigo-600 hover:!bg-indigo-500 !py-4 active:scale-95 transition-transform" onClick={() => setShowHistoryModal(true)}>
-                <History size={18} /> Xem Lại Diễn Biến
+            <div className="flex flex-col sm:flex-row gap-3 w-full">
+              <button 
+                className="flex-1 flex items-center justify-center gap-2 bg-slate-800/80 hover:bg-slate-700 text-white font-bold tracking-widest text-[10px] sm:text-xs py-3.5 px-4 rounded-2xl border border-white/10 transition-all cursor-pointer active:scale-95 shadow-inner" 
+                onClick={() => setShowHistoryModal(true)}
+              >
+                <History size={16} /> DIỄN BIẾN
               </button>
-              <button className="btn !bg-gray-700 w-full !py-4 active:scale-95 transition-transform" onClick={() => onExit(myScore === opponentScore ? 'draw' : 'lose')}>Thoát</button>
-              {myScore > opponentScore && (
-                <button className="btn !bg-yellow-500 text-black w-full !py-4 font-black text-lg shadow-lg shadow-yellow-500/20 active:scale-95 transition-transform" onClick={() => { onWin(); onExit('win'); }}>
-                  🎁 Nhận Thưởng
-                </button>
-              )}
+              <button 
+                className="flex-[0.6] flex items-center justify-center gap-2 bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 font-bold tracking-widest text-[10px] sm:text-xs py-3.5 px-4 rounded-2xl border border-rose-500/20 transition-all cursor-pointer active:scale-95" 
+                onClick={() => onExit(myScore === opponentScore ? 'draw' : 'lose')}
+              >
+                THOÁT
+              </button>
             </div>
+            {myScore > opponentScore && (
+              <button 
+                className="w-full mt-3 flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-600 to-yellow-400 hover:from-yellow-500 hover:to-amber-400 text-black font-black tracking-widest text-xs sm:text-sm py-4 px-4 rounded-2xl border border-yellow-400 shadow-[0_0_20px_rgba(234,179,8,0.4)] transition-all cursor-pointer active:scale-95 animate-pulse" 
+                onClick={() => { onWin(); onExit('win'); }}
+              >
+                🎁 NHẬN PHẦN THƯỞNG
+              </button>
+            )}
           </div>
           {showHistoryModal && (
             <MatchHistoryModal 

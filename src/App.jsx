@@ -3989,22 +3989,39 @@ export default function App() {
                                     <p className="text-[9px] text-gray-500 font-mono truncate">ID: {user.peerId}</p>
                                   </div>
 
-                                  <button 
-                                    className={`btn !py-2 !px-3 text-[10px] flex items-center gap-1 shadow-md transition-all uppercase font-black tracking-widest shrink-0 cursor-pointer ${
-                                      squad.length < 11
-                                        ? 'opacity-40 !bg-gray-700 cursor-not-allowed text-gray-400' 
-                                        : 'bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white shadow-red-900/40 group-hover:scale-105 hover:shadow-lg'
-                                    }`}
-                                    disabled={squad.length < 11}
-                                    onClick={() => {
-                                      if (squad.length === 11) {
-                                        sendChallengeInvite(user.username, user.peerId);
-                                      }
-                                    }}
-                                    title={squad.length < 11 ? 'Đội hình cần đủ 11 người để thách đấu' : `Thách đấu ngay với ${user.username}`}
-                                  >
-                                    <Swords size={10} /> Đấu
-                                  </button>
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <button 
+                                      className="btn !py-2 !px-3 text-[10px] flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-white shadow-md transition-all uppercase font-black tracking-widest cursor-pointer border border-white/10"
+                                      onClick={() => {
+                                        playFx('click');
+                                        setActivePrivatePartner(user.username);
+                                        setChatTab('private');
+                                        setTimeout(() => {
+                                          const inputEl = document.getElementById('private-chat-input');
+                                          if (inputEl) inputEl.focus();
+                                        }, 100);
+                                      }}
+                                      title={`Nhắn tin riêng cho ${user.username}`}
+                                    >
+                                      <MessageSquare size={10} /> Nhắn Tin
+                                    </button>
+                                    <button 
+                                      className={`btn !py-2 !px-3 text-[10px] flex items-center gap-1 shadow-md transition-all uppercase font-black tracking-widest cursor-pointer ${
+                                        squad.length < 11
+                                          ? 'opacity-40 !bg-gray-700 cursor-not-allowed text-gray-400' 
+                                          : 'bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white shadow-red-900/40 hover:scale-105 hover:shadow-lg'
+                                      }`}
+                                      disabled={squad.length < 11}
+                                      onClick={() => {
+                                        if (squad.length === 11) {
+                                          sendChallengeInvite(user.username, user.peerId);
+                                        }
+                                      }}
+                                      title={squad.length < 11 ? 'Đội hình cần đủ 11 người để thách đấu' : `Thách đấu ngay với ${user.username}`}
+                                    >
+                                      <Swords size={10} /> Đấu
+                                    </button>
+                                  </div>
                                 </div>
                               ))
                             )}
@@ -6280,7 +6297,7 @@ export default function App() {
           )}
 
           {(matchPhase === 'playing' || matchPhase === 'roundResult') && (
-            <div className="flex-1 w-full flex flex-col md:flex-row p-2 sm:p-4 gap-4 overflow-y-auto hide-scrollbar z-20 relative">
+            <div className="flex-1 w-full flex flex-col-reverse md:flex-row p-2 sm:p-4 gap-4 sm:gap-6 overflow-y-auto hide-scrollbar z-20 relative">
               
               {/* Battle Overlay for Effects */}
               {matchPhase === 'roundResult' && (
