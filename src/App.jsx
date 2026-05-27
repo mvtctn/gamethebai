@@ -235,18 +235,18 @@ export const checkAttrAdvantage = (attrKey1, attrKey2) => {
 
 // --- Environment & Form System ---
 export const ENV_WEATHER = [
-  { key: 'Sunny', name: 'Nắng Rực Rỡ ☀️', desc: 'Tăng phong độ Tốc độ ⚡, giảm nhẹ Sức mạnh 💪' },
-  { key: 'Rainy', name: 'Mưa Tầm Tã 🌧️', desc: 'Giảm phong độ Tốc độ ⚡, tăng phong độ Sức mạnh 💪' },
-  { key: 'Snowy', name: 'Tuyết Rơi ❄️', desc: 'Giảm mạnh Tốc độ ⚡, tăng phong độ Sức mạnh 💪' },
-  { key: 'Windy', name: 'Gió Thổi Mạnh 🌬️', desc: 'Giảm phong độ Kỹ thuật 🌀' },
+  { key: 'Sunny', name: 'Nắng Rực Rỡ ☀️', desc: 'Tốc độ ⚡ +5, Kỹ thuật 🌀 +2' },
+  { key: 'Rainy', name: 'Mưa Tầm Tã 🌧️', desc: 'Tốc độ ⚡ -4, Sức mạnh 💪 +3' },
+  { key: 'Snowy', name: 'Tuyết Rơi ❄️', desc: 'Tốc độ ⚡ -8, Sức mạnh 💪 +4' },
+  { key: 'Windy', name: 'Gió Thổi Mạnh 🌬️', desc: 'Kỹ thuật 🌀 -5' },
   { key: 'Balanced', name: 'Lặng Gió 🍃', desc: 'Phong độ ổn định cho mọi hệ' },
-  { key: 'DesertStorm', name: 'Bão Cát Sa Mạc 🏜️', desc: 'Phong độ Tốc độ ⚡ và Kỹ thuật 🌀 sa sút, Sức mạnh 💪 đột biến tăng cực mạnh (+4 OVR)' },
-  { key: 'DenseFog', name: 'Sương Mù Dày Đặc 🌫️', desc: 'Phong độ Tốc độ ⚡ và Sức mạnh 💪 giảm mạnh, Kỹ thuật 🌀 thăng hoa tăng mạnh (+3 OVR)' },
-  { key: 'Blizzard', name: 'Mưa Tuyết Băng Giá 🌨️', desc: 'Phong độ Tốc độ ⚡ giảm thê thảm (-6 OVR), Sức mạnh 💪 được tăng nhẹ (+2 OVR)' }
+  { key: 'DesertStorm', name: 'Bão Cát Sa Mạc 🏜️', desc: 'Tốc độ ⚡ -6, Kỹ thuật 🌀 -6, Sức mạnh 💪 +8' },
+  { key: 'DenseFog', name: 'Sương Mù Dày Đặc 🌫️', desc: 'Tốc độ ⚡ -5, Sức mạnh 💪 -5, Kỹ thuật 🌀 +6' },
+  { key: 'Blizzard', name: 'Mưa Tuyết Băng Giá 🌨️', desc: 'Tốc độ ⚡ -12, Sức mạnh 💪 +6' }
 ];
 
 export const ENV_TIME = [
-  { key: 'Night', name: 'Đêm Trăng 🌙', desc: 'Tăng phong độ Kỹ thuật 🌀 (Ánh đèn sân khấu)' },
+  { key: 'Night', name: 'Đêm Trăng 🌙', desc: 'Kỹ thuật 🌀 +3 (Ánh đèn sân khấu)' },
   { key: 'Sunset', name: 'Chiều Tà 🌇', desc: 'Phong độ cân bằng' },
   { key: 'Noon', name: 'Giữa Trưa ☀️', desc: 'Thời tiết nắng nóng nhẹ' }
 ];
@@ -266,29 +266,33 @@ export const generateCardForm = (card, opponentCard, env, rng = Math.random) => 
   
   let weights = [0.10, 0.25, 0.35, 0.20, 0.10];
 
+  let envBonus = 0;
   if (env) {
     if (env.weather === 'Sunny') {
-      if (attr === 'speed') { weights[0] += 0.15; weights[1] += 0.15; }
+      if (attr === 'speed') { weights[0] += 0.15; weights[1] += 0.15; envBonus += 5; }
+      if (attr === 'tech') envBonus += 2;
       if (attr === 'power') { weights[3] += 0.10; weights[4] += 0.05; }
-    } else if (env.weather === 'Rainy' || env.weather === 'Snowy') {
-      const penalty = env.weather === 'Snowy' ? 0.30 : 0.15;
-      if (attr === 'speed') { weights[3] += penalty; weights[4] += penalty / 2; }
-      if (attr === 'power') { weights[0] += 0.15; weights[1] += 0.15; }
+    } else if (env.weather === 'Rainy') {
+      if (attr === 'speed') { weights[3] += 0.15; weights[4] += 0.07; envBonus -= 4; }
+      if (attr === 'power') { weights[0] += 0.15; weights[1] += 0.15; envBonus += 3; }
+    } else if (env.weather === 'Snowy') {
+      if (attr === 'speed') { weights[3] += 0.30; weights[4] += 0.15; envBonus -= 8; }
+      if (attr === 'power') { weights[0] += 0.15; weights[1] += 0.15; envBonus += 4; }
     } else if (env.weather === 'Windy') {
-      if (attr === 'tech') { weights[3] += 0.20; weights[4] += 0.10; }
+      if (attr === 'tech') { weights[3] += 0.20; weights[4] += 0.10; envBonus -= 5; }
     } else if (env.weather === 'DesertStorm') {
-      if (attr === 'speed' || attr === 'tech') { weights[3] += 0.25; weights[4] += 0.15; }
-      if (attr === 'power') { weights[0] += 0.30; weights[1] += 0.15; }
+      if (attr === 'speed' || attr === 'tech') { weights[3] += 0.25; weights[4] += 0.15; envBonus -= 6; }
+      if (attr === 'power') { weights[0] += 0.30; weights[1] += 0.15; envBonus += 8; }
     } else if (env.weather === 'DenseFog') {
-      if (attr === 'speed' || attr === 'power') { weights[3] += 0.20; weights[4] += 0.10; }
-      if (attr === 'tech') { weights[0] += 0.25; weights[1] += 0.15; }
+      if (attr === 'speed' || attr === 'power') { weights[3] += 0.20; weights[4] += 0.10; envBonus -= 5; }
+      if (attr === 'tech') { weights[0] += 0.25; weights[1] += 0.15; envBonus += 6; }
     } else if (env.weather === 'Blizzard') {
-      if (attr === 'speed') { weights[3] += 0.40; weights[4] += 0.20; }
-      if (attr === 'power') { weights[0] += 0.15; weights[1] += 0.10; }
+      if (attr === 'speed') { weights[3] += 0.40; weights[4] += 0.20; envBonus -= 12; }
+      if (attr === 'power') { weights[0] += 0.15; weights[1] += 0.10; envBonus += 6; }
     }
 
     if (env.time === 'Night') {
-      if (attr === 'tech') { weights[0] += 0.20; weights[1] += 0.10; }
+      if (attr === 'tech') { weights[0] += 0.20; weights[1] += 0.10; envBonus += 3; }
     }
   }
 
@@ -323,7 +327,7 @@ export const generateCardForm = (card, opponentCard, env, rng = Math.random) => 
     bonus = state.min;
   }
 
-  return { state, bonus };
+  return { state, bonus, envBonus };
 };
 
 // --- Tactical Synergy & Chemistry Helpers ---
@@ -2682,10 +2686,20 @@ export default function App() {
       // Smart AI Card Selection logic
       const aiCardsWithIndex = aiHand.map((card, idx) => ({ card, idx }));
       
+      const pAttr = getPlayerAttr(selectedPlayerCard).key;
+
+      // Calculate pseudo-final value for each AI card to see if it wins
+      aiCardsWithIndex.forEach(item => {
+        let cardBase = item.card.stats[targetStat] + ((item.card.level || 1) - 1) * 2;
+        let cAttr = getPlayerAttr(item.card).key;
+        let cBonus = checkAttrAdvantage(cAttr, pAttr) ? 10 : (checkAttrAdvantage(pAttr, cAttr) ? -10 : 0);
+        item.pseudoVal = cardBase + cBonus;
+      });
+      
       // Separate cards into winning, drawing, and losing groups
-      const winners = aiCardsWithIndex.filter(item => item.card.stats[targetStat] > playerVal);
-      const drawers = aiCardsWithIndex.filter(item => item.card.stats[targetStat] === playerVal);
-      const losers = aiCardsWithIndex.filter(item => item.card.stats[targetStat] < playerVal);
+      const winners = aiCardsWithIndex.filter(item => item.pseudoVal > playerVal);
+      const drawers = aiCardsWithIndex.filter(item => item.pseudoVal === playerVal);
+      const losers = aiCardsWithIndex.filter(item => item.pseudoVal < playerVal);
 
       // Determine smart selection probability based on difficulty
       let isSmart = false;
@@ -2704,29 +2718,24 @@ export default function App() {
         const bluffRand = Math.random();
         const canBluff = (difficulty === 'Legendary' || difficulty === 'Ultimate');
 
-        if (canBluff && winners.length > 0 && bluffRand < 0.15) {
-          // Bluff / Sacrifice: Play the weakest card overall to conserve resources!
-          if (losers.length > 0) {
-            losers.sort((a, b) => a.card.stats[targetStat] - b.card.stats[targetStat]);
-            aiIndex = losers[0].idx;
-          } else {
-            winners.sort((a, b) => a.card.stats[targetStat] - b.card.stats[targetStat]);
-            aiIndex = winners[0].idx;
-          }
+        if (canBluff && bluffRand < 0.20 && losers.length > 0) {
+          // Bluff / Sacrifice / "Cắn trộm" Bạo Kích! Play the weakest card to conserve or hope for Underdog Critical Strike!
+          losers.sort((a, b) => a.pseudoVal - b.pseudoVal);
+          aiIndex = losers[0].idx;
         } else if (canBluff && winners.length > 0 && bluffRand >= 0.85) {
           // Overkill: Play the absolutely strongest card to crush the player's selection!
-          winners.sort((a, b) => b.card.stats[targetStat] - a.card.stats[targetStat]);
+          winners.sort((a, b) => b.pseudoVal - a.pseudoVal);
           aiIndex = winners[0].idx;
         } else if (winners.length > 0) {
           // Normal smart play: lowest winning card to conserve cards
-          winners.sort((a, b) => a.card.stats[targetStat] - b.card.stats[targetStat]);
+          winners.sort((a, b) => a.pseudoVal - b.pseudoVal);
           aiIndex = winners[0].idx;
         } else if (drawers.length > 0) {
           // Draw
           aiIndex = drawers[Math.floor(Math.random() * drawers.length)].idx;
         } else {
           // Sacrificial play
-          losers.sort((a, b) => a.card.stats[targetStat] - b.card.stats[targetStat]);
+          losers.sort((a, b) => a.pseudoVal - b.pseudoVal);
           aiIndex = losers[0].idx;
         }
       } else {
@@ -2770,29 +2779,49 @@ export default function App() {
     const formResult2 = generateCardForm(aiCard, selectedPlayerCard, matchEnvironment);
     const formBonus1 = formResult1.bonus;
     const formBonus2 = formResult2.bonus;
+    const envBonus1 = formResult1.envBonus || 0;
+    const envBonus2 = formResult2.envBonus || 0;
 
     // Card rarity boost
     const bonus1 = getCardTypeBonus(selectedPlayerCard.type);
     const bonus2 = getCardTypeBonus(aiCard.type);
 
-    // Attribute System counter bonus (+5 OVR)
+    // Attribute System counter bonus (+10 OVR)
     const attr1 = getPlayerAttr(selectedPlayerCard);
     const attr2 = getPlayerAttr(aiCard);
     let attrBonus1 = 0;
     let attrBonus2 = 0;
 
     if (checkAttrAdvantage(attr1.key, attr2.key)) {
-      attrBonus1 = 5;
+      attrBonus1 = 10;
     } else if (checkAttrAdvantage(attr2.key, attr1.key)) {
-      attrBonus2 = 5;
+      attrBonus2 = 10;
+    }
+
+    // --- CRITICAL STRIKE (Đột Biến / Bạo Kích) ---
+    const rawVal1 = baseV1 + attrBonus1;
+    const rawVal2 = baseV2 + attrBonus2;
+    
+    let myCritChance = rawVal1 <= rawVal2 - 10 ? 0.35 : 0.10;
+    let aiCritChance = rawVal2 <= rawVal1 - 10 ? 0.35 : 0.10;
+    
+    let myCritBonus = 0;
+    if (Math.random() < myCritChance) {
+      myCritBonus = rawVal1 <= rawVal2 - 10 ? Math.floor(Math.random() * 6) + 15 : Math.floor(Math.random() * 6) + 10;
+    }
+    
+    let aiCritBonus = 0;
+    if (Math.random() < aiCritChance) {
+      aiCritBonus = rawVal2 <= rawVal1 - 10 ? Math.floor(Math.random() * 6) + 15 : Math.floor(Math.random() * 6) + 10;
     }
 
     // Final OVR value calculations
-    const v1 = baseV1 + bonus1 + attrBonus1 + formBonus1 + chemBonus1 + capBonus1;
-    const v2 = baseV2 + bonus2 + attrBonus2 + formBonus2 + chemBonus2 + capBonus2;
+    const v1 = baseV1 + bonus1 + attrBonus1 + formBonus1 + envBonus1 + chemBonus1 + capBonus1 + myCritBonus;
+    const v2 = baseV2 + bonus2 + attrBonus2 + formBonus2 + envBonus2 + chemBonus2 + capBonus2 + aiCritBonus;
 
-    const bonusPart = (b, ab, emoji, lb, fb, fs, chem, cap) => {
+    const bonusPart = (b, ab, emoji, lb, fb, fs, env, chem, cap, crit) => {
       let parts = [];
+      if (crit > 0) parts.push(`+${crit} BẠO KÍCH 💥`);
       if (lb > 0) parts.push(`+${lb} Lv`);
       if (b > 0) parts.push(`+${b} Rarity`);
       if (ab > 0) parts.push(`+${ab} Khắc chế ${emoji}`);
@@ -2801,6 +2830,10 @@ export default function App() {
         parts.push(`${sign}${fb} Phong độ ${fs.emoji}`);
       } else {
         parts.push(`+0 Phong độ ➡️`);
+      }
+      if (env !== 0) {
+        const sign = env > 0 ? '+' : '';
+        parts.push(`${sign}${env} Khí hậu`);
       }
       if (chem > 0) parts.push(`+${chem} Duyên 🤝`);
       if (cap > 0) parts.push(`+${cap} Đội trưởng 👑`);
@@ -2811,8 +2844,8 @@ export default function App() {
     let aScore = matchScore.ai;
     let msg;
 
-    const myBonusDetails = bonusPart(bonus1, attrBonus1, attr1.emoji, lvlBonus1, formBonus1, formResult1.state, chemBonus1, capBonus1);
-    const opBonusDetails = bonusPart(bonus2, attrBonus2, attr2.emoji, lvlBonus2, formBonus2, formResult2.state, chemBonus2, capBonus2);
+    const myBonusDetails = bonusPart(bonus1, attrBonus1, attr1.emoji, lvlBonus1, formBonus1, formResult1.state, envBonus1, chemBonus1, capBonus1, myCritBonus);
+    const opBonusDetails = bonusPart(bonus2, attrBonus2, attr2.emoji, lvlBonus2, formBonus2, formResult2.state, envBonus2, chemBonus2, capBonus2, aiCritBonus);
 
     if (v1 > v2) {
       pScore++;
@@ -3306,7 +3339,12 @@ export default function App() {
                   <h3>Bước 5 — Khắc Chế Hệ Kỹ Năng</h3>
                   <p>
                     Cầu thủ chia làm 3 hệ nguyên tố: <strong style={{color:'#facc15'}}>Tốc Độ ⚡</strong> (khắc chế) <strong style={{color:'#22d3ee'}}>Kỹ Thuật 🌀</strong> (khắc chế) <strong style={{color:'#f87171'}}>Sức Mạnh 💪</strong> (khắc chế) <strong style={{color:'#facc15'}}>Tốc Độ ⚡</strong>.
-                    Khi so tài, nếu cầu thủ của bạn có hệ khắc chế đối thủ, bạn được <strong style={{color:'#4ade80'}}>cộng ngay +5 điểm</strong> vào chỉ số thi đấu! Sắp xếp bài khắc chế thay vì chỉ nhìn vào chỉ số cao thấp.
+                    Khi so tài, nếu cầu thủ của bạn có hệ khắc chế đối thủ, bạn được <strong style={{color:'#4ade80'}}>cộng ngay +10 điểm</strong> vào chỉ số thi đấu! Sắp xếp bài khắc chế thay vì chỉ nhìn vào chỉ số cao thấp.
+                  </li>
+                  <li>
+                    <strong className="text-white">Bạo Kích (Critical Strike) 💥 & Bùng Nổ Ngược Dòng</strong>:
+                    <br/>
+                    Trong lúc thi đấu, mọi thẻ bài đều có 10% cơ hội tung đòn <strong>Bạo kích (+10 đến +15 OVR)</strong>. Đặc biệt, nếu thẻ bài của bạn đang <strong>thua thiệt đối thủ từ 10 chỉ số gốc trở lên</strong>, tinh thần chiến đấu sẽ bùng nổ, tăng tỷ lệ xuất hiện Bạo Kích lên tới <strong>35%</strong> (cộng tới +20 OVR). Nhờ vậy, thẻ thấp điểm hoàn toàn có cơ hội lật kèo ngoạn mục!
                   </p>
                   <span className="htp-tip">💡 Quan sát kỹ biểu tượng hệ nguyên tố ở góc trên bên phải của mỗi chiếc thẻ!</span>
                 </div>
@@ -6424,7 +6462,7 @@ export default function App() {
                   <span className="text-cyan-500">🌀 Kỹ thuật</span><span className="text-gray-600">→</span>
                   <span className="text-red-500">💪 Sức mạnh</span><span className="text-gray-600">→</span>
                   <span className="text-yellow-500">⚡ Tốc độ</span>
-                  <span className="text-gray-600 ml-1">(+5 OVR khắc chế)</span>
+                  <span className="text-gray-600 ml-1">(+10 OVR khắc chế)</span>
                 </div>
 
                 {/* SÂN 3D */}

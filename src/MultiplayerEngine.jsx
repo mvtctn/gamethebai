@@ -240,9 +240,9 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     let guestBonus = 0;
 
     if (checkAttrAdvantage(attr1.key, attr2.key)) {
-      hostBonus = 5;
+      hostBonus = 10;
     } else if (checkAttrAdvantage(attr2.key, attr1.key)) {
-      guestBonus = 5;
+      guestBonus = 10;
     }
 
     // Use a single consistent seed for both cards (no per-side reversal)
@@ -253,6 +253,8 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
 
     const formBonus1 = formResult1.bonus; // host
     const formBonus2 = formResult2.bonus; // guest
+    const envBonus1 = formResult1.envBonus || 0; // host
+    const envBonus2 = formResult2.envBonus || 0; // guest
 
     // Squad Chemistry Boost (host uses squad, guest uses opponentSquad)
     const chemBonus1 = getPlayerChemistryBoost(hostCard, squad); // host
@@ -266,11 +268,32 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     const guestLvlBonus = ((guestCard.level || 1) - 1) * 2;
     const hostVal = hostCard.stats[currentStat] + hostLvlBonus;
     const guestVal = guestCard.stats[currentStat] + guestLvlBonus;
-    const hostFinal = hostVal + hostBonus + formBonus1 + chemBonus1 + capBonus1;
-    const guestFinal = guestVal + guestBonus + formBonus2 + chemBonus2 + capBonus2;
 
-    const bonusPart = (b, emoji, lb, fb, fs, chem, cap) => {
+    // --- CRITICAL STRIKE (Đột Biến / Bạo Kích) ---
+    const rngCrit1 = seededRNG(roundCountRef.current * 10 + 3);
+    const rngCrit2 = seededRNG(roundCountRef.current * 10 + 4);
+    
+    let hostCritChance = hostVal <= guestVal - 10 ? 0.35 : 0.10;
+    let guestCritChance = guestVal <= hostVal - 10 ? 0.35 : 0.10;
+    
+    let hostCritBonus = 0;
+    if (rngCrit1() < hostCritChance) {
+      const isUnderdog = hostVal <= guestVal - 10;
+      hostCritBonus = isUnderdog ? Math.floor(rngCrit1() * 6) + 15 : Math.floor(rngCrit1() * 6) + 10;
+    }
+    
+    let guestCritBonus = 0;
+    if (rngCrit2() < guestCritChance) {
+      const isUnderdog = guestVal <= hostVal - 10;
+      guestCritBonus = isUnderdog ? Math.floor(rngCrit2() * 6) + 15 : Math.floor(rngCrit2() * 6) + 10;
+    }
+
+    const hostFinal = hostVal + hostBonus + formBonus1 + envBonus1 + chemBonus1 + capBonus1 + hostCritBonus;
+    const guestFinal = guestVal + guestBonus + formBonus2 + envBonus2 + chemBonus2 + capBonus2 + guestCritBonus;
+
+    const bonusPart = (b, emoji, lb, fb, fs, env, chem, cap, crit) => {
       let parts = [];
+      if (crit > 0) parts.push(`+${crit} BẠO KÍCH 💥`);
       if (lb > 0) parts.push(`+${lb} Lv`);
       if (b > 0) parts.push(`+${b} Khắc chế`);
       if (fb !== 0) {
@@ -279,13 +302,17 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       } else {
         parts.push(`+0 Phong độ ➡️`);
       }
+      if (env !== 0) {
+        const sign = env > 0 ? '+' : '';
+        parts.push(`${sign}${env} Khí hậu`);
+      }
       if (chem > 0) parts.push(`+${chem} Duyên 🤝`);
       if (cap > 0) parts.push(`+${cap} Đội trưởng 👑`);
       return parts.length > 0 ? ` [${parts.join(' & ')}]` : '';
     };
 
-    const hostBonusDetails = bonusPart(hostBonus, attr1.emoji, hostLvlBonus, formBonus1, formResult1.state, chemBonus1, capBonus1);
-    const guestBonusDetails = bonusPart(guestBonus, attr2.emoji, guestLvlBonus, formBonus2, formResult2.state, chemBonus2, capBonus2);
+    const hostBonusDetails = bonusPart(hostBonus, attr1.emoji, hostLvlBonus, formBonus1, formResult1.state, envBonus1, chemBonus1, capBonus1, hostCritBonus);
+    const guestBonusDetails = bonusPart(guestBonus, attr2.emoji, guestLvlBonus, formBonus2, formResult2.state, envBonus2, chemBonus2, capBonus2, guestCritBonus);
 
     // Determine winner from HOST perspective
     let winner; // 'host' | 'guest' | 'draw'
