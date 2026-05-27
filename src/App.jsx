@@ -6501,6 +6501,57 @@ export default function App() {
                     </div>
                   </div>
                 </div>
+
+                {/* ===== AI COMPACT BAR — nhỏ gọn ở phía dưới ===== */}
+                <div className="shrink-0 bg-slate-950/80 border border-red-900/30 rounded-2xl px-3 py-2 flex items-center gap-3">
+                  {/* AI Label */}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="w-7 h-7 bg-red-900/60 rounded-full flex items-center justify-center border border-red-500/50 shadow-[0_0_8px_rgba(239,68,68,0.4)]">
+                      <span className="text-red-400 font-black text-[8px]">AI</span>
+                    </div>
+                    <div>
+                      <div className="text-[8px] font-black text-red-400 uppercase tracking-wider leading-none">Đối Thủ</div>
+                      <div className="text-[8px] text-gray-500 font-bold leading-none mt-0.5">Còn {aiHand.length} lá</div>
+                    </div>
+                  </div>
+
+                  {/* Separator */}
+                  <div className="w-px h-8 bg-white/10 shrink-0"></div>
+
+                  {/* AI card played / waiting */}
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    {matchPhase === 'roundResult' && currentAiCard ? (
+                      <>
+                        <div className="w-10 aspect-[5/7] shrink-0 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]">
+                          <Card player={currentAiCard} />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-[8px] text-red-400 font-bold uppercase tracking-wider leading-none">AI đã ra:</div>
+                          <div className="text-[10px] font-black text-white truncate leading-tight">{currentAiCard.name}</div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-2 text-red-400/50">
+                        <div className="w-2 h-2 rounded-full bg-red-500/40"></div>
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-gray-600">AI đang chuẩn bị...</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Mini face-down count chips */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    {Array.from({ length: Math.min(aiHand.length, 6) }).map((_, i) => (
+                      <div key={i} className="w-3.5 h-5 bg-gradient-to-b from-slate-700 to-slate-800 border border-slate-600 rounded-sm flex items-center justify-center opacity-50">
+                        <span className="text-[6px] text-slate-500 font-black">?</span>
+                      </div>
+                    ))}
+                    {aiHand.length > 6 && (
+                      <span className="text-[8px] text-gray-600 font-bold ml-0.5">+{aiHand.length - 6}</span>
+                    )}
+                  </div>
+                </div>
+
+              </div>
             </div>
           )}
         </div>
