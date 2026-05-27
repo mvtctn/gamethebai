@@ -3340,8 +3340,8 @@ export default function App() {
                   <p>
                     Cầu thủ chia làm 3 hệ nguyên tố: <strong style={{color:'#facc15'}}>Tốc Độ ⚡</strong> (khắc chế) <strong style={{color:'#22d3ee'}}>Kỹ Thuật 🌀</strong> (khắc chế) <strong style={{color:'#f87171'}}>Sức Mạnh 💪</strong> (khắc chế) <strong style={{color:'#facc15'}}>Tốc Độ ⚡</strong>.
                     Khi so tài, nếu cầu thủ của bạn có hệ khắc chế đối thủ, bạn được <strong style={{color:'#4ade80'}}>cộng ngay +10 điểm</strong> vào chỉ số thi đấu! Sắp xếp bài khắc chế thay vì chỉ nhìn vào chỉ số cao thấp.
-                  </li>
-                  <li>
+                  </p>
+                  <p>
                     <strong className="text-white">Bạo Kích (Critical Strike) 💥 & Bùng Nổ Ngược Dòng</strong>:
                     <br/>
                     Trong lúc thi đấu, mọi thẻ bài đều có 10% cơ hội tung đòn <strong>Bạo kích (+10 đến +15 OVR)</strong>. Đặc biệt, nếu thẻ bài của bạn đang <strong>thua thiệt đối thủ từ 10 chỉ số gốc trở lên</strong>, tinh thần chiến đấu sẽ bùng nổ, tăng tỷ lệ xuất hiện Bạo Kích lên tới <strong>35%</strong> (cộng tới +20 OVR). Nhờ vậy, thẻ thấp điểm hoàn toàn có cơ hội lật kèo ngoạn mục!
