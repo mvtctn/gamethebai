@@ -563,6 +563,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       setMyPlayedStat(null);
       setOpponentPlayedCard(null);
       setRoundWinner(null);
+      setRoundResultMsg('');
       updateActiveStat(data.stat);
       updatePhase('select_card');
     }
