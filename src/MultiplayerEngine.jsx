@@ -600,7 +600,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
         setMatchEnvironment({ weather: ENV_WEATHER[data.weatherIdx], time: ENV_TIME[data.timeIdx] });
       }
       setIsReconnecting(false);
-      setRoundResultMsg('Đã kết nối lại thành công! Tiếp tục trận đấu.');
+      setRoundResultMsg('Đã kết nối thành công, Trận đấu Bắt đầu!');
       playFx('winPoint');
     }
     else if (data.type === 'ping') {
@@ -655,7 +655,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
           timeIdx: ENV_TIME.indexOf(matchEnvironmentRef.current.time)
         });
       }
-      setRoundResultMsg('Đã kết nối lại thành công! Trận đấu tiếp tục.');
+      setRoundResultMsg('Đã kết nối thành công, Trận đấu Bắt đầu!');
       playFx('winPoint');
     });
   }, [handleNetworkData, onExit]);
@@ -1192,7 +1192,9 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
             {/* THÔNG BÁO GIỮA SÂN */}
             <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 z-20 flex flex-col items-center gap-2 px-4 pointer-events-none">
               {roundResultMsg ? (
-                <div className={`px-5 py-3 md:px-8 md:py-4 rounded-2xl md:rounded-3xl text-sm sm:text-base md:text-lg font-black uppercase tracking-wide shadow-2xl border text-center max-w-[280px] sm:max-w-sm md:max-w-md ${
+                <div className={`px-5 py-3 md:px-8 md:py-4 rounded-2xl md:rounded-3xl text-sm sm:text-base md:text-lg font-black tracking-wide shadow-2xl border text-center max-w-[280px] sm:max-w-sm md:max-w-md ${
+                  roundResultMsg === roundResultMsg.toUpperCase() ? 'uppercase' : ''
+                } ${
                   roundWinner === 'me'
                     ? 'bg-green-900/95 border-green-400 text-green-200 shadow-green-500/35'
                     : roundWinner === 'opponent'
