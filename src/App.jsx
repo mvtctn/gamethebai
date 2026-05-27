@@ -1191,7 +1191,7 @@ export default function App() {
     if (!currentUser || !isConnectedToFirebase) return;
 
     const userRef = ref(database, `/users/${currentUser}`);
-    onValue(userRef, (snapshot) => {
+    const unsubscribe = onValue(userRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
         // Cấp 200 xu khởi đầu 1 lần cho tất cả user chưa nhận (kể cả user cũ coins=0)
@@ -1246,7 +1246,9 @@ export default function App() {
         set(userRef, initialData);
         setCoins(200);
       }
-    }, { onlyOnce: true });
+    });
+
+    return () => unsubscribe();
   }, [currentUser, isConnectedToFirebase]);
 
   // Gain XP function
