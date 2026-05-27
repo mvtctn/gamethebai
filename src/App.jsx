@@ -3353,10 +3353,10 @@ export default function App() {
               <div className="htp-step-card">
                 <div className="htp-step-num">🌦️</div>
                 <div className="htp-step-body">
-                  <h3>Bước 6 — Thời Tiết & Phong Độ</h3>
+                  <h3>Bước 6 — Thời Tiết & Môi Trường</h3>
                   <p>
-                    Kết quả trận đấu bị ảnh hưởng lớn bởi <strong style={{color:'#38bdf8'}}>Thời Tiết (Nắng, Mưa, Tuyết...)</strong> và <strong style={{color:'#f472b6'}}>Giờ Thi Đấu</strong>. Trời mưa tuyết làm giảm tốc độ, Gió mạnh hỗ trợ kỹ thuật... 
-                    Đồng thời, mỗi thẻ sẽ có trạng thái <strong style={{color:'#4ade80'}}>Phong Độ</strong> ngẫu nhiên. Đặc biệt cơ chế lật kèo: nếu thẻ của bạn kém đối phương quá 5 điểm OVR, bạn sẽ có <strong style={{color:'#facc15'}}>25% cơ hội bùng nổ sức mạnh</strong> cực lớn!
+                    Kết quả trận đấu bị tác động <strong>trực tiếp</strong> bởi <strong style={{color:'#38bdf8'}}>Thời Tiết (Nắng, Mưa, Tuyết...)</strong> và <strong style={{color:'#f472b6'}}>Giờ Thi Đấu</strong>. Trời bão tuyết sẽ trừ thẳng tới -12 OVR vào Tốc Độ của cả hai bên, trong khi Sức Mạnh lại được cộng thêm +6 OVR. Bạn phải luôn theo dõi thời tiết góc trên cùng màn hình để chọn bài có hệ phù hợp nhất!
+                    Ngoài ra, mỗi thẻ sẽ có trạng thái <strong style={{color:'#4ade80'}}>Phong Độ (Form)</strong> ngẫu nhiên.
                   </p>
                   <span className="htp-tip">💡 Phải luôn chú ý bảng điều kiện môi trường góc trên khi đấu PvP!</span>
                 </div>
@@ -3385,6 +3385,21 @@ export default function App() {
                     Kiểm tra <strong style={{color:'#c4f000'}}>Bảng Xếp Hạng</strong> để đua top với các HLV toàn server. Đạt mốc hoạt động để nhận thẻ Edition đặc biệt!
                   </p>
                   <span className="htp-tip">🎖️ Thẻ Icon & Super Limited cực hiếm chỉ có thể nhận qua mốc thành tích</span>
+                </div>
+              </div>
+
+              <div className="htp-step-card" style={{ border: '1px solid rgba(239, 68, 68, 0.4)', background: 'linear-gradient(to right, rgba(0,0,0,0.8), rgba(239,68,68,0.15))' }}>
+                <div className="htp-step-num" style={{ background: '#ef4444', color: 'white' }}>🧠</div>
+                <div className="htp-step-body">
+                  <h3 style={{ color: '#f87171' }}>Chiến Thuật Tối Thượng</h3>
+                  <p>
+                    <strong>Đừng bao giờ ném thẻ tùy tiện!</strong> Bí quyết làm chủ game:
+                    <br/><br/>
+                    1. <strong>"Dùng mồi nhử"</strong>: Đối thủ thường dùng thẻ cực mạnh ở các lượt đầu. Hãy "cắn trộm" bằng cách vứt 1 thẻ thật yếu ra. Bạn sẽ bị dẫn trước, nhưng thẻ yếu đó có tới <strong>35% tỷ lệ Bạo Kích Lật kèo</strong>. Nếu Bạo Kích nổ, bạn vừa thắng lượt, vừa giữ được bài mạnh cho cuối game!<br/>
+                    2. <strong>Bắt bài Khắc Chế</strong>: Quan sát điểm sáng nhất của đối thủ. Nếu họ toàn bài Sức Mạnh, hãy ưu tiên dùng bài Kỹ Thuật (🌀) để ẵm trọn <strong>+10 OVR Khắc chế</strong>.<br/>
+                    3. <strong>Tận dụng Thời Tiết</strong>: Bão tuyết (❄️) phế võ công của hệ Tốc Độ (-12 OVR). Đừng dại ném thẻ Tốc Độ vào lúc này! Ngược lại, Nắng gắt (☀️) biến Tốc độ thành quái vật (+5 OVR).
+                  </p>
+                  <span className="htp-tip" style={{ color: '#fca5a5' }}>💡 Người chơi giỏi không thắng bằng OVR cao, họ thắng bằng Khắc chế và Mồi nhử!</span>
                 </div>
               </div>
 
