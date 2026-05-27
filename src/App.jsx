@@ -3515,30 +3515,33 @@ export default function App() {
           {/* Native flow footer used at the bottom of app-container instead */}
 
           {/* User Header Profile */}
-          <div className="absolute top-4 right-4 z-50 flex items-center gap-3 bg-black/50  px-4 py-2 rounded-full border border-white/10 shadow-lg">
+          <div className="absolute top-2 sm:top-4 right-2 sm:right-4 z-50 flex items-center gap-1.5 sm:gap-3 bg-black/50 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full border border-white/10 shadow-lg whitespace-nowrap max-w-[95vw] overflow-hidden">
             <button 
               onClick={() => { playFx('click'); setGameState('userWall'); setUserWallTarget(currentUser); setSocialWallTab('global'); }} 
-              className="text-xs text-cyan-400 hover:text-cyan-300 font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer select-none transition-all hover:scale-105 active:scale-95"
+              className="text-xs text-cyan-400 hover:text-cyan-300 font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer select-none transition-all hover:scale-105 active:scale-95 shrink-0"
               title="Xem Tường nhà cá nhân"
             >
-              🐦 Tường
+              🐦 <span className="hidden sm:inline">Tường</span>
             </button>
-            <div className="w-[1px] h-4 bg-white/20"></div>
-            <div className="text-sm flex items-center gap-2 cursor-pointer hover:text-cyan-400 hover:scale-105 transition-all duration-300 select-none" onClick={() => { playFx('click'); setGameState('profile'); }} title="Xem hồ sơ và cài đặt HLV">
-              <span className="text-gray-400">HLV: </span>
-              <span className="font-bold text-fuchsia-400">{currentUser}</span>
-              <span className="text-[10px] bg-white/10 text-gray-300 px-2 py-0.5 rounded-full border border-white/10 font-bold">Lv.{level}</span>
+            <div className="w-[1px] h-3 sm:h-4 bg-white/20 shrink-0"></div>
+            <div className="text-xs sm:text-sm flex items-center gap-1 sm:gap-2 cursor-pointer hover:text-cyan-400 hover:scale-105 transition-all duration-300 select-none shrink-0" onClick={() => { playFx('click'); setGameState('profile'); }} title="Xem hồ sơ và cài đặt HLV">
+              <span className="hidden sm:inline text-gray-400">HLV: </span>
+              <span className="font-bold text-fuchsia-400 truncate max-w-[80px] sm:max-w-none">{currentUser}</span>
+              <span className="text-[9px] sm:text-[10px] bg-white/10 text-gray-300 px-1.5 sm:px-2 py-0.5 rounded-full border border-white/10 font-bold">Lv.{level}</span>
               {(() => {
                 const tier = getPlayerTier(level);
                 return (
-                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border flex items-center gap-1 ${tier.color} ${tier.glow}`}>
-                    {tier.icon} {tier.name}
+                  <span className={`text-[8px] sm:text-[9px] font-black uppercase px-1.5 sm:px-2 py-0.5 rounded-full border flex items-center gap-1 ${tier.color} ${tier.glow}`}>
+                    {tier.icon} <span className="hidden sm:inline">{tier.name}</span>
                   </span>
                 );
               })()}
             </div>
-            <div className="w-[1px] h-4 bg-white/20"></div>
-            <button onClick={handleLogout} className="text-xs text-red-400 hover:text-red-300 font-bold uppercase tracking-wider">Thoát</button>
+            <div className="w-[1px] h-3 sm:h-4 bg-white/20 shrink-0"></div>
+            <button onClick={handleLogout} className="text-xs text-red-400 hover:text-red-300 font-bold uppercase tracking-wider flex items-center gap-1 shrink-0" title="Thoát">
+              <span className="sm:hidden text-sm">🚪</span>
+              <span className="hidden sm:inline">Thoát</span>
+            </button>
           </div>
 
           <div className={`app-container relative z-10 ${gameState === 'lobby' ? 'lg:max-w-none lg:w-full lg:mx-0 lg:pr-0 lg:pl-8' : ''}`}>
