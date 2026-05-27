@@ -1558,6 +1558,9 @@ export default function App() {
 
       await update(ref(database), updates);
 
+      // Optimistic UI update
+      setCoins(prev => prev - giftAmount);
+
       // Send a system message to global chat
       const chatRef = ref(database, '/chat');
       const newMsg = {
