@@ -6209,28 +6209,60 @@ export default function App() {
 
           {matchPhase === 'gameOver' && (
             <div className="flex-1 flex flex-col items-center justify-center p-4">
-              <div className="glass-panel p-8 sm:p-12 rounded-3xl text-center w-full max-w-lg">
-                <div className="text-xl mx-4 text-gray-400 font-bold mb-2">TỈ SỐ CHUNG CUỘC</div>
-                <div className="score-board mb-8 text-center flex justify-center items-center gap-4 text-5xl font-black">
-                  <span className={matchScore.player > matchScore.ai ? 'text-green-400' : ''}>{matchScore.player}</span>
-                  <span className="text-gray-500">-</span>
-                  <span className={matchScore.ai > matchScore.player ? 'text-green-400' : ''}>{matchScore.ai}</span>
-                </div>
-                <h3 className="text-3xl font-black mb-8 uppercase text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 drop-shadow-md">
-                  {matchScore.player > matchScore.ai ? "BẠN ĐÃ CHIẾN THẮNG! 🏆" : matchScore.player < matchScore.ai ? "BẠN ĐÃ THUA! 💀" : "HÒA NHAU! 🤝"}
-                </h3>
-                {matchScore.player > matchScore.ai && (
-                  <div className="bg-yellow-900/40 border border-yellow-500/50 px-6 py-3 rounded-xl mb-6 flex items-center justify-center gap-3">
-                    <Coins className="text-yellow-400" size={28} />
-                    <span className="text-2xl font-bold text-yellow-400">+{lastReward} Xu</span>
-                  </div>
-                )}
+              <div className="glass-panel p-6 sm:p-10 rounded-3xl text-center w-full max-w-md border border-white/10 shadow-2xl relative overflow-hidden">
+                {/* Background glow effects based on result */}
+                <div className={`absolute -inset-4 opacity-20 blur-2xl z-0 ${
+                  matchScore.player > matchScore.ai ? 'bg-green-500' : matchScore.player < matchScore.ai ? 'bg-red-500' : 'bg-blue-500'
+                }`}></div>
                 
-                <div className="flex flex-col gap-3">
-                  <button className="btn w-full flex items-center justify-center gap-2 !bg-indigo-600 hover:!bg-indigo-500" onClick={() => setShowHistoryModal(true)}>
-                    <History size={18} /> Xem Lại Diễn Biến Trận Đấu
-                  </button>
-                  <button className="btn w-full" onClick={returnToLobby}>Trở Về Sảnh Chính</button>
+                <div className="relative z-10">
+                  <div className="text-xs tracking-widest text-gray-400 font-black uppercase mb-4 opacity-80">Tỉ số chung cuộc</div>
+                  
+                  <div className="score-board mb-6 flex justify-center items-center gap-6 text-6xl font-black">
+                    <div className={`w-20 h-24 sm:w-24 sm:h-28 flex items-center justify-center rounded-2xl border ${
+                      matchScore.player > matchScore.ai ? 'bg-green-950/40 text-green-400 border-green-500/30 shadow-[0_0_20px_rgba(74,222,128,0.2)]' : 'bg-slate-900/50 text-white border-white/10'
+                    }`}>
+                      {matchScore.player}
+                    </div>
+                    <span className="text-gray-600 text-3xl font-black">:</span>
+                    <div className={`w-20 h-24 sm:w-24 sm:h-28 flex items-center justify-center rounded-2xl border ${
+                      matchScore.ai > matchScore.player ? 'bg-red-950/40 text-red-400 border-red-500/30 shadow-[0_0_20px_rgba(248,113,113,0.2)]' : 'bg-slate-900/50 text-white border-white/10'
+                    }`}>
+                      {matchScore.ai}
+                    </div>
+                  </div>
+                  
+                  <h3 className={`text-2xl sm:text-3xl font-black mb-6 uppercase drop-shadow-lg ${
+                    matchScore.player > matchScore.ai 
+                      ? "text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500" 
+                      : matchScore.player < matchScore.ai 
+                        ? "text-red-400" 
+                        : "text-blue-400"
+                  }`}>
+                    {matchScore.player > matchScore.ai ? "BẠN ĐÃ CHIẾN THẮNG! 🏆" : matchScore.player < matchScore.ai ? "BẠN ĐÃ THUA! 💀" : "HÒA NHAU! 🤝"}
+                  </h3>
+                  
+                  {matchScore.player > matchScore.ai && (
+                    <div className="bg-yellow-950/40 border border-yellow-500/30 px-4 py-2 rounded-xl mb-6 inline-flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(234,179,8,0.15)]">
+                      <Coins className="text-yellow-400" size={20} />
+                      <span className="text-lg font-black text-yellow-400">+{lastReward} Xu</span>
+                    </div>
+                  )}
+                  
+                  <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                    <button 
+                      className="flex-1 flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-bold tracking-wide text-xs sm:text-sm py-3 px-4 rounded-xl border border-white/10 transition-colors cursor-pointer active:scale-95" 
+                      onClick={() => setShowHistoryModal(true)}
+                    >
+                      <History size={16} /> Diễn Biến
+                    </button>
+                    <button 
+                      className="flex-1 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black uppercase tracking-wider text-xs sm:text-sm py-3 px-4 rounded-xl shadow-lg shadow-indigo-900/30 transition-all cursor-pointer active:scale-95" 
+                      onClick={returnToLobby}
+                    >
+                      Sảnh Chính
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
