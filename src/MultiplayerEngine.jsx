@@ -914,7 +914,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       style={{ background: 'linear-gradient(180deg, #0d0015 0%, #080818 50%, #000d1a 100%)' }}>
 
       {/* HUD điểm số */}
-      <div className="flex-none flex items-center justify-between px-4 py-2 sm:py-3 border-b border-white/10 bg-black/50 backdrop-blur-md shrink-0">
+      <div className="flex-none flex items-center justify-between px-4 py-2 sm:py-3 border-b border-white/10 bg-black/80 shrink-0">
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-900/60 rounded-full flex items-center justify-center border-2 border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]">
             <User className="text-red-400 w-5 h-5" />
@@ -1110,7 +1110,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
                     </div>
                   )
                 ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center text-red-500/20 border-2 border-dashed border-red-900/30 rounded-2xl gap-2 bg-black/25 backdrop-blur-sm">
+                  <div className="w-full h-full flex flex-col items-center justify-center text-red-500/20 border-2 border-dashed border-red-900/30 rounded-2xl gap-2 bg-slate-950/60">
                     <div className="w-2.5 h-2.5 rounded-full bg-red-500/50 animate-ping" />
                     <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-center px-1 leading-normal">Đối thủ<br/>đang chọn...</span>
                   </div>
@@ -1125,7 +1125,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
                   {myPlayedCard ? (
                     <CardComponent player={myPlayedCard} />
                   ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-blue-400/20 border-2 border-dashed border-blue-900/40 rounded-2xl gap-2 bg-black/25 backdrop-blur-sm">
+                    <div className="w-full h-full flex flex-col items-center justify-center text-blue-400/20 border-2 border-dashed border-blue-900/40 rounded-2xl gap-2 bg-slate-950/60">
                       <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-center px-2 text-cyan-400/70 leading-normal animate-pulse">
                         {phase === 'select_card' ? '👆 HÃY CHỌN THẺ\nỞ DƯỚI' : '—'}
                       </span>
@@ -1138,7 +1138,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
             {/* THÔNG BÁO GIỮA SÂN */}
             <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 z-20 flex flex-col items-center gap-2 px-4 pointer-events-none">
               {roundResultMsg ? (
-                <div className={`px-5 py-3 md:px-8 md:py-4 rounded-2xl md:rounded-3xl text-sm sm:text-base md:text-lg font-black uppercase tracking-wide shadow-2xl border backdrop-blur-xl text-center max-w-[280px] sm:max-w-sm md:max-w-md ${
+                <div className={`px-5 py-3 md:px-8 md:py-4 rounded-2xl md:rounded-3xl text-sm sm:text-base md:text-lg font-black uppercase tracking-wide shadow-2xl border text-center max-w-[280px] sm:max-w-sm md:max-w-md ${
                   roundWinner === 'me'
                     ? 'bg-green-900/95 border-green-400 text-green-200 shadow-green-500/35'
                     : roundWinner === 'opponent'
@@ -1147,7 +1147,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
                   {roundResultMsg}
                 </div>
               ) : (
-                <div className="bg-black/85 backdrop-blur-xl border border-white/20 px-6 py-2.5 md:px-8 md:py-3.5 rounded-full text-xs sm:text-sm md:text-base font-black uppercase tracking-wider flex items-center gap-2 shadow-[0_0_30px_rgba(0,0,0,0.8)]">
+                <div className="bg-black/90 border border-white/15 px-6 py-2.5 md:px-8 md:py-3.5 rounded-full text-xs sm:text-sm md:text-base font-black uppercase tracking-wider flex items-center gap-2 shadow-lg">
                   {phase === 'select_card' && (
                     <span className="text-yellow-400 flex items-center gap-1.5">
                       ⚡ Vòng này đọ: <span className="bg-gradient-to-r from-yellow-300 to-amber-500 text-black px-2.5 py-0.5 rounded text-[10px] md:text-xs font-extrabold">{statInfo.emoji} {statInfo.name}</span>
@@ -1163,7 +1163,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
           </div>
 
           {/* BÀI TRÊN TAY */}
-          <div className="flex-none bg-black/85 border-t border-white/10 backdrop-blur-md shrink-0"
+          <div className="flex-none bg-black/90 border-t border-white/10 shrink-0"
             style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}>
             <div className="px-4 py-2 flex justify-between items-center border-b border-white/5 bg-black/30">
               <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Bài Trên Tay</span>
@@ -1214,7 +1214,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
 
       {/* Reusable In-Game Custom Alert Modal */}
       {pvpAlert && (
-        <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+        <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/90 p-4 animate-fade-in">
           <div className="glass-panel p-6 sm:p-8 rounded-[2rem] max-w-sm w-full text-center flex flex-col items-center bg-gradient-to-t from-slate-900 via-slate-950 to-slate-900 border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)] relative animate-scale-in">
             <h3 className="text-base font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 mb-4 uppercase tracking-widest">
               {pvpAlert.title || 'Thông Báo'}

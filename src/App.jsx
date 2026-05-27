@@ -3546,7 +3546,7 @@ export default function App() {
                     
                     {/* Hero Section */}
                     <div className="relative flex flex-col items-center mb-12 sm:mb-16">
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-yellow-500/20 rounded-full blur-[100px] pointer-events-none"></div>
+                      {/* Decorative glow removed for GPU perf - using radial bg on parent instead */}
                       
                       <Trophy size={150} className="text-yellow-400 trophy-hero mb-4 drop-shadow-[0_0_40px_rgba(251,191,36,0.8)]" />
                       
@@ -3968,7 +3968,7 @@ export default function App() {
                                 >
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center flex-wrap gap-2 mb-0.5">
-                                      <span className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)] shrink-0 animate-pulse"></span>
+                                      <span className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.9)] shrink-0"></span>
                                       <span 
                                         className="font-extrabold text-xs text-white truncate hover:underline hover:text-cyan-400 cursor-pointer"
                                         onClick={() => { playFx('click'); setGameState('userWall'); setUserWallTarget(user.username); }}
@@ -4170,7 +4170,7 @@ export default function App() {
 
             {/* Recovery Email Card */}
             <div className="glass-panel rounded-3xl p-7 border border-purple-500/20 shadow-2xl bg-gradient-to-b from-purple-950/20 to-slate-900/60 flex flex-col gap-5 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-[40px] pointer-events-none"></div>
+              {/* Decorative accent removed for GPU perf */}
               <div className="flex items-center gap-3 border-b border-white/5 pb-4">
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg">
                   <Mail size={18} className="text-white" />
@@ -4207,7 +4207,7 @@ export default function App() {
 
             {/* Change Password Card */}
             <div className="glass-panel rounded-3xl p-7 border border-indigo-500/20 shadow-2xl bg-gradient-to-b from-indigo-950/20 to-slate-900/60 flex flex-col gap-5 relative overflow-hidden">
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-[40px] pointer-events-none"></div>
+              {/* Decorative accent removed for GPU perf */}
               <div className="flex items-center gap-3 border-b border-white/5 pb-4">
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg">
                   <Lock size={18} className="text-white" />
@@ -4259,7 +4259,7 @@ export default function App() {
 
             {/* Referral Panel — full width */}
             <div className="md:col-span-2 glass-panel rounded-3xl p-7 border border-amber-500/20 shadow-2xl bg-gradient-to-b from-amber-950/10 to-slate-900/40 flex flex-col gap-5 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-40 h-40 bg-amber-500/5 rounded-full blur-[50px] pointer-events-none"></div>
+              {/* Decorative accent removed for GPU perf */}
               <div className="flex items-center gap-3 border-b border-white/5 pb-4">
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center shadow-lg">
                   <Sparkles size={18} className="text-slate-900" />
@@ -4351,9 +4351,8 @@ export default function App() {
               <div className="glass-panel rounded-3xl overflow-hidden border border-white/10 shadow-2xl relative bg-slate-950/40 ">
                 {/* Cover Banner */}
                 <div className="h-28 sm:h-36 bg-gradient-to-r from-cyan-900 via-indigo-950 to-purple-950 relative overflow-hidden flex items-center justify-center">
-                  <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_white_1px,_transparent_1px)] bg-[size:10px_10px]"></div>
-                  <div className="absolute -top-10 -left-10 w-40 h-40 bg-cyan-400/20 rounded-full blur-[50px]"></div>
-                  <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-purple-500/20 rounded-full blur-[50px]"></div>
+                  {/* Decorative orbs - lighter radial gradient approach */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/8 via-transparent to-purple-500/8 pointer-events-none"></div>
                   <span className="text-white/10 font-black italic tracking-tighter text-4xl sm:text-6xl uppercase select-none pointer-events-none transform -rotate-6">THE BONG DA</span>
                 </div>
                 <div className="px-6 pb-6 pt-1 flex flex-col items-center text-center relative">
@@ -6297,16 +6296,8 @@ export default function App() {
           )}
 
           {(matchPhase === 'playing' || matchPhase === 'roundResult') && (
-            <div className="flex-1 w-full flex flex-col-reverse md:flex-row p-2 sm:p-4 gap-4 sm:gap-6 overflow-y-auto hide-scrollbar z-20 relative">
+            <div className="flex-1 w-full flex flex-col p-2 gap-2 overflow-hidden relative z-20">
               
-              {/* Battle Overlay for Effects */}
-              {matchPhase === 'roundResult' && (
-                <div className={`battle-overlay active ${
-                  roundResultMsg.includes('THẮNG') ? 'win-overlay' : 
-                  roundResultMsg.includes('THUA') ? 'cloud-overlay' : 'draw-overlay'
-                }`}></div>
-              )}
-
               {/* Stat Selection Modal */}
               {selectedPlayerCard && matchPhase === 'playing' && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80  p-4 animate-fade-in">
@@ -6354,8 +6345,7 @@ export default function App() {
 
               {/* Round Result Overlay */}
               {matchPhase === 'roundResult' && (
-                <div className="fixed inset-0 z-[90] flex flex-col items-center justify-center pointer-events-none p-4 sm:p-6 gap-6 sm:gap-12">
-                  {/* Floating Round Result Card */}
+                <div className="fixed inset-0 z-[90] flex flex-col items-center justify-center pointer-events-none p-4">
                   {matchHistory.length > 0 && (() => {
                     const lastRound = matchHistory[matchHistory.length - 1];
                     const isWin = lastRound.result === 'win';
@@ -6369,148 +6359,79 @@ export default function App() {
                                     isLoss ? 'bg-rose-950/80 text-rose-400 border-rose-500/30' : 
                                     'bg-amber-950/80 text-amber-400 border-amber-500/30';
                                     
-                    const resultText = isWin ? 'CHIẾN THẮNG LƯỢT ĐẤU! 🏆' : 
-                                       isLoss ? 'THẤT BẠI LƯỢT ĐẤU! 💔' : 
-                                       'HÒA LƯỢT ĐẤU! 🤝';
+                    const resultText = isWin ? 'CHIẾN THẮNG! 🏆' : isLoss ? 'THẤT BẠI! 💔' : 'HÒA! 🤝';
 
                     return (
-                      <div className={`w-full max-w-xl glass-panel p-4 sm:p-5 rounded-3xl bg-slate-950/90 border  flex flex-col items-center gap-3 animate-scale-in pointer-events-auto transition-all ${borderColor}`}>
-                        {/* Result Badge */}
-                        <div className={`px-4 py-1.5 rounded-full border text-[10px] sm:text-xs font-black tracking-widest uppercase ${badgeBg} shadow-inner`}>
-                          {resultText}
-                        </div>
-                        
-                        {/* Comparison Info */}
-                        <div className="w-full flex items-center justify-between gap-4 mt-1">
-                          {/* Player Side */}
-                          <div className="flex-1 flex flex-col items-center text-center">
-                            <span className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-0.5">Bạn</span>
-                            <span className="text-xs sm:text-sm font-black text-white line-clamp-1">{lastRound.myCardName}</span>
-                            <div className="flex items-center gap-1.5 mt-1">
-                              <span className="text-xl sm:text-2xl font-black text-blue-400">{lastRound.myFinalVal}</span>
-                              <span className="text-[9px] font-black text-blue-500 bg-blue-950/60 px-1.5 py-0.5 rounded border border-blue-800/40 uppercase">{lastRound.myStat}</span>
-                            </div>
-                            <span className="text-[9px] text-gray-400 mt-1 italic leading-tight max-w-[155px] break-words">{lastRound.myBonusDetails || "Không có boost"}</span>
-                          </div>
-                          
-                          {/* VS / Comparison Sign */}
-                          <div className="flex flex-col items-center justify-center shrink-0">
-                            <span className={`text-2xl sm:text-3xl font-black italic drop-shadow-md ${
-                              isWin ? 'text-emerald-400 animate-pulse' : isLoss ? 'text-rose-400 animate-pulse' : 'text-amber-400 animate-pulse'
-                            }`}>
-                              {isWin ? '＞' : isLoss ? '＜' : '＝'}
-                            </span>
-                            <span className="text-[9px] text-amber-400 font-black mt-1.5 bg-black/50 px-2 py-0.5 rounded-full border border-amber-500/20 shadow">Tỉ số: {matchScore.player} - {matchScore.ai}</span>
-                          </div>
-                          
-                          {/* AI Side */}
-                          <div className="flex-1 flex flex-col items-center text-center">
-                            <span className="text-[10px] text-red-400 font-bold uppercase tracking-widest mb-0.5">Đối thủ (AI)</span>
-                            <span className="text-xs sm:text-sm font-black text-white line-clamp-1">{lastRound.opCardName}</span>
-                            <div className="flex items-center gap-1.5 mt-1">
-                              <span className="text-xl sm:text-2xl font-black text-red-400">{lastRound.opFinalVal}</span>
-                              <span className="text-[9px] font-black text-red-500 bg-red-950/60 px-1.5 py-0.5 rounded border border-red-800/40 uppercase">{lastRound.opStat}</span>
-                            </div>
-                            <span className="text-[9px] text-gray-400 mt-1 italic leading-tight max-w-[155px] break-words">{lastRound.opBonusDetails || "Không có boost"}</span>
-                          </div>
+                      <div className={`w-full max-w-sm glass-panel p-4 rounded-3xl bg-slate-950/90 border flex flex-col items-center gap-3 animate-scale-in pointer-events-auto transition-all ${borderColor}`}>
+                        <div className={`px-4 py-1.5 rounded-full border text-[10px] font-black tracking-widest uppercase ${badgeBg}`}>{resultText}</div>
+                        <div className="w-full flex items-center justify-between text-center text-[10px]">
+                          <div><div className="text-blue-400 font-bold uppercase">Bạn</div><div className="text-white font-black">{lastRound.myFinalVal}</div></div>
+                          <div className={`text-lg font-black ${isWin ? 'text-emerald-400' : isLoss ? 'text-rose-400' : 'text-amber-400'}`}>{isWin ? '＞' : isLoss ? '＜' : '＝'}</div>
+                          <div><div className="text-red-400 font-bold uppercase">AI</div><div className="text-white font-black">{lastRound.opFinalVal}</div></div>
                         </div>
                       </div>
                     );
                   })()}
-
                   {playedCardIds.length >= 11 ? (
-                    <button
-                      className="px-8 py-3 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 font-black tracking-widest uppercase rounded-full shadow-[0_0_30px_rgba(251,191,36,0.5)] transition-all hover:scale-105 pointer-events-auto cursor-pointer animate-bounce-subtle"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        playFx('click');
-                        nextRound();
-                      }}
-                    >
-                      Xem Kết Quả Trận Đấu 🏆
-                    </button>
+                    <button className="mt-4 px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-slate-950 font-black tracking-widest uppercase rounded-full shadow-lg pointer-events-auto cursor-pointer" onClick={(e) => { e.stopPropagation(); playFx('click'); nextRound(); }}>XEM KẾT QUẢ 🏆</button>
                   ) : (
-                    <div className="text-amber-400 text-[10px] sm:text-xs font-bold tracking-widest uppercase animate-pulse bg-black/85 px-6 py-2.5 rounded-full border border-amber-500/30 shadow-lg pointer-events-auto cursor-pointer">
-                       Chạm vào bất kỳ đâu để tiếp tục ⚽
-                     </div>
+                    <div className="mt-4 text-amber-400 text-[10px] font-bold tracking-widest uppercase bg-black/85 px-6 py-2.5 rounded-full border border-amber-500/30 shadow-lg pointer-events-auto cursor-pointer animate-pulse">CHẠM ĐỂ TIẾP TỤC ⚽</div>
                   )}
                 </div>
               )}
 
-              {/* Màn hình 1: Sân vận động 3D (Cột Trái) */}
-              <div className="flex-[1.6] flex flex-col gap-2 h-full justify-between w-full">
-                
-                {/* HUD Score */}
-                <div className="glass-panel px-6 py-3 rounded-2xl flex justify-between items-center bg-black/40 border border-white/10 shadow-lg">
-                  <div className="flex items-center gap-3 w-1/3">
-                     <div className="w-10 h-10 bg-blue-900/50 rounded-full flex items-center justify-center border border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]">
-                       <User className="text-blue-400"/>
-                     </div>
-                     <div>
-                       <div className="text-[10px] text-blue-400 font-bold uppercase tracking-widest">{currentUser}</div>
-                       <div className="text-2xl font-black text-white">{matchScore.player}</div>
-                     </div>
-                  </div>
-                  
-                  <div className="text-3xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-red-400 drop-shadow-lg shrink-0">
-                    VS
-                  </div>
-                  
-                  <div className="flex items-center gap-3 w-1/3 justify-end text-right">
-                     <div>
-                       <div className="text-[10px] text-red-400 font-bold uppercase tracking-widest">AI</div>
-                       <div className="text-2xl font-black text-white">{matchScore.ai}</div>
-                     </div>
-                     <div className="w-10 h-10 bg-red-900/50 rounded-full flex items-center justify-center border border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]">
-                       <span className="text-red-400 font-black text-xs">AI</span>
-                     </div>
-                  </div>
-                </div>
+              {/* ===== LAYOUT MỚI: SÂN 3D USER ở trên, AI BAR nhỏ ở dưới ===== */}
+              <div className="flex-1 flex flex-col gap-2 w-full min-h-0">
 
-                {/* Weather & Environment HUD */}
-                <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 bg-slate-950/80 border border-white/10 p-2.5 rounded-2xl mx-auto select-none mt-1 shadow-lg max-w-xl w-full text-center">
-                  <div className="flex items-center gap-1 text-[10px] sm:text-xs">
-                    <span className="text-gray-400 font-bold uppercase">Sân đấu:</span>
-                    <span className="text-amber-400 font-black">Lusail Iconic 🏟️</span>
+                {/* HUD Score + Environment — gọn trên cùng */}
+                <div className="flex items-center gap-2 px-1">
+                  <div className="flex items-center gap-2 bg-black/60 border border-white/10 rounded-2xl px-3 py-1.5 shrink-0">
+                    <div className="text-center">
+                      <div className="text-[9px] text-blue-400 font-bold uppercase tracking-widest leading-none">{currentUser}</div>
+                      <div className="text-xl font-black text-white leading-none">{matchScore.player}</div>
+                    </div>
+                    <div className="text-base font-black italic text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-red-400 px-1">VS</div>
+                    <div className="text-center">
+                      <div className="text-[9px] text-red-400 font-bold uppercase tracking-widest leading-none">AI</div>
+                      <div className="text-xl font-black text-white leading-none">{matchScore.ai}</div>
+                    </div>
                   </div>
-                  <div className="w-[1px] bg-white/10 h-3 hidden sm:block"></div>
-                  <div className="flex items-center gap-1 text-[10px] sm:text-xs" title={matchEnvironment.weather.desc}>
-                    <span className="text-gray-400 font-bold uppercase">Thời tiết:</span>
-                    <span className="text-white font-extrabold">{matchEnvironment.weather.name}</span>
-                  </div>
-                  <div className="w-[1px] bg-white/10 h-3 hidden sm:block"></div>
-                  <div className="flex items-center gap-1 text-[10px] sm:text-xs" title={matchEnvironment.time.desc}>
-                    <span className="text-gray-400 font-bold uppercase">Khung giờ:</span>
-                    <span className="text-cyan-400 font-extrabold">{matchEnvironment.time.name}</span>
-                  </div>
-                </div>
 
-                {/* Sleek Counter Guide Pill */}
-                <div className="flex items-center justify-center gap-2 sm:gap-4 bg-slate-900/60 border border-white/5 py-1.5 px-4 rounded-full text-[9px] sm:text-xs font-semibold tracking-wide mx-auto select-none mt-1 shadow-md">
-                  <span className="text-gray-400 font-bold uppercase text-[8px] sm:text-[10px]">Khắc chế (+5 OVR):</span>
-                  <span className="flex items-center gap-1 font-bold text-yellow-400">Tốc độ ⚡</span>
-                  <span className="text-gray-500 font-black">➔</span>
-                  <span className="flex items-center gap-1 font-bold text-cyan-400">Kỹ thuật 🌀</span>
-                  <span className="text-gray-500 font-black">➔</span>
-                  <span className="flex items-center gap-1 font-bold text-red-400">Sức mạnh 💪</span>
-                  <span className="text-gray-500 font-black">➔</span>
-                  <span className="flex items-center gap-1 font-bold text-yellow-400">Tốc độ ⚡</span>
-                </div>
-
-                {/* Sân 3D */}
-                <div className="glass-panel p-2 pb-6 rounded-3xl flex-1 flex flex-col relative bg-black/30 border border-white/10">
-                  <h3 className="text-xs font-bold tracking-widest uppercase mb-1 text-center w-full z-20 flex items-center justify-center gap-2">
-                    <span>Đội hình ra sân của bạn</span>
-                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black border ${
+                  <div className="flex-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 bg-black/40 border border-white/5 rounded-2xl px-3 py-1.5 text-[9px] min-w-0">
+                    <span className="text-gray-500 font-bold">⛅ {matchEnvironment.weather.name}</span>
+                    <span className="text-gray-600">·</span>
+                    <span className="text-gray-500 font-bold">🕐 {matchEnvironment.time.name}</span>
+                    <span className="text-gray-600 hidden sm:inline">·</span>
+                    <span className={`font-black text-[9px] hidden sm:inline px-1.5 py-0.5 rounded-full border ${
                       (playedCardIds.length % 2 === 0) 
-                        ? 'bg-blue-950/80 text-blue-400 border-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.3)] animate-pulse'
-                        : 'bg-amber-950/80 text-amber-400 border-amber-500/30'
+                        ? 'bg-blue-950/60 text-blue-400 border-blue-500/20'
+                        : 'bg-amber-950/60 text-amber-400 border-amber-500/20'
                     }`}>
-                      {(playedCardIds.length % 2 === 0) ? '⚔️ LƯỢT BẠN TẤN CÔNG' : '🛡️ BẠN PHÒNG THỦ'}
+                      {(playedCardIds.length % 2 === 0) ? '⚔️ LƯỢT TẤN CÔNG' : '🛡️ LƯỢT PHÒNG THỦ'}
                     </span>
-                  </h3>
+                  </div>
+
+                  <button 
+                    className="shrink-0 text-gray-500 hover:text-white bg-black/60 hover:bg-red-950/60 border border-white/10 hover:border-red-500/30 text-[9px] font-bold uppercase tracking-widest px-2.5 py-1.5 rounded-xl transition-all cursor-pointer"
+                    onClick={() => setGameState('lobby')}
+                  >
+                    Thoát
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-center gap-1.5 text-[8px] sm:text-[9px] font-bold text-gray-500 tracking-wide select-none">
+                  <span className="text-yellow-500">⚡ Tốc độ</span><span className="text-gray-600">→</span>
+                  <span className="text-cyan-500">🌀 Kỹ thuật</span><span className="text-gray-600">→</span>
+                  <span className="text-red-500">💪 Sức mạnh</span><span className="text-gray-600">→</span>
+                  <span className="text-yellow-500">⚡ Tốc độ</span>
+                  <span className="text-gray-600 ml-1">(+5 OVR khắc chế)</span>
+                </div>
+
+                {/* SÂN 3D */}
+                <div className="glass-panel p-2 pb-4 rounded-2xl flex-1 flex flex-col relative bg-black/30 border border-white/10 min-h-0">
+                  <h3 className="text-[9px] font-bold tracking-widest uppercase mb-1 text-center text-gray-400">ĐỘI HÌNH RA SÂN CỦA BẠN</h3>
                   
-                  <div className="pitch-wrapper flex-1 mt-1">
+                  <div className="pitch-wrapper flex-1 mt-1 min-h-0">
                     <div className="pitch-container">
                       <div className="pitch-lines"></div>
                       <div className="penalty-box-top"></div>
@@ -6520,12 +6441,9 @@ export default function App() {
                         const isPlayed = playedCardIds.includes(player.id);
                         const isSelected = selectedPlayerCard?.id === player.id;
                         const pos = PITCH_POSITIONS[idx] || { top: '50%', left: '50%' };
-                        
-                        if (isPlayed) return null; // Ẩn thẻ đã đánh
-                        
+                        if (isPlayed) return null;
                         const chemBoost = getPlayerChemistryBoost(player, squad);
                         const isCap = squad.length > 0 && player.id === squad[0].id;
-                        
                         return (
                           <div 
                             key={player.id}
@@ -6919,8 +6837,8 @@ export default function App() {
               
               {/* Decorative glows */}
               <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-red-500 via-yellow-500 to-cyan-500"></div>
-              <div className="absolute -top-20 -left-20 w-48 h-48 bg-cyan-500/10 rounded-full blur-[80px]"></div>
-              <div className="absolute -bottom-20 -right-20 w-48 h-48 bg-yellow-500/10 rounded-full blur-[80px]"></div>
+              {/* Decorative gradient lines only - no blur for GPU perf */}
+              {/* removed */}
 
               {/* Header Title */}
               <div>
@@ -7026,3 +6944,4 @@ export default function App() {
     </>
   );
 }
+

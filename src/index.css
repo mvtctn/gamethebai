@@ -1852,3 +1852,97 @@ h2 {
   transform: scale(1.02);
 }
 
+/* ═══════════════════════════════════════════
+   GPU PERFORMANCE OPTIMIZATIONS
+   Giảm thiểu composite layers & repaint
+   ═══════════════════════════════════════════ */
+
+/* 1. Override Tailwind animate-pulse để dùng opacity thay vì repainting */
+/* Tailwind's default pulse uses opacity 1→0.5→1 — tốt, nhưng cần will-change
+   để browser tạo composite layer riêng, tránh repaint toàn bộ parent */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* 2. Tất cả animated elements phải có will-change để browser tách GPU layer */
+.animate-pulse,
+.animate-bounce,
+.animate-ping {
+  will-change: opacity, transform;
+  /* Isolate animated element trong composite layer riêng */
+  transform: translateZ(0);
+  /* Giới hạn repaint chỉ trong bounds của element */
+  contain: layout style;
+}
+
+/* 3. animate-ping cực kỳ nặng (scale + opacity đồng thời) — giảm tần suất */
+@keyframes ping {
+  75%, 100% {
+    transform: translateZ(0) scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* 4. Tắt animate-pulse cho các badge/dot nhỏ ít quan trọng */
+/* Chỉ giữ lại pulse cho các yếu tố thực sự cần nổi bật */
+.text-\[8px\].animate-pulse,
+.text-\[9px\].animate-pulse {
+  animation: none;
+}
+
+/* 5. Giảm độ phức tạp background của bg-stadium (fixed background = repaint mỗi scroll) */
+.bg-stadium {
+  will-change: auto;
+  /* Dùng contain để hạn chế tác động repaint */
+  contain: layout style paint;
+}
+
+/* 6. Các blur decorative orbs: dùng will-change & contain để tách layer */
+/* Không xóa blur hoàn toàn để giữ aesthetics, nhưng tách khỏi main render tree */
+[class*="blur-["] {
+  will-change: auto;
+  transform: translateZ(0);
+  /* contain: paint hạn chế repaint trong bounds orb, không lan ra ngoài */
+  contain: paint;
+  /* pointer-events none để tránh hit-testing tốn CPU */
+  pointer-events: none;
+}
+
+/* 7. Pitch 3D: transform-style preserve-3d rất tốn GPU — optimize */
+.pitch-container {
+  /* Giảm tải CSS 3D perspective — transform được GPU handle */
+  will-change: transform;
+  /* Dùng backface-visibility hidden để GPU skip render mặt sau */
+  backface-visibility: hidden;
+}
+
+.pitch-player-slot {
+  /* Mỗi thẻ đứng 3D đã có will-change: transform — đảm bảo composite layer */
+  backface-visibility: hidden;
+  transform-style: flat;
+}
+
+/* 8. Glass panel: box-shadow phức tạp không cần GPU, nhưng avoid repaints */
+.glass-panel {
+  /* contain: layout style giúp thay đổi trong glass-panel không trigger parent repaint */
+  contain: layout style;
+}
+
+/* 9. Giới hạn shadow radius của custom Tailwind shadow-[...] inline styles */
+/* Large blur radius shadows rất tốn GPU compositing */
+
+/* 10. App container: isolate toàn bộ app trong 1 stacking context */
+.app-container {
+  isolation: isolate;
+}
+
+/* 11. Fixed background image: dùng content-visibility để skip offscreen */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse,
+  .animate-bounce,
+  .animate-ping,
+  .animate-spin {
+    animation: none !important;
+  }
+}
