@@ -421,7 +421,7 @@ export const Card = ({ player, onClick, isSelectable, isSelected, hideStats }) =
         )}
 
         {/* Top right info: Attribute style badge */}
-        <div className={`absolute top-2 right-2 px-1.5 py-0.5 rounded-full border backdrop-blur-md z-20 flex items-center gap-1 ${attr.bg} shadow-md`}>
+        <div className={`absolute top-2 right-2 px-1.5 py-0.5 rounded-full border  z-20 flex items-center gap-1 ${attr.bg} shadow-md`}>
           <span className="text-[9px] sm:text-[10px]">{attr.emoji}</span>
           <span className={`text-[7px] sm:text-[8px] font-black uppercase tracking-wider ${attr.color}`}>{attr.name}</span>
         </div>
@@ -3477,7 +3477,7 @@ export default function App() {
       {currentUser && (
         <>
           {activeInvite && (
-            <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-fade-in animate-pulse-subtle">
+            <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/95  p-4 animate-fade-in ">
               <div className="glass-panel p-8 sm:p-10 rounded-[2.5rem] max-w-sm w-full flex flex-col items-center bg-gradient-to-b from-red-950/80 via-slate-900 to-black shadow-[0_0_80px_rgba(239,68,68,0.4)] border border-red-500/30 text-center relative">
                 <div className="w-20 h-20 bg-red-900/60 rounded-full flex items-center justify-center border-4 border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.6)] mb-6 animate-bounce">
                   <Swords size={40} className="text-red-400" />
@@ -3492,13 +3492,13 @@ export default function App() {
                 
                 <div className="flex gap-4 w-full mt-2">
                   <button 
-                    className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-full border border-emerald-500/40 bg-emerald-950/20 text-emerald-300 hover:text-white hover:bg-gradient-to-r hover:from-emerald-600 hover:to-green-500 hover:border-transparent hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] active:scale-95 transition-all duration-300 font-extrabold uppercase text-xs tracking-widest cursor-pointer backdrop-blur-sm"
+                    className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-full border border-emerald-500/40 bg-emerald-950/20 text-emerald-300 hover:text-white hover:bg-gradient-to-r hover:from-emerald-600 hover:to-green-500 hover:border-transparent hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] active:scale-95 transition-all duration-300 font-extrabold uppercase text-xs tracking-widest cursor-pointer "
                     onClick={() => acceptChallenge(activeInvite)}
                   >
                     🤝 Đồng Ý
                   </button>
                   <button 
-                    className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-full border border-red-500/40 bg-red-950/20 text-red-300 hover:text-white hover:bg-gradient-to-r hover:from-red-600 hover:to-rose-500 hover:border-transparent hover:shadow-[0_0_25px_rgba(239,68,68,0.5)] active:scale-95 transition-all duration-300 font-extrabold uppercase text-xs tracking-widest cursor-pointer backdrop-blur-sm"
+                    className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-full border border-red-500/40 bg-red-950/20 text-red-300 hover:text-white hover:bg-gradient-to-r hover:from-red-600 hover:to-rose-500 hover:border-transparent hover:shadow-[0_0_25px_rgba(239,68,68,0.5)] active:scale-95 transition-all duration-300 font-extrabold uppercase text-xs tracking-widest cursor-pointer "
                     onClick={declineChallenge}
                   >
                     ✕ Từ Chối
@@ -3515,7 +3515,7 @@ export default function App() {
           {/* Native flow footer used at the bottom of app-container instead */}
 
           {/* User Header Profile */}
-          <div className="absolute top-4 right-4 z-50 flex items-center gap-3 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
+          <div className="absolute top-4 right-4 z-50 flex items-center gap-3 bg-black/50  px-4 py-2 rounded-full border border-white/10 shadow-lg">
             <button 
               onClick={() => { playFx('click'); setGameState('userWall'); setUserWallTarget(currentUser); setSocialWallTab('global'); }} 
               className="text-xs text-cyan-400 hover:text-cyan-300 font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer select-none transition-all hover:scale-105 active:scale-95"
@@ -3650,7 +3650,7 @@ export default function App() {
                   {/* RIGHT COLUMN: Real-time Global Chat & Online Panel */}
                   <div className="w-full lg:w-96 flex flex-col z-20 shrink-0">
                     {/* Inline LobbyChatPanel rendering */}
-                    <div id="lobby-chat-panel" className="glass-panel w-full h-[450px] lg:h-[580px] rounded-3xl lg:rounded-r-none flex flex-col overflow-hidden border border-white/10 lg:border-r-0 shadow-[0_4px_30px_rgba(0,0,0,0.4)] backdrop-blur-md bg-slate-950/40 relative">
+                    <div id="lobby-chat-panel" className="glass-panel w-full h-[450px] lg:h-[580px] rounded-3xl lg:rounded-r-none flex flex-col overflow-hidden border border-white/10 lg:border-r-0 shadow-[0_4px_30px_rgba(0,0,0,0.4)]  bg-slate-950/40 relative">
                       {/* Header Tabs */}
                       <div className="flex border-b border-white/10 bg-black/40">
                         <button 
@@ -4031,7 +4031,7 @@ export default function App() {
 
                   {/* PVP Join Modal */}
                   {showPvpJoinModal && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80  p-4 animate-fade-in">
                       <div className="glass-panel p-8 sm:p-10 rounded-[2rem] max-w-sm w-full flex flex-col items-center bg-gradient-to-t from-red-900/40 to-slate-900 shadow-[0_0_50px_rgba(0,0,0,0.8)] relative border border-white/10">
                         <button 
                           className="absolute top-4 right-4 text-gray-400 hover:text-white bg-black/40 hover:bg-black/80 p-2 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
@@ -4346,7 +4346,7 @@ export default function App() {
             <div className="lg:col-span-5 flex flex-col gap-6">
 
               {/* === Profile Card === */}
-              <div className="glass-panel rounded-3xl overflow-hidden border border-white/10 shadow-2xl relative bg-slate-950/40 backdrop-blur-md">
+              <div className="glass-panel rounded-3xl overflow-hidden border border-white/10 shadow-2xl relative bg-slate-950/40 ">
                 {/* Cover Banner */}
                 <div className="h-28 sm:h-36 bg-gradient-to-r from-cyan-900 via-indigo-950 to-purple-950 relative overflow-hidden flex items-center justify-center">
                   <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_white_1px,_transparent_1px)] bg-[size:10px_10px]"></div>
@@ -4797,7 +4797,7 @@ export default function App() {
               
               {/* LEFT PROFILE CARD (5/12 cols): Cover, stats, and fast actions */}
               <div className={`lg:col-span-5 flex-col gap-4 lg:flex w-full ${mobileSubTab === 'profile' ? 'flex' : 'hidden'}`}>
-                <div className="glass-panel rounded-2xl border border-white/10 shadow-2xl overflow-hidden bg-slate-950/40 backdrop-blur-md relative flex flex-col">
+                <div className="glass-panel rounded-2xl border border-white/10 shadow-2xl overflow-hidden bg-slate-950/40  relative flex flex-col">
                   {/* Premium Cover Banner */}
                   <div className="h-16 sm:h-32 bg-gradient-to-r from-cyan-900 via-indigo-950 to-purple-950 relative overflow-hidden flex items-center justify-center">
                     <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_white_1px,_transparent_1px)] bg-[size:10px_10px]"></div>
@@ -4942,7 +4942,7 @@ export default function App() {
                 </div>
 
                 {/* HLV Search & Discovery Directory */}
-                <div className={`glass-panel rounded-2xl border border-white/10 p-4 shadow-2xl bg-slate-950/40 backdrop-blur-md flex-col gap-4 w-full ${mobileSubTab === 'search' ? 'flex' : 'hidden lg:flex'}`}>
+                <div className={`glass-panel rounded-2xl border border-white/10 p-4 shadow-2xl bg-slate-950/40  flex-col gap-4 w-full ${mobileSubTab === 'search' ? 'flex' : 'hidden lg:flex'}`}>
                   <div>
                     <h4 className="text-xs font-black text-cyan-400 uppercase tracking-widest flex items-center gap-1.5">
                       <span>🔍</span> Tìm Kiếm & Khám Phá HLV
@@ -5082,7 +5082,7 @@ export default function App() {
                 
                 {/* 1. Composer (Only for the wall owner, when not on global feed tab) */}
                 {userWallTarget === currentUser && socialWallTab !== 'global' && (
-                  <div className="glass-panel rounded-2xl p-4 border border-white/10 shadow-xl bg-slate-950/40 backdrop-blur-md flex gap-3">
+                  <div className="glass-panel rounded-2xl p-4 border border-white/10 shadow-xl bg-slate-950/40  flex gap-3">
                     <div 
                       className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center font-black border border-white/10 select-none text-xs"
                       style={{ background: getAvatarGradient(currentUser) }}
@@ -5103,7 +5103,7 @@ export default function App() {
                       {/* Mention Autocomplete Dropdown */}
                       {showMentionDropdown && (
                         <div className="relative">
-                          <div className="absolute top-0 left-0 z-[60] bg-slate-900/95 border border-white/10 rounded-xl p-1.5 flex flex-col gap-1 w-44 shadow-2xl backdrop-blur-md animate-fade-in">
+                          <div className="absolute top-0 left-0 z-[60] bg-slate-900/95 border border-white/10 rounded-xl p-1.5 flex flex-col gap-1 w-44 shadow-2xl  animate-fade-in">
                             <div className="text-[8px] font-black text-gray-500 uppercase tracking-widest px-1.5 py-0.5 border-b border-white/5">Nhắc tên HLV:</div>
                             {getAutocompleteSuggestions().map(name => (
                               <button
@@ -5162,7 +5162,7 @@ export default function App() {
 
                 {/* 2. Composer for global tab (everyone can post globally) */}
                 {socialWallTab === 'global' && (
-                  <div className="glass-panel rounded-2xl p-4 border border-white/10 shadow-xl bg-slate-950/40 backdrop-blur-md flex gap-3">
+                  <div className="glass-panel rounded-2xl p-4 border border-white/10 shadow-xl bg-slate-950/40  flex gap-3">
                     <div
                       className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center font-black border border-white/10 select-none text-xs"
                       style={{ background: getAvatarGradient(currentUser) }}
@@ -5182,7 +5182,7 @@ export default function App() {
                       {/* Mention Autocomplete Dropdown */}
                       {showMentionDropdown && (
                         <div className="relative">
-                          <div className="absolute top-0 left-0 z-[60] bg-slate-900/95 border border-white/10 rounded-xl p-1.5 flex flex-col gap-1 w-44 shadow-2xl backdrop-blur-md animate-fade-in">
+                          <div className="absolute top-0 left-0 z-[60] bg-slate-900/95 border border-white/10 rounded-xl p-1.5 flex flex-col gap-1 w-44 shadow-2xl  animate-fade-in">
                             <div className="text-[8px] font-black text-gray-500 uppercase tracking-widest px-1.5 py-0.5 border-b border-white/5">Nhắc tên HLV:</div>
                             {getAutocompleteSuggestions().map(name => (
                               <button
@@ -6012,7 +6012,7 @@ export default function App() {
                         </div>
                         {/* Rarity badge */}
                         <div
-                          className="absolute top-1.5 right-1.5 text-[8px] font-black px-1.5 py-0.5 rounded-full border backdrop-blur-sm z-30"
+                          className="absolute top-1.5 right-1.5 text-[8px] font-black px-1.5 py-0.5 rounded-full border  z-30"
                           style={{ color: tier.color, borderColor: tier.color + '60', background: 'rgba(0,0,0,0.7)' }}
                         >
                           {tier.star} {tier.label}
@@ -6066,7 +6066,7 @@ export default function App() {
 
       {gameState === 'teamBuilder' && (
         <div className="team-builder relative z-10 p-4 sm:p-8 pt-20 min-h-screen flex flex-col">
-          <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 bg-black/50 p-4 rounded-2xl backdrop-blur-md border border-white/10">
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 bg-black/50 p-4 rounded-2xl  border border-white/10">
             <div className="flex flex-wrap gap-2 sm:gap-4 items-center">
               <button className="btn !bg-blue-600 hover:!bg-blue-500 !py-2 !px-4 text-sm whitespace-nowrap" onClick={() => setGameState('lobby')}>← Về Sảnh</button>
               <button 
@@ -6183,7 +6183,7 @@ export default function App() {
                 </div>
                 
                 <button 
-                  className="btn w-full flex items-center justify-center gap-2 !bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 font-black tracking-widest text-lg py-4 rounded-2xl shadow-[0_4px_20px_rgba(239,68,68,0.3)] hover:scale-[1.02] transition-all cursor-pointer animate-pulse-subtle" 
+                  className="btn w-full flex items-center justify-center gap-2 !bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 font-black tracking-widest text-lg py-4 rounded-2xl shadow-[0_4px_20px_rgba(239,68,68,0.3)] hover:scale-[1.02] transition-all cursor-pointer " 
                   onClick={() => {
                     playFx('click');
                     startMatch();
@@ -6244,7 +6244,7 @@ export default function App() {
 
               {/* Stat Selection Modal */}
               {selectedPlayerCard && matchPhase === 'playing' && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80  p-4 animate-fade-in">
                   <div className="glass-panel p-6 sm:p-8 rounded-[2rem] max-w-sm w-full flex flex-col items-center bg-gradient-to-t from-blue-900/60 to-slate-900 shadow-[0_0_50px_rgba(0,0,0,0.8)] relative border border-white/10">
                     <button 
                       className="absolute top-4 right-4 text-gray-400 hover:text-white bg-black/40 hover:bg-black/80 p-2 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
@@ -6309,7 +6309,7 @@ export default function App() {
                                        'HÒA LƯỢT ĐẤU! 🤝';
 
                     return (
-                      <div className={`w-full max-w-xl glass-panel p-4 sm:p-5 rounded-3xl bg-slate-950/90 border backdrop-blur-md flex flex-col items-center gap-3 animate-scale-in pointer-events-auto transition-all ${borderColor}`}>
+                      <div className={`w-full max-w-xl glass-panel p-4 sm:p-5 rounded-3xl bg-slate-950/90 border  flex flex-col items-center gap-3 animate-scale-in pointer-events-auto transition-all ${borderColor}`}>
                         {/* Result Badge */}
                         <div className={`px-4 py-1.5 rounded-full border text-[10px] sm:text-xs font-black tracking-widest uppercase ${badgeBg} shadow-inner`}>
                           {resultText}
@@ -6541,7 +6541,7 @@ export default function App() {
                            <Card player={currentAiCard} />
                         </div>
                       ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-red-400/30 border-2 border-dashed border-red-900/30 rounded-2xl bg-black/50 backdrop-blur-sm shadow-inner">
+                        <div className="w-full h-full flex flex-col items-center justify-center text-red-400/30 border-2 border-dashed border-red-900/30 rounded-2xl bg-black/50  shadow-inner">
                            <div className="w-3 h-3 rounded-full bg-red-500/50 animate-ping mb-3"></div>
                            <span className="text-[10px] font-bold uppercase tracking-widest text-center px-2">Đang chờ<br/>phản hồi</span>
                         </div>
@@ -6594,7 +6594,7 @@ export default function App() {
         const isMaxLvl = lvl >= 10;
         return (
           <div 
-            className="fixed inset-0 z-[190] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in"
+            className="fixed inset-0 z-[190] flex items-center justify-center bg-black/85  p-4 animate-fade-in"
             onClick={() => setSelectedUpgradeCard(null)}
           >
             <div 
@@ -6698,7 +6698,7 @@ export default function App() {
 
       {/* 2. LEVEL UP CELEBRATION MODAL */}
       {showLevelUpModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-fade-in">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90  p-4 animate-fade-in">
           <div className="glass-panel p-8 sm:p-12 rounded-[2.5rem] text-center w-full max-w-md bg-gradient-to-t from-yellow-950/30 via-slate-900 to-slate-950 border border-yellow-500/30 shadow-[0_0_80px_rgba(251,191,36,0.3)] animate-scale-in flex flex-col items-center">
             <div className="text-7xl mb-4 animate-bounce-subtle">🏆</div>
             
@@ -6742,7 +6742,7 @@ export default function App() {
         const streak = checkInState.streak || 0;
 
         return (
-          <div className="fixed inset-0 z-[220] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in" onClick={() => setShowCheckInModal(false)}>
+          <div className="fixed inset-0 z-[220] flex items-center justify-center bg-black/80  p-4 animate-fade-in" onClick={() => setShowCheckInModal(false)}>
             <div 
               className="glass-panel w-full max-w-2xl rounded-[2.5rem] border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col relative bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/40 p-6 sm:p-8 gap-5 animate-scale-in"
               onClick={(e) => e.stopPropagation()}
@@ -6863,7 +6863,7 @@ export default function App() {
         const tier = RARITY_TIERS[rarity] || { color: '#ffffff', glow: 'rgba(255,255,255,0.4)', star: '★', label: 'SIÊU SAO' };
         
         return (
-          <div className="fixed inset-0 z-[220] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 overflow-y-auto animate-fade-in">
+          <div className="fixed inset-0 z-[220] flex items-center justify-center bg-black/95  p-4 overflow-y-auto animate-fade-in">
             <div className="relative w-full max-w-lg bg-gradient-to-b from-slate-900 via-slate-950 to-black border-2 border-yellow-500/40 rounded-[2.5rem] p-6 sm:p-8 text-center shadow-[0_0_80px_rgba(251,191,36,0.35)] flex flex-col items-center gap-6 overflow-hidden">
               
               {/* Decorative glows */}
@@ -6952,7 +6952,7 @@ export default function App() {
 
       {/* 3. IN-GAME CUSTOM ALERT MODAL */}
       {gameAlert && (
-        <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+        <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/80  p-4 animate-fade-in">
           <div className="glass-panel p-6 sm:p-8 rounded-[2rem] max-w-sm w-full text-center flex flex-col items-center bg-gradient-to-t from-slate-900 via-slate-950 to-slate-900 border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)] relative animate-scale-in">
             <h3 className="text-base font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 mb-4 uppercase tracking-widest">
               {gameAlert.title || 'Thông Báo'}
