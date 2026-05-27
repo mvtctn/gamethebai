@@ -503,6 +503,8 @@ export default function App() {
     return saved !== null ? parseInt(saved) : 0; // New users start with 0 coins; earn through quests/levels
   });
 
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
+
   const urlParams = new URLSearchParams(window.location.search);
   const pvpTarget = urlParams.get('pvp');
 
@@ -936,51 +938,57 @@ export default function App() {
 
   // Sync rewardedMilestones to localStorage and Firebase
   useEffect(() => {
+    if (isConnectedToFirebase && !isDataLoaded) return;
     if (currentUser) {
       localStorage.setItem(`panini_${currentUser}_rewardedMilestones`, JSON.stringify(rewardedMilestones));
       if (isConnectedToFirebase) {
         set(ref(database, `/users/${currentUser}/rewardedMilestones`), rewardedMilestones);
       }
     }
-  }, [rewardedMilestones, currentUser]);
+  }, [rewardedMilestones, currentUser, isDataLoaded]);
 
   useEffect(() => {
+    if (isConnectedToFirebase && !isDataLoaded) return;
     if (currentUser) {
       localStorage.setItem(`panini_${currentUser}_claimedLevelRewards`, JSON.stringify(claimedLevelRewards));
       if (isConnectedToFirebase) {
         set(ref(database, `/users/${currentUser}/claimedLevelRewards`), claimedLevelRewards);
       }
     }
-  }, [claimedLevelRewards, currentUser]);
+  }, [claimedLevelRewards, currentUser, isDataLoaded]);
 
   useEffect(() => {
+    if (isConnectedToFirebase && !isDataLoaded) return;
     if (currentUser) {
       localStorage.setItem(`panini_${currentUser}_freePacks`, freePacks.toString());
       if (isConnectedToFirebase) {
         set(ref(database, `/users/${currentUser}/freePacks`), freePacks);
       }
     }
-  }, [freePacks, currentUser]);
+  }, [freePacks, currentUser, isDataLoaded]);
 
   useEffect(() => {
+    if (isConnectedToFirebase && !isDataLoaded) return;
     if (currentUser && userCreatedAt) {
       localStorage.setItem(`panini_${currentUser}_createdAt`, userCreatedAt.toString());
       if (isConnectedToFirebase) {
         set(ref(database, `/users/${currentUser}/createdAt`), userCreatedAt);
       }
     }
-  }, [userCreatedAt, currentUser]);
+  }, [userCreatedAt, currentUser, isDataLoaded]);
 
   useEffect(() => {
+    if (isConnectedToFirebase && !isDataLoaded) return;
     if (currentUser) {
       localStorage.setItem(`panini_${currentUser}_checkin`, JSON.stringify(checkInState));
       if (isConnectedToFirebase) {
         set(ref(database, `/users/${currentUser}/checkIn`), checkInState);
       }
     }
-  }, [checkInState, currentUser]);
+  }, [checkInState, currentUser, isDataLoaded]);
 
   useEffect(() => {
+    if (isConnectedToFirebase && !isDataLoaded) return;
     if (currentUser) {
       localStorage.setItem(`panini_${currentUser}_equippedTitle`, equippedTitle);
       if (isConnectedToFirebase) {
@@ -989,16 +997,17 @@ export default function App() {
         update(ref(database, `/leaderboard/${currentUser}`), { equippedTitle });
       }
     }
-  }, [equippedTitle, currentUser]);
+  }, [equippedTitle, currentUser, isDataLoaded]);
 
   useEffect(() => {
+    if (isConnectedToFirebase && !isDataLoaded) return;
     if (currentUser) {
       localStorage.setItem(`panini_${currentUser}_claimedAchievements`, JSON.stringify(claimedAchievements));
       if (isConnectedToFirebase) {
         set(ref(database, `/users/${currentUser}/claimedAchievements`), claimedAchievements);
       }
     }
-  }, [claimedAchievements, currentUser]);
+  }, [claimedAchievements, currentUser, isDataLoaded]);
 
   useEffect(() => {
     if (gameState === 'profile') {
@@ -1094,67 +1103,74 @@ export default function App() {
 
   // Auto-save state to localStorage & Firebase when they change
   useEffect(() => {
+    if (isConnectedToFirebase && !isDataLoaded) return;
     if (currentUser) {
       localStorage.setItem(`panini_${currentUser}_collection`, JSON.stringify(collection));
       if (isConnectedToFirebase) {
         set(ref(database, `/users/${currentUser}/collection`), collection);
       }
     }
-  }, [collection, currentUser]);
+  }, [collection, currentUser, isDataLoaded]);
 
   useEffect(() => {
+    if (isConnectedToFirebase && !isDataLoaded) return;
     if (currentUser) {
       localStorage.setItem(`panini_${currentUser}_squad`, JSON.stringify(squad));
       if (isConnectedToFirebase) {
         set(ref(database, `/users/${currentUser}/squad`), squad);
       }
     }
-  }, [squad, currentUser]);
+  }, [squad, currentUser, isDataLoaded]);
 
   useEffect(() => {
+    if (isConnectedToFirebase && !isDataLoaded) return;
     if (currentUser) {
       localStorage.setItem(`panini_${currentUser}_coins`, coins.toString());
       if (isConnectedToFirebase) {
         set(ref(database, `/users/${currentUser}/coins`), coins);
       }
     }
-  }, [coins, currentUser]);
+  }, [coins, currentUser, isDataLoaded]);
 
   useEffect(() => {
+    if (isConnectedToFirebase && !isDataLoaded) return;
     if (currentUser) {
       localStorage.setItem(`panini_${currentUser}_quests`, JSON.stringify(quests));
       if (isConnectedToFirebase) {
         set(ref(database, `/users/${currentUser}/quests`), quests);
       }
     }
-  }, [quests, currentUser]);
+  }, [quests, currentUser, isDataLoaded]);
 
   useEffect(() => {
+    if (isConnectedToFirebase && !isDataLoaded) return;
     if (currentUser) {
       localStorage.setItem(`panini_${currentUser}_level`, level.toString());
       if (isConnectedToFirebase) {
         set(ref(database, `/users/${currentUser}/level`), level);
       }
     }
-  }, [level, currentUser]);
+  }, [level, currentUser, isDataLoaded]);
 
   useEffect(() => {
+    if (isConnectedToFirebase && !isDataLoaded) return;
     if (currentUser) {
       localStorage.setItem(`panini_${currentUser}_xp`, xp.toString());
       if (isConnectedToFirebase) {
         set(ref(database, `/users/${currentUser}/xp`), xp);
       }
     }
-  }, [xp, currentUser]);
+  }, [xp, currentUser, isDataLoaded]);
 
   useEffect(() => {
+    if (isConnectedToFirebase && !isDataLoaded) return;
     if (currentUser) {
       localStorage.setItem(`panini_${currentUser}_stats`, JSON.stringify(stats));
       if (isConnectedToFirebase) {
         set(ref(database, `/users/${currentUser}/stats`), stats);
       }
     }
-  }, [stats, currentUser]);
+  }, [stats, currentUser, isDataLoaded]);
 
   // Sync to Leaderboard node
   useEffect(() => {
@@ -1178,13 +1194,14 @@ export default function App() {
   }, [currentUser, level, xp, coins, stats, collection, squad, equippedTitle, isConnectedToFirebase]);
 
   useEffect(() => {
+    if (isConnectedToFirebase && !isDataLoaded) return;
     if (currentUser) {
       localStorage.setItem(`panini_${currentUser}_email`, email);
       if (isConnectedToFirebase) {
         set(ref(database, `/users/${currentUser}/email`), email);
       }
     }
-  }, [email, currentUser]);
+  }, [email, currentUser, isDataLoaded]);
 
   // Sync from Firebase on login/mount
   useEffect(() => {
@@ -1221,6 +1238,7 @@ export default function App() {
           showAlert("🎁 Chúc Mừng!", `Bạn vừa nhận được ${data.coinNotification.amount} xu từ HLV ${data.coinNotification.from}!`);
           set(ref(database, `/users/${currentUser}/coinNotification`), null);
         }
+        setIsDataLoaded(true);
       } else {
         // Initialize brand-new guest user — fresh start with 3 starter packs + 200 xu
         const initialData = {
@@ -1249,6 +1267,7 @@ export default function App() {
         };
         set(userRef, initialData);
         setCoins(200);
+        setIsDataLoaded(true);
       }
     });
 
@@ -2114,7 +2133,7 @@ export default function App() {
       } else {
         // EXISTING user
         setAuthFoundUser(val);
-        const hasPin = val.pin && val.pin.length === 4;
+        const hasPin = val.pin && (val.pin.length === 4 || val.pin.length === 64);
         if (hasPin) {
           // Has PIN → ask for PIN
           setAuthStep('enter_pin');
@@ -2201,6 +2220,7 @@ export default function App() {
       pin: hashedPin, // optional hashed PIN
       email: '',
       coins: 200, // Thành viên mới được 200 Xu để bắt đầu mở thẻ
+      startingBonus: true,
       collection: [],
       squad: [],
       level: 1,

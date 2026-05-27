@@ -130,7 +130,12 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
   const [pvpAlert, setPvpAlert] = useState(null); // Custom in-game dialog alert: { title, message, onClose }
   const [matchHistory, setMatchHistory] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [matchEnvironment, setMatchEnvironment] = useState({ weather: ENV_WEATHER[4], time: ENV_TIME[1] });
+  const [matchEnvironment, setMatchEnvironmentState] = useState({ weather: ENV_WEATHER[4], time: ENV_TIME[1] });
+  const matchEnvironmentRef = useRef({ weather: ENV_WEATHER[4], time: ENV_TIME[1] });
+  const setMatchEnvironment = useCallback((env) => {
+    matchEnvironmentRef.current = env;
+    setMatchEnvironmentState(env);
+  }, []);
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [opponentSquad, setOpponentSquad] = useState([]);
   const opponentSquadRef = useRef([]);
@@ -248,8 +253,8 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     // Use a single consistent seed for both cards (no per-side reversal)
     const rng1 = seededRNG(roundCountRef.current * 10 + 1);
     const rng2 = seededRNG(roundCountRef.current * 10 + 2);
-    const formResult1 = generateCardForm(hostCard, guestCard, matchEnvironment, rng1);
-    const formResult2 = generateCardForm(guestCard, hostCard, matchEnvironment, rng2);
+    const formResult1 = generateCardForm(hostCard, guestCard, matchEnvironmentRef.current, rng1);
+    const formResult2 = generateCardForm(guestCard, hostCard, matchEnvironmentRef.current, rng2);
 
     const formBonus1 = formResult1.bonus; // host
     const formBonus2 = formResult2.bonus; // guest
@@ -478,8 +483,8 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
             stat: nextStat, 
             roundIndex: roundCountRef.current, 
             seed: roundSeed,
-            weatherIdx: ENV_WEATHER.indexOf(matchEnvironment.weather),
-            timeIdx: ENV_TIME.indexOf(matchEnvironment.time)
+            weatherIdx: ENV_WEATHER.indexOf(matchEnvironmentRef.current.weather),
+            timeIdx: ENV_TIME.indexOf(matchEnvironmentRef.current.time)
           });
         } else {
           if (phaseRef.current === 'result') {
@@ -646,8 +651,8 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
           opponentDeckCount: myDeckRef.current.length,
           activeStat: activeStatRef.current,
           phase: phaseRef.current,
-          weatherIdx: ENV_WEATHER.indexOf(matchEnvironment.weather),
-          timeIdx: ENV_TIME.indexOf(matchEnvironment.time)
+          weatherIdx: ENV_WEATHER.indexOf(matchEnvironmentRef.current.weather),
+          timeIdx: ENV_TIME.indexOf(matchEnvironmentRef.current.time)
         });
       }
       setRoundResultMsg('Đã kết nối lại thành công! Trận đấu tiếp tục.');
