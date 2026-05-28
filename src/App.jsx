@@ -484,7 +484,7 @@ export const AnimatedHeroPlayer = () => {
 
   return (
     <div className="relative w-full h-full overflow-hidden select-none" style={{
-      backgroundImage: "url('/wc2026_kids_banner.png')",
+      backgroundImage: "url('/wc2026_banner.png')",
       backgroundSize: "cover",
       backgroundPosition: "center"
     }}>
@@ -517,8 +517,8 @@ export const AnimatedHeroPlayer = () => {
         }
         .trophy-glint {
           position: absolute;
-          top: 18%;
-          left: 50%;
+          top: 38%;
+          left: 72%;
           transform: translate(-50%, -50%);
           width: 60px;
           height: 60px;
@@ -529,8 +529,8 @@ export const AnimatedHeroPlayer = () => {
         }
         .trophy-glint-flare {
           position: absolute;
-          top: 18%;
-          left: 50%;
+          top: 38%;
+          left: 72%;
           transform: translate(-50%, -50%) rotate(45deg);
           width: 100px;
           height: 2px;
@@ -614,7 +614,7 @@ export const AnimatedHeroPlayer = () => {
 
 
 const BANNERS = [
-  "/wc2026_kids_banner.png",
+  "/wc2026_banner.png",
   "/wc2026_banner_2.png",
   "/wc2026_banner_3.png",
   "/wc2026_banner_4.png",
