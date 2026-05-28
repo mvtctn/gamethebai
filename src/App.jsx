@@ -1306,6 +1306,10 @@ export default function App() {
   const [showCheckInModal, setShowCheckInModal] = useState(false);
   const [activeShareData, setActiveShareData] = useState(null);
 
+  // Showroom page state (must be here at top level - Rules of Hooks)
+  const [showroomFilterState, setShowroomFilterState] = useState('mythic');
+  const [showroomHoverState, setShowroomHoverState] = useState(null);
+
 
   // Global Escape Key Handler for Modals
   useEffect(() => {
@@ -7582,8 +7586,8 @@ export default function App() {
           rare:      ['Fan Favourite', 'Top Keeper'],
           common:    ['Base'],
         };
-        const [showroomFilter, setShowroomFilter] = React.useState('mythic');
-        const [showroomHover, setShowroomHover] = React.useState(null);
+        const [showroomFilter, setShowroomFilter] = [showroomFilterState, setShowroomFilterState];
+        const [showroomHover, setShowroomHover] = [showroomHoverState, setShowroomHoverState];
         const filterTypes = RARITY_TYPE_MAP[showroomFilter] || [];
         const showcasePlayers = playersData
           .filter(p => filterTypes.includes(p.type))
