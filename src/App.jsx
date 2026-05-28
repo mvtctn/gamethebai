@@ -3840,12 +3840,16 @@ export default function App() {
             {/* ── LEFT: Banner Column ── */}
             <div className="landing-banner-col">
               <div className="landing-banner-card">
-                <img 
-                  key={activeBannerIdx}
-                  src={BANNERS[activeBannerIdx]} 
-                  alt="World Cup 2026 Banner" 
-                  className="banner-fade-in"
-                />
+                {activeBannerIdx === 0 ? (
+                  <AnimatedHeroPlayer />
+                ) : (
+                  <img 
+                    key={activeBannerIdx}
+                    src={BANNERS[activeBannerIdx]} 
+                    alt="World Cup 2026 Banner" 
+                    className="banner-fade-in"
+                  />
+                )}
               </div>
 
               {/* Info section underneath the banner card */}
