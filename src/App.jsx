@@ -3987,12 +3987,95 @@ export default function App() {
                 {activeBannerIdx === 0 ? (
                   <AnimatedHeroPlayer />
                 ) : (
-                  <img 
-                    key={activeBannerIdx}
-                    src={BANNERS[activeBannerIdx]} 
-                    alt="World Cup 2026 Banner" 
-                    className="banner-fade-in"
-                  />
+                  <div className="relative w-full h-full overflow-hidden select-none">
+                    <style dangerouslySetInnerHTML={{__html: `
+                      .ken-burns-banner {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                        animation: kenBurnsZoom 16s ease-in-out infinite alternate;
+                      }
+                      .stadium-spotlight-left-all {
+                        position: absolute;
+                        bottom: 0;
+                        left: 10%;
+                        width: 80px;
+                        height: 100%;
+                        background: linear-gradient(to right, transparent, rgba(56,189,248,0.2), transparent);
+                        transform-origin: bottom center;
+                        animation: sweepLightLeft 7s ease-in-out infinite;
+                        pointer-events: none;
+                        mix-blend-mode: screen;
+                        filter: blur(8px);
+                      }
+                      .stadium-spotlight-right-all {
+                        position: absolute;
+                        bottom: 0;
+                        right: 10%;
+                        width: 80px;
+                        height: 100%;
+                        background: linear-gradient(to right, transparent, rgba(56,189,248,0.2), transparent);
+                        transform-origin: bottom center;
+                        animation: sweepLightRight 7s ease-in-out infinite;
+                        pointer-events: none;
+                        mix-blend-mode: screen;
+                        filter: blur(8px);
+                      }
+                      .falling-confetti-all {
+                        position: absolute;
+                        top: -20px;
+                        animation: driftDown linear infinite;
+                        pointer-events: none;
+                      }
+                      @keyframes kenBurnsZoom {
+                        0% { transform: scale(1.0); }
+                        100% { transform: scale(1.12); }
+                      }
+                    `}} />
+                    
+                    <img 
+                      key={activeBannerIdx}
+                      src={BANNERS[activeBannerIdx]} 
+                      alt="World Cup 2026 Banner" 
+                      className="ken-burns-banner banner-fade-in"
+                    />
+
+                    {/* Active Stadium spotlight beams sweeping across all slides */}
+                    <div className="stadium-spotlight-left-all" />
+                    <div className="stadium-spotlight-right-all" />
+
+                    {/* Drifting star/confetti overlays for consistent theme energy */}
+                    {Array.from({ length: 15 }).map((_, idx) => {
+                      const left = (idx * 6.6) + Math.random() * 4;
+                      const delay = Math.random() * 8;
+                      const duration = 4.5 + Math.random() * 3.5;
+                      const size = 6 + Math.random() * 8;
+                      const colors = ['#fbbf24', '#38bdf8', '#f43f5e', '#10b981', '#a78bfa', '#c4f000'];
+                      const color = colors[idx % colors.length];
+                      const isStar = idx % 3 === 0;
+                      return (
+                        <div
+                          key={idx}
+                          className="falling-confetti-all"
+                          style={{
+                            left: `${left}%`,
+                            animationDelay: `${delay}s`,
+                            animationDuration: `${duration}s`,
+                            width: `${size}px`,
+                            height: `${size}px`,
+                          }}
+                        >
+                          {isStar ? (
+                            <svg viewBox="0 0 24 24" width="100%" height="100%" fill={color} className="drop-shadow-[0_0_3px_rgba(255,255,255,0.4)]">
+                              <path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.787 1.4 8.168L12 18.896l-7.334 3.857 1.4-8.168L.132 9.21l8.2-1.192z" />
+                            </svg>
+                          ) : (
+                            <div className="w-full h-full rounded-full opacity-70" style={{ backgroundColor: color }} />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
 
