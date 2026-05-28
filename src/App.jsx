@@ -4327,6 +4327,14 @@ export default function App() {
               🐦 <span className="hidden sm:inline">Tường</span>
             </button>
             <div className="w-[1px] h-3 sm:h-4 bg-white/20 shrink-0"></div>
+            <button 
+              onClick={() => { playFx('click'); setGameState('howToPlay'); }} 
+              className="text-xs text-yellow-400 hover:text-yellow-300 font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer select-none transition-all hover:scale-105 active:scale-95 shrink-0"
+              title="Xem hướng dẫn chơi game"
+            >
+              📖 <span className="hidden sm:inline">Hướng Dẫn</span>
+            </button>
+            <div className="w-[1px] h-3 sm:h-4 bg-white/20 shrink-0"></div>
             <div className="text-xs sm:text-sm flex items-center gap-1 sm:gap-2 cursor-pointer hover:text-cyan-400 hover:scale-105 transition-all duration-300 select-none shrink-0" onClick={() => { playFx('click'); setGameState('profile'); }} title="Xem hồ sơ và cài đặt HLV">
               <span className="hidden sm:inline text-gray-400">HLV: </span>
               <span className="font-bold text-fuchsia-400 truncate max-w-[80px] sm:max-w-none">{currentUser}</span>
