@@ -74,6 +74,31 @@ const getAvatarGradient = (username) => {
   return colors[index];
 };
 
+// --- Profile Customization Presets ---
+const AVATAR_PRESETS = [
+  { id: 'auto',    label: 'Mặc Định', value: null },
+  { id: 'cyblue',  label: 'Xanh Điện', value: 'linear-gradient(135deg, #06b6d4, #2563eb)' },
+  { id: 'purpink', label: 'Tím Hồng',  value: 'linear-gradient(135deg, #a855f7, #ec4899)' },
+  { id: 'emeteal', label: 'Xanh Ngọc', value: 'linear-gradient(135deg, #10b981, #0d9488)' },
+  { id: 'rosorg',  label: 'Hồng Cam',  value: 'linear-gradient(135deg, #f43f5e, #f97316)' },
+  { id: 'indvio',  label: 'Chàm Tím',  value: 'linear-gradient(135deg, #6366f1, #7c3aed)' },
+  { id: 'goldyel', label: 'Vàng Kim',  value: 'linear-gradient(135deg, #f59e0b, #eab308)' },
+  { id: 'obsidian',label: 'Hắc Diệu',  value: 'linear-gradient(135deg, #1e293b, #0f172a)' },
+  { id: 'crimgold',label: 'Son Vàng',  value: 'linear-gradient(135deg, #b91c1c, #d97706)' },
+];
+
+const BANNER_PRESETS = [
+  { id: 'default', label: 'Mặc Định',    value: null },
+  { id: 'galaxy',  label: '🌌 Dải Ngân Hà', value: 'linear-gradient(135deg, #0f0c29 0%, #302b63 40%, #24243e 100%)' },
+  { id: 'neongrn', label: '💚 Xanh Neon', value: 'linear-gradient(135deg, #064e3b 0%, #065f46 30%, #0d9488 60%, #0f766e 100%)' },
+  { id: 'cyberpnk',label: '🟣 Cyberpunk', value: 'linear-gradient(135deg, #1a0533 0%, #3b0764 30%, #6d28d9 60%, #db2777 100%)' },
+  { id: 'crimgold2',label: '🔴 Son Vàng', value: 'linear-gradient(135deg, #450a0a 0%, #7f1d1d 35%, #b45309 70%, #78350f 100%)' },
+  { id: 'sunset',  label: '🌅 Hoàng Hôn', value: 'linear-gradient(135deg, #0c4a6e 0%, #1e40af 25%, #7c3aed 50%, #db2777 75%, #f97316 100%)' },
+  { id: 'carbon',  label: '⚙️ Carbon',    value: 'repeating-linear-gradient(45deg, #0f172a 0px, #0f172a 4px, #1e293b 4px, #1e293b 8px)' },
+  { id: 'aurora',  label: '🎇 Aurora',    value: 'linear-gradient(135deg, #042f2e 0%, #134e4a 25%, #0e7490 50%, #1e3a5f 75%, #312e81 100%)' },
+  { id: 'midnite', label: '🌃 Đêm Đen',  value: 'linear-gradient(180deg, #020617 0%, #0f172a 50%, #1e1b4b 100%)' },
+];
+
 const LEVEL_MILESTONES = [
   { level: 2, coins: 200, packs: 0, desc: 'Tiền thưởng thăng cấp 2 khởi đầu' },
   { level: 3, coins: 300, packs: 0, desc: 'Tiền thưởng thăng cấp 3' },
@@ -1265,8 +1290,22 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
+  // Profile Customization States
+  const [customAvatar, setCustomAvatar] = useState(() => {
+    if (!currentUser) return null;
+    return localStorage.getItem(`panini_${currentUser}_customAvatar`) || null;
+  });
+  const [customBanner, setCustomBanner] = useState(() => {
+    if (!currentUser) return null;
+    return localStorage.getItem(`panini_${currentUser}_customBanner`) || null;
+  });
+  const [isCustomizingProfile, setIsCustomizingProfile] = useState(false);
+  const [previewAvatar, setPreviewAvatar] = useState(null);
+  const [previewBanner, setPreviewBanner] = useState(null);
+
   const [showCheckInModal, setShowCheckInModal] = useState(false);
   const [activeShareData, setActiveShareData] = useState(null);
+
 
   // Global Escape Key Handler for Modals
   useEffect(() => {
@@ -1357,6 +1396,28 @@ export default function App() {
       }
     }
   }, [claimedAchievements, currentUser, isDataLoaded]);
+
+  useEffect(() => {
+    if (isConnectedToFirebase && !isDataLoaded) return;
+    if (currentUser) {
+      if (customAvatar) localStorage.setItem(`panini_${currentUser}_customAvatar`, customAvatar);
+      else localStorage.removeItem(`panini_${currentUser}_customAvatar`);
+      if (isConnectedToFirebase) {
+        set(ref(database, `/users/${currentUser}/customAvatar`), customAvatar || null);
+      }
+    }
+  }, [customAvatar, currentUser, isDataLoaded]);
+
+  useEffect(() => {
+    if (isConnectedToFirebase && !isDataLoaded) return;
+    if (currentUser) {
+      if (customBanner) localStorage.setItem(`panini_${currentUser}_customBanner`, customBanner);
+      else localStorage.removeItem(`panini_${currentUser}_customBanner`);
+      if (isConnectedToFirebase) {
+        set(ref(database, `/users/${currentUser}/customBanner`), customBanner || null);
+      }
+    }
+  }, [customBanner, currentUser, isDataLoaded]);
 
   useEffect(() => {
     if (gameState === 'profile') {
@@ -1583,6 +1644,9 @@ export default function App() {
         if (data.checkIn) setCheckInState(data.checkIn);
         if (data.equippedTitle !== undefined) setEquippedTitle(data.equippedTitle);
         if (data.claimedAchievements) setClaimedAchievements(data.claimedAchievements);
+        if (data.customAvatar !== undefined) setCustomAvatar(data.customAvatar || null);
+        if (data.customBanner !== undefined) setCustomBanner(data.customBanner || null);
+
         if (data.coinNotification) {
           showAlert("🎁 Chúc Mừng!", `Bạn vừa nhận được ${data.coinNotification.amount} xu từ HLV ${data.coinNotification.from}!`);
           set(ref(database, `/users/${currentUser}/coinNotification`), null);
@@ -4694,7 +4758,11 @@ export default function App() {
                         <button className="glass-panel px-6 py-2.5 rounded-full text-xs sm:text-sm font-bold uppercase tracking-widest text-yellow-400 hover:text-yellow-300 hover:bg-white/10 transition-colors flex items-center gap-2 cursor-pointer border border-yellow-500/20 shadow-[0_0_15px_rgba(234,179,8,0.15)] animate-pulse" onClick={() => { playFx('click'); setShowCheckInModal(true); }}>
                            📅 Điểm Danh Nhận Quà <ChevronRight size={16}/>
                         </button>
+                        <button className="glass-panel px-6 py-2.5 rounded-full text-xs sm:text-sm font-bold uppercase tracking-widest text-fuchsia-400 hover:text-fuchsia-300 hover:bg-white/10 transition-all flex items-center gap-2 cursor-pointer border border-fuchsia-500/30 shadow-[0_0_20px_rgba(217,70,239,0.25)] hover:shadow-[0_0_30px_rgba(217,70,239,0.5)] hover:scale-105" onClick={() => { playFx('click'); setGameState('showroom'); }}>
+                           💎 Phòng Trưng Bày <ChevronRight size={16}/>
+                        </button>
                      </div>
+
                   </div>
 
                   {/* RIGHT COLUMN: Real-time Global Chat & Online Panel */}
@@ -5941,19 +6009,22 @@ export default function App() {
               {/* === Profile Card === */}
               <div className="glass-panel rounded-3xl overflow-hidden border border-white/10 shadow-2xl relative bg-slate-950/40 ">
                 {/* Cover Banner */}
-                <div className="h-28 sm:h-36 bg-gradient-to-r from-cyan-900 via-indigo-950 to-purple-950 relative overflow-hidden flex items-center justify-center">
-                  {/* Decorative orbs - lighter radial gradient approach */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/8 via-transparent to-purple-500/8 pointer-events-none"></div>
+                <div className="h-28 sm:h-36 relative overflow-hidden flex items-center justify-center group/banner cursor-pointer" style={{ background: customBanner || 'linear-gradient(to right, #164e63, #1e1b4b, #4a044e)' }} onClick={() => { playFx('click'); setPreviewAvatar(customAvatar); setPreviewBanner(customBanner); setIsCustomizingProfile(true); }}>
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/20 pointer-events-none"></div>
                   <span className="text-white/10 font-black italic tracking-tighter text-4xl sm:text-6xl uppercase select-none pointer-events-none transform -rotate-6">THE BONG DA</span>
+                  <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded-lg opacity-0 group-hover/banner:opacity-100 transition-opacity flex items-center gap-1 border border-white/20">✏️ Đổi Banner</div>
                 </div>
                 <div className="px-6 pb-6 pt-1 flex flex-col items-center text-center relative">
                   {/* Avatar overlapping banner */}
-                  <div
-                    className="w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center border-4 border-slate-950 shadow-2xl relative z-10 -mt-12 sm:-mt-14"
-                    style={{ background: getAvatarGradient(currentUser), boxShadow: '0 0 30px rgba(244,63,94,0.35)' }}
-                  >
-                    <span className="text-4xl sm:text-5xl font-black text-white">{(currentUser || '').charAt(0).toUpperCase()}</span>
+                  <div className="relative group/avatar -mt-12 sm:-mt-14 z-10 cursor-pointer" onClick={() => { playFx('click'); setPreviewAvatar(customAvatar); setPreviewBanner(customBanner); setIsCustomizingProfile(true); }}>
+                    <div
+                      className="w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center border-4 border-slate-950 shadow-2xl"
+                      style={{ background: customAvatar || getAvatarGradient(currentUser), boxShadow: '0 0 30px rgba(244,63,94,0.35)' }}
+                    >
+                      <span className="text-4xl sm:text-5xl font-black text-white">{(currentUser || '').charAt(0).toUpperCase()}</span>
+                    </div>
                     <span className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-500 to-amber-600 text-slate-950 text-[11px] font-black px-2 py-0.5 rounded-full border-2 border-slate-950 shadow-md">Lv.{level}</span>
+                    <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity"><span className="text-lg">✏️</span></div>
                   </div>
 
                   <h3 className="text-2xl font-black text-white uppercase mt-3 tracking-wider flex items-center gap-2">
@@ -6398,29 +6469,33 @@ export default function App() {
               <div className={`lg:col-span-5 flex-col gap-4 lg:flex w-full ${mobileSubTab === 'profile' || mobileSubTab === 'search' ? 'flex' : 'hidden'}`}>
                 <div className={`glass-panel rounded-2xl border border-white/10 shadow-2xl overflow-hidden bg-slate-950/40 relative flex flex-col ${mobileSubTab === 'profile' ? 'flex' : 'hidden lg:flex'}`}>
                   {/* Premium Cover Banner */}
-                  <div className="h-16 sm:h-32 bg-gradient-to-r from-cyan-900 via-indigo-950 to-purple-950 relative overflow-hidden flex items-center justify-center">
-                    <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_white_1px,_transparent_1px)] bg-[size:10px_10px]"></div>
-                    <div className="absolute -top-10 -left-10 w-24 h-24 bg-cyan-400/20 rounded-full blur-[30px]"></div>
-                    <div className="absolute -bottom-10 -right-10 w-24 h-24 bg-purple-500/20 rounded-full blur-[30px]"></div>
+                  <div className="h-16 sm:h-32 relative overflow-hidden flex items-center justify-center" style={{ background: wallData.customBanner || 'linear-gradient(to right, #164e63, #1e1b4b, #4a044e)' }}>
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/20 pointer-events-none"></div>
                     <span className="text-white/10 font-black italic tracking-tighter text-2xl sm:text-4xl uppercase select-none pointer-events-none transform -rotate-6">THE BONG DA</span>
+                    {userWallTarget === currentUser && (
+                      <button className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded-lg transition-opacity flex items-center gap-1 border border-white/20 hover:bg-black/70" onClick={() => { playFx('click'); setPreviewAvatar(customAvatar); setPreviewBanner(customBanner); setIsCustomizingProfile(true); }}>✏️ Đổi Banner</button>
+                    )}
                   </div>
 
                   {/* Profile Overlay details */}
                   <div className="px-4 pb-4 pt-1 sm:px-6 sm:pb-6 flex flex-col items-center text-center relative">
                     {/* Avatar circle overlapping banner */}
-                    <div 
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center border-4 border-slate-950 shadow-2xl relative select-none z-10 -mt-8 sm:-mt-10"
-                      style={{ 
-                        background: getAvatarGradient(userWallTarget),
-                        boxShadow: `0 0 20px rgba(${userWallTarget === currentUser ? '244,63,94' : '59,130,246'}, 0.35)`
-                      }}
-                    >
-                      <span className="text-2xl sm:text-3xl font-black text-white">{(userWallTarget || '').charAt(0).toUpperCase()}</span>
-                      
-                      {/* Floating level badge */}
+                    <div className="relative z-10 -mt-8 sm:-mt-10">
+                      <div
+                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center border-4 border-slate-950 shadow-2xl select-none"
+                        style={{ 
+                          background: wallData.customAvatar || getAvatarGradient(userWallTarget),
+                          boxShadow: `0 0 20px rgba(${userWallTarget === currentUser ? '244,63,94' : '59,130,246'}, 0.35)`
+                        }}
+                      >
+                        <span className="text-2xl sm:text-3xl font-black text-white">{(userWallTarget || '').charAt(0).toUpperCase()}</span>
+                      </div>
                       <span className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-500 to-amber-600 text-slate-950 text-[9px] font-black px-1.5 py-0.5 rounded-full border border-slate-950 shadow-md">
                         Lv.{wallData.level || 1}
                       </span>
+                      {userWallTarget === currentUser && (
+                        <button className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity" onClick={() => { playFx('click'); setPreviewAvatar(customAvatar); setPreviewBanner(customBanner); setIsCustomizingProfile(true); }}><span className="text-base">✏️</span></button>
+                      )}
                     </div>
 
                     <h3 className="text-lg sm:text-xl font-black text-white mt-2 uppercase tracking-wider flex items-center gap-1.5 justify-center">
@@ -7491,7 +7566,212 @@ export default function App() {
         </div>
       )}
 
+      {gameState === 'showroom' && (() => {
+        const SHOWROOM_RARITY_ORDER = ['mythic', 'legendary', 'epic', 'rare', 'common'];
+        const rarityConfig = {
+          mythic:    { label: 'SIÊU SAO ⭐⭐⭐⭐⭐', color: '#f43f5e', glow: 'rgba(244,63,94,0.8)',   bg: 'from-rose-950/60 to-red-900/40',    border: 'border-rose-500/60',   badge: 'bg-rose-500/20 text-rose-300 border-rose-400/40',   particle: '✦' },
+          legendary: { label: 'HUYỀN THOẠI ⭐⭐⭐⭐', color: '#f59e0b', glow: 'rgba(245,158,11,0.8)', bg: 'from-amber-950/60 to-yellow-900/40', border: 'border-amber-500/60',  badge: 'bg-amber-500/20 text-amber-300 border-amber-400/40',  particle: '★' },
+          epic:      { label: 'SIÊU HIẾM ⭐⭐⭐',    color: '#a78bfa', glow: 'rgba(167,139,250,0.7)', bg: 'from-purple-950/60 to-violet-900/40',border: 'border-violet-500/50', badge: 'bg-violet-500/20 text-violet-300 border-violet-400/40', particle: '◆' },
+          rare:      { label: 'HIẾM ⭐⭐',            color: '#60a5fa', glow: 'rgba(96,165,250,0.6)',  bg: 'from-blue-950/60 to-blue-900/30',   border: 'border-blue-500/40',   badge: 'bg-blue-500/20 text-blue-300 border-blue-400/40',     particle: '●' },
+          common:    { label: 'THƯỜNG ⭐',             color: '#9ca3af', glow: 'rgba(156,163,175,0.4)', bg: 'from-slate-900/60 to-slate-800/30', border: 'border-gray-500/30',   badge: 'bg-gray-700/30 text-gray-400 border-gray-500/30',     particle: '·' },
+        };
+        const RARITY_TYPE_MAP = {
+          mythic:    ['Golden Baller'],
+          legendary: ['Icon'],
+          epic:      ['Defensive Rock', 'Midfield Maestro', 'Goal Machine'],
+          rare:      ['Fan Favourite', 'Top Keeper'],
+          common:    ['Base'],
+        };
+        const [showroomFilter, setShowroomFilter] = React.useState('mythic');
+        const [showroomHover, setShowroomHover] = React.useState(null);
+        const filterTypes = RARITY_TYPE_MAP[showroomFilter] || [];
+        const showcasePlayers = playersData
+          .filter(p => filterTypes.includes(p.type))
+          .sort((a, b) => Math.max(b.stats.attack, b.stats.defense, b.stats.control) - Math.max(a.stats.attack, a.stats.defense, a.stats.control));
+        const cfg = rarityConfig[showroomFilter] || rarityConfig.mythic;
+
+        return (
+          <div className="min-h-screen relative overflow-hidden" style={{ background: 'radial-gradient(ellipse at top, #0f0c29 0%, #302b63 40%, #0a0a0f 100%)' }}>
+            {/* Animated star particles background */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              {[...Array(60)].map((_, i) => (
+                <div key={i} className="absolute rounded-full animate-pulse" style={{
+                  width: Math.random() * 3 + 1 + 'px', height: Math.random() * 3 + 1 + 'px',
+                  top: Math.random() * 100 + '%', left: Math.random() * 100 + '%',
+                  background: ['#f43f5e','#f59e0b','#a78bfa','#60a5fa','#34d399'][Math.floor(Math.random()*5)],
+                  animationDelay: Math.random() * 3 + 's', animationDuration: Math.random() * 3 + 2 + 's',
+                  opacity: Math.random() * 0.8 + 0.2,
+                }}/>
+              ))}
+            </div>
+            {/* Top glow orbs */}
+            <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${cfg.glow} 0%, transparent 70%)`, filter: 'blur(60px)', opacity: 0.4 }}/>
+            <div className="absolute top-0 right-1/4 w-96 h-96 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, rgba(167,139,250,0.5) 0%, transparent 70%)`, filter: 'blur(60px)', opacity: 0.3 }}/>
+
+            <div className="relative z-10 max-w-7xl mx-auto px-4 pt-6 pb-16 sm:pt-10">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+                <button className="btn !bg-white/10 hover:!bg-white/20 border border-white/20 flex items-center gap-2 text-sm" onClick={() => { playFx('click'); setGameState('lobby'); }}>
+                  ← Về Sảnh
+                </button>
+                <div className="text-center flex-1">
+                  <div className="text-xs font-bold uppercase tracking-[0.4em] text-fuchsia-400 mb-1">✦ Bộ Sưu Tập Đỉnh Cao ✦</div>
+                  <h1 className="text-3xl sm:text-5xl font-black italic tracking-tight text-transparent bg-clip-text uppercase" style={{ backgroundImage: `linear-gradient(135deg, #fff 0%, ${cfg.color} 50%, #fff 100%)` }}>
+                    Phòng Trưng Bày
+                  </h1>
+                  <p className="text-gray-400 text-xs sm:text-sm mt-1 font-medium">Những thẻ cầu thủ đẳng cấp nhất thế giới ✨</p>
+                </div>
+                <div className="text-right text-xs text-gray-500 font-bold">
+                  <div className="text-fuchsia-400 font-black text-lg">{showcasePlayers.length}</div>
+                  <div className="uppercase tracking-wider">Thẻ</div>
+                </div>
+              </div>
+
+              {/* Rarity Filter Tabs */}
+              <div className="flex gap-2 sm:gap-3 justify-center mb-10 flex-wrap">
+                {SHOWROOM_RARITY_ORDER.map(rarity => {
+                  const rc = rarityConfig[rarity];
+                  const count = playersData.filter(p => (RARITY_TYPE_MAP[rarity] || []).includes(p.type)).length;
+                  const isActive = showroomFilter === rarity;
+                  return (
+                    <button key={rarity} onClick={() => { playFx('click'); setShowroomFilter(rarity); }}
+                      className={`px-3 sm:px-5 py-2 sm:py-2.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider border transition-all duration-300 flex items-center gap-1.5 cursor-pointer ${isActive ? 'scale-110 shadow-2xl' : 'opacity-60 hover:opacity-90 hover:scale-105'}`}
+                      style={isActive ? { background: `rgba(${rc.color.replace('#','').match(/.{2}/g).map(h=>parseInt(h,16)).join(',')}, 0.2)`, borderColor: rc.color, color: rc.color, boxShadow: `0 0 25px ${rc.glow}` } : { borderColor: 'rgba(255,255,255,0.15)', color: '#9ca3af', background: 'rgba(255,255,255,0.05)' }}
+                    >
+                      {rc.particle} {rarity === 'mythic' ? 'Siêu Sao' : rarity === 'legendary' ? 'Huyền Thoại' : rarity === 'epic' ? 'Siêu Hiếm' : rarity === 'rare' ? 'Hiếm' : 'Thường'}
+                      <span className="bg-white/10 px-1.5 py-0.5 rounded-full text-[9px]">{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Rarity Title Banner */}
+              <div className="text-center mb-8">
+                <div className={`inline-block px-6 py-2 rounded-full border text-sm font-black uppercase tracking-widest ${cfg.badge}`}
+                  style={{ boxShadow: `0 0 30px ${cfg.glow}` }}>
+                  {cfg.label}
+                </div>
+              </div>
+
+              {/* Cards Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5">
+                {showcasePlayers.map((player, idx) => {
+                  const levelBonus = ((player.level || 1) - 1) * 2;
+                  const maxStat = Math.max(player.stats.attack, player.stats.defense, player.stats.control) + levelBonus;
+                  const isHovered = showroomHover === (player.id || idx);
+                  return (
+                    <div key={player.id || idx}
+                      className="relative group cursor-pointer transition-all duration-500"
+                      style={{ transform: isHovered ? 'scale(1.08) translateY(-8px)' : 'scale(1) translateY(0)' }}
+                      onMouseEnter={() => setShowroomHover(player.id || idx)}
+                      onMouseLeave={() => setShowroomHover(null)}
+                    >
+                      {/* Glow halo behind card */}
+                      <div className="absolute inset-0 rounded-2xl transition-all duration-500 pointer-events-none" style={{
+                        boxShadow: isHovered ? `0 0 50px ${cfg.glow}, 0 20px 60px rgba(0,0,0,0.6)` : `0 0 20px ${cfg.glow.replace('0.8','0.3')}`,
+                        background: isHovered ? `radial-gradient(circle at center, ${cfg.glow} 0%, transparent 70%)` : 'transparent',
+                        filter: 'blur(8px)', zIndex: -1, transform: 'scale(1.1)',
+                      }}/>
+
+                      {/* Card wrapper */}
+                      <div className={`rounded-2xl overflow-hidden border-2 relative ${cfg.border} bg-gradient-to-b ${cfg.bg} backdrop-blur-sm`}
+                        style={{ boxShadow: isHovered ? `0 0 40px ${cfg.glow}, inset 0 0 20px rgba(255,255,255,0.05)` : `0 4px 20px rgba(0,0,0,0.5)` }}>
+
+                        {/* Holographic shimmer on hover */}
+                        {isHovered && (
+                          <div className="absolute inset-0 pointer-events-none z-30 rounded-2xl" style={{
+                            background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 40%, rgba(255,255,255,0.08) 100%)',
+                            animation: 'shimmer 1.5s ease-in-out infinite alternate',
+                          }}/>
+                        )}
+
+                        {/* Rank badge */}
+                        {idx < 3 && (
+                          <div className="absolute top-2 right-2 z-30 text-xs font-black w-6 h-6 rounded-full flex items-center justify-center"
+                            style={{ background: idx === 0 ? 'linear-gradient(135deg, #f59e0b, #d97706)' : idx === 1 ? 'linear-gradient(135deg, #9ca3af, #6b7280)' : 'linear-gradient(135deg, #b45309, #92400e)', boxShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
+                            {idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}
+                          </div>
+                        )}
+
+                        {/* Player image */}
+                        <div className="aspect-[4/5] relative overflow-hidden">
+                          <div className="absolute inset-0 z-10" style={{ background: `linear-gradient(to bottom, transparent 40%, ${showroomFilter === 'mythic' ? '#1a0000' : showroomFilter === 'legendary' ? '#1a1000' : showroomFilter === 'epic' ? '#1a0033' : '#001a33'} 100%)` }}/>
+                          <img src={player.image} alt={player.name}
+                            className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-115"
+                            onError={e => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(player.name)}&background=1e1b4b&color=fff&size=200`; }}
+                          />
+                          {/* Stat overlay bottom */}
+                          <div className="absolute bottom-0 left-0 right-0 z-20 p-2">
+                            <div className="text-center">
+                              <div className="text-3xl font-black text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]" style={{ textShadow: `0 0 15px ${cfg.color}` }}>
+                                {maxStat}
+                              </div>
+                              <div className="text-[9px] font-bold text-white/70 uppercase tracking-widest">OVR</div>
+                            </div>
+                          </div>
+                          {/* Nation flag top-left */}
+                          {player.nation && player.nation !== 'World' && (
+                            <div className="absolute top-2 left-2 z-20">
+                              <img src={`https://flagcdn.com/w20/${player.nation}.png`} alt={player.nation}
+                                className="w-6 h-auto rounded-sm shadow-lg border border-white/30"/>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Card footer info */}
+                        <div className="p-2 pb-3">
+                          <div className="text-[11px] sm:text-xs font-black text-white uppercase tracking-wide text-center truncate leading-tight mb-1">
+                            {player.name}
+                          </div>
+                          <div className="flex justify-around text-center">
+                            <div>
+                              <div className="text-[10px] font-black text-white">{player.stats.attack + levelBonus}</div>
+                              <div className="text-[7px] font-bold text-white/50 uppercase">ATK</div>
+                            </div>
+                            <div className="w-px bg-white/15"/>
+                            <div>
+                              <div className="text-[10px] font-black text-white">{player.stats.control + levelBonus}</div>
+                              <div className="text-[7px] font-bold text-white/50 uppercase">CTRL</div>
+                            </div>
+                            <div className="w-px bg-white/15"/>
+                            <div>
+                              <div className="text-[10px] font-black text-white">{player.stats.defense + levelBonus}</div>
+                              <div className="text-[7px] font-bold text-white/50 uppercase">DEF</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Floating particles on hover */}
+                      {isHovered && (
+                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-lg animate-bounce pointer-events-none z-40" style={{ color: cfg.color, textShadow: `0 0 10px ${cfg.color}` }}>
+                          {cfg.particle}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {showcasePlayers.length === 0 && (
+                <div className="text-center py-20 text-gray-500">
+                  <div className="text-5xl mb-4">🎴</div>
+                  <div className="font-bold">Chưa có thẻ nào trong hạng mục này.</div>
+                </div>
+              )}
+
+              {/* Bottom decoration */}
+              <div className="text-center mt-16 opacity-30">
+                <div className="text-4xl">💎</div>
+                <div className="text-xs font-bold uppercase tracking-[0.5em] text-gray-500 mt-2">WC 2026 Ultimate Collection</div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {gameState === 'packOpening' && (
+
         <div className="min-h-screen bg-gradient-to-b from-slate-950 via-purple-950/20 to-slate-950 p-4 sm:p-8 pt-20 overflow-y-auto">
           <div className="max-w-4xl mx-auto">
 
@@ -8637,7 +8917,109 @@ export default function App() {
         );
       })()}
 
+      {/* PROFILE CUSTOMIZER MODAL */}
+      {isCustomizingProfile && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md animate-fade-in" onClick={(e) => { if (e.target === e.currentTarget) setIsCustomizingProfile(false); }}>
+          <div className="glass-panel rounded-3xl w-full max-w-xl border border-white/15 shadow-[0_0_60px_rgba(167,139,250,0.3)] flex flex-col overflow-hidden" style={{ maxHeight: '92vh', background: 'linear-gradient(180deg, #0f0c29 0%, #1e1b4b 100%)' }}>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/20 shrink-0">
+              <div>
+                <h2 className="text-lg font-black text-white uppercase tracking-wider">✏️ Tuỳ Chỉnh Hồ Sơ</h2>
+                <p className="text-xs text-gray-400 mt-0.5">Chọn màu nền avatar và banner cá nhân</p>
+              </div>
+              <button className="text-gray-400 hover:text-white text-xl leading-none w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-all" onClick={() => setIsCustomizingProfile(false)}>✕</button>
+            </div>
+
+            <div className="overflow-y-auto flex-1 p-5 space-y-6">
+              {/* Live Preview Card */}
+              <div>
+                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 text-center">Xem Trước Thẻ Hồ Sơ</div>
+                <div className="glass-panel rounded-2xl overflow-hidden border border-white/10 max-w-[280px] mx-auto shadow-2xl">
+                  <div className="h-20 relative overflow-hidden flex items-center justify-center"
+                    style={{ background: previewBanner || customBanner || 'linear-gradient(to right, #164e63, #1e1b4b, #4a044e)' }}>
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/20"/>
+                    <span className="text-white/10 font-black italic text-2xl uppercase select-none">THE BONG DA</span>
+                  </div>
+                  <div className="px-4 pb-4 pt-1 flex flex-col items-center text-center">
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center border-4 border-slate-900 shadow-2xl -mt-8 z-10 relative"
+                      style={{ background: previewAvatar || customAvatar || getAvatarGradient(currentUser), boxShadow: '0 0 20px rgba(244,63,94,0.4)' }}>
+                      <span className="text-2xl font-black text-white">{(currentUser || '').charAt(0).toUpperCase()}</span>
+                    </div>
+                    <div className="text-sm font-black text-white uppercase mt-2 tracking-wider">{currentUser}</div>
+                    <div className="text-[10px] text-gray-500 mt-0.5">HLV • Cấp {level}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Avatar Color Selector */}
+              <div>
+                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">🎨 Màu Nền Avatar</div>
+                <div className="grid grid-cols-9 gap-2">
+                  {AVATAR_PRESETS.map(preset => {
+                    const isSelected = (previewAvatar !== undefined ? previewAvatar : customAvatar) === preset.value;
+                    return (
+                      <button key={preset.id} title={preset.label}
+                        className={`w-full aspect-square rounded-full border-2 transition-all duration-200 cursor-pointer hover:scale-110 ${isSelected ? 'border-white scale-115 shadow-[0_0_12px_rgba(255,255,255,0.5)]' : 'border-white/20 hover:border-white/50'}`}
+                        style={{ background: preset.value || getAvatarGradient(currentUser) }}
+                        onClick={() => setPreviewAvatar(preset.value)}
+                      >
+                        {isSelected && <span className="text-white text-xs font-black drop-shadow">✓</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Banner Selector */}
+              <div>
+                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">🖼️ Nền Banner</div>
+                <div className="grid grid-cols-3 gap-2">
+                  {BANNER_PRESETS.map(preset => {
+                    const isSelected = (previewBanner !== undefined ? previewBanner : customBanner) === preset.value;
+                    return (
+                      <button key={preset.id} title={preset.label}
+                        className={`h-12 rounded-xl border-2 transition-all duration-200 cursor-pointer hover:scale-105 flex items-center justify-center text-[10px] font-bold text-white/70 ${isSelected ? 'border-white shadow-[0_0_12px_rgba(255,255,255,0.4)]' : 'border-white/15 hover:border-white/40'}`}
+                        style={{ background: preset.value || 'linear-gradient(to right, #164e63, #1e1b4b, #4a044e)' }}
+                        onClick={() => setPreviewBanner(preset.value)}
+                      >
+                        {isSelected ? '✓' : preset.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="px-5 py-4 border-t border-white/10 bg-black/20 flex gap-3 shrink-0">
+              <button
+                className="flex-1 py-3 rounded-xl text-sm font-black uppercase tracking-wider text-gray-400 border border-white/15 hover:bg-white/10 transition-all cursor-pointer"
+                onClick={() => { setPreviewAvatar(null); setPreviewBanner(null); setIsCustomizingProfile(false); }}
+              >
+                Huỷ
+              </button>
+              <button
+                className="flex-1 py-3 rounded-xl text-sm font-black uppercase tracking-wider text-white border border-fuchsia-500/40 transition-all cursor-pointer hover:scale-105"
+                style={{ background: 'linear-gradient(135deg, #7c3aed, #db2777)', boxShadow: '0 0 20px rgba(167,139,250,0.3)' }}
+                onClick={() => {
+                  playFx('click');
+                  if (previewAvatar !== null) setCustomAvatar(previewAvatar);
+                  if (previewBanner !== null) setCustomBanner(previewBanner);
+                  setPreviewAvatar(null);
+                  setPreviewBanner(null);
+                  setIsCustomizingProfile(false);
+                  showAlert('✅ Đã Lưu!', 'Hồ sơ HLV của bạn đã được cập nhật thành công!');
+                }}
+              >
+                ✨ Áp Dụng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 2. GIFT COIN MODAL */}
+
       {showGiftModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
           <div className="glass-panel p-6 rounded-2xl max-w-sm w-full border border-yellow-500/30 flex flex-col items-center relative animate-in fade-in zoom-in duration-200">
