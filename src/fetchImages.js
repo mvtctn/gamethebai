@@ -37,7 +37,7 @@ async function updatePlayers() {
     const p = playersData[i];
     
     // Bỏ qua nếu đã có ảnh thật
-    if (p.image && !p.image.includes('dicebear')) {
+    if (p.image && !p.image.includes('dicebear') && !p.image.includes('Portrait_Placeholder')) {
       imageCache[p.name] = p.image;
       continue;
     }

@@ -3001,6 +3001,7 @@ export default function App() {
     standard: { name: 'Gói Tiêu Chuẩn', emoji: '📦', cost: 100, isFree: false, cards: 8,  common: 0.60, rare: 0.25, epic: 0.10, legendary: 0.03,  mythic: 0.02,  guaranteedRare: 1 },
     premium:  { name: 'Gói Cao Cấp',    emoji: '💫', cost: 300, isFree: false, cards: 12, common: 0.45, rare: 0.30, epic: 0.15, legendary: 0.06,  mythic: 0.04,  guaranteedRare: 2 },
     ultimate: { name: 'Gói Tuyển Chọn', emoji: '👑', cost: 600, isFree: false, cards: 16, common: 0.30, rare: 0.30, epic: 0.20, legendary: 0.12,  mythic: 0.08,  guaranteedRare: 3 },
+    champion: { name: 'Gói Siêu Vô Địch', emoji: '🏆', cost: 1000, isFree: false, cards: 5,  common: 0.00, rare: 0.10, epic: 0.30, legendary: 0.40,  mythic: 0.20,  guaranteedRare: 5 },
   };
 
   // ─── ENHANCED GACHA ALGORITHM with Pity System ───────────────────────────────
@@ -3018,7 +3019,7 @@ export default function App() {
       setCoins(c => c - cfg.cost);
     }
 
-    gainXp(type === 'ultimate' ? 30 : type === 'premium' ? 20 : type === 'standard' ? 10 : 5);
+    gainXp(type === 'champion' ? 50 : type === 'ultimate' ? 30 : type === 'premium' ? 20 : type === 'standard' ? 10 : 5);
     setIsPackOpeningAnim(true);
     setOpenedCards([]);
     setRevealingCards([]);
@@ -7302,7 +7303,7 @@ export default function App() {
             {openedCards.length === 0 && !isPackOpeningAnim && (
               <div className="mb-6">
                 <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">📦 Chọn Loại Gói</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                   {Object.entries(PACK_CONFIGS).map(([key, cfg]) => {
                     const isSelected = packType === key;
                     const canAfford = key === 'starter' ? freePacks > 0 : coins >= cfg.cost;
@@ -7311,7 +7312,9 @@ export default function App() {
                         key={key}
                         className={`p-3 rounded-2xl border flex flex-col items-center gap-1 transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-fuchsia-900/40 border-fuchsia-500/60 shadow-[0_0_20px_rgba(217,70,239,0.2)]'
+                            ? key === 'champion'
+                              ? 'bg-cyan-950/60 border-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.4)]'
+                              : 'bg-fuchsia-900/40 border-fuchsia-500/60 shadow-[0_0_20px_rgba(217,70,239,0.2)]'
                             : canAfford ? 'bg-black/40 border-white/10 hover:border-white/30' : 'bg-black/20 border-white/5 opacity-40'
                         }`}
                         onClick={() => canAfford && setPackType(key)}
@@ -7321,6 +7324,7 @@ export default function App() {
                         <span className="text-[11px] font-black text-white">{cfg.name}</span>
                         <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
                           key === 'starter' ? 'bg-green-900/50 text-green-400 border border-green-500/30' :
+                          key === 'champion' ? 'bg-cyan-900/50 text-cyan-300 border border-cyan-500/30' :
                           key === 'ultimate' ? 'bg-rose-900/50 text-rose-400 border border-rose-500/30' :
                           'bg-yellow-900/50 text-yellow-400 border border-yellow-500/30'
                         }`}>
