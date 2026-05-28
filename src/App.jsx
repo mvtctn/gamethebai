@@ -470,12 +470,12 @@ export const Card = ({ player, onClick, isSelectable, isSelected, hideStats }) =
 };
 
 export const AnimatedHeroPlayer = () => {
-  const confettiCount = 24;
+  const confettiCount = 30;
   const particles = Array.from({ length: confettiCount }).map((_, idx) => {
-    const left = (idx * 4.1) + Math.random() * 3;
-    const delay = Math.random() * 6;
-    const duration = 3.5 + Math.random() * 2.5;
-    const size = 6 + Math.random() * 8;
+    const left = (idx * 3.3) + Math.random() * 5;
+    const delay = Math.random() * 8;
+    const duration = 4 + Math.random() * 3;
+    const size = 6 + Math.random() * 10;
     const colors = ['#fbbf24', '#38bdf8', '#f43f5e', '#10b981', '#a78bfa', '#c4f000'];
     const color = colors[idx % colors.length];
     const isStar = idx % 3 === 0;
@@ -483,105 +483,113 @@ export const AnimatedHeroPlayer = () => {
   });
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-[#070f1e] select-none flex flex-col justify-end">
+    <div className="relative w-full h-full overflow-hidden select-none" style={{
+      backgroundImage: "url('/wc2026_kids_banner.png')",
+      backgroundSize: "cover",
+      backgroundPosition: "center"
+    }}>
       <style dangerouslySetInnerHTML={{__html: `
-        .stadium-lights-left {
-          transform-origin: bottom left;
-          animation: swingSpotlightLeft 6s ease-in-out infinite;
-        }
-        .stadium-lights-right {
-          transform-origin: bottom right;
-          animation: swingSpotlightRight 6s ease-in-out infinite;
-        }
-        .trophy-shine-mask {
+        .stadium-spotlight-left {
           position: absolute;
-          inset: 0;
-          overflow: hidden;
-        }
-        .trophy-shine-line {
-          width: 30px;
+          bottom: 0;
+          left: 10%;
+          width: 80px;
           height: 100%;
-          background: rgba(255, 255, 255, 0.4);
-          transform: translateX(-100%) skewX(-25deg);
-          animation: trophyShine 2.5s ease-in-out infinite;
-        }
-        .kid-character {
-          animation: bounceKid 2.4s ease-in-out infinite;
+          background: linear-gradient(to right, transparent, rgba(56,189,248,0.25), transparent);
           transform-origin: bottom center;
+          animation: sweepLightLeft 7s ease-in-out infinite;
+          pointer-events: none;
+          mix-blend-mode: screen;
+          filter: blur(8px);
         }
-        .kid-arms {
-          animation: armWiggle 2.4s ease-in-out infinite;
-          transform-origin: center center;
+        .stadium-spotlight-right {
+          position: absolute;
+          bottom: 0;
+          right: 10%;
+          width: 80px;
+          height: 100%;
+          background: linear-gradient(to right, transparent, rgba(56,189,248,0.25), transparent);
+          transform-origin: bottom center;
+          animation: sweepLightRight 7s ease-in-out infinite;
+          pointer-events: none;
+          mix-blend-mode: screen;
+          filter: blur(8px);
         }
-        .kid-eyes {
-          animation: eyesBlink 4s ease-in-out infinite;
-          transform-origin: center center;
+        .trophy-glint {
+          position: absolute;
+          top: 18%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 60px;
+          height: 60px;
+          background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(251,191,36,0.3) 40%, transparent 70%);
+          mix-blend-mode: screen;
+          animation: glintPulse 3.5s ease-in-out infinite;
+          pointer-events: none;
         }
-        .particle-item {
+        .trophy-glint-flare {
+          position: absolute;
+          top: 18%;
+          left: 50%;
+          transform: translate(-50%, -50%) rotate(45deg);
+          width: 100px;
+          height: 2px;
+          background: linear-gradient(to right, transparent, #fff, transparent);
+          mix-blend-mode: screen;
+          animation: flareRotate 3.5s ease-in-out infinite;
+          pointer-events: none;
+        }
+        .falling-confetti {
           position: absolute;
           top: -20px;
-          animation: driftConfetti linear infinite;
+          animation: driftDown linear infinite;
+          pointer-events: none;
         }
-        @keyframes swingSpotlightLeft {
-          0%, 100% { transform: rotate(-15deg); opacity: 0.3; }
-          50% { transform: rotate(10deg); opacity: 0.6; }
+        .banner-card-float {
+          width: 100%;
+          height: 100%;
+          position: absolute;
+          inset: 0;
+          animation: bannerCardFloat 6s ease-in-out infinite;
         }
-        @keyframes swingSpotlightRight {
-          0%, 100% { transform: rotate(15deg); opacity: 0.3; }
-          50% { transform: rotate(-10deg); opacity: 0.6; }
+        @keyframes sweepLightLeft {
+          0%, 100% { transform: rotate(-20deg) scaleX(0.8); }
+          50% { transform: rotate(15deg) scaleX(1.3); }
         }
-        @keyframes trophyShine {
-          0% { transform: translateX(-150%) skewX(-30deg); }
-          30%, 100% { transform: translateX(250%) skewX(-30deg); }
+        @keyframes sweepLightRight {
+          0%, 100% { transform: rotate(20deg) scaleX(0.8); }
+          50% { transform: rotate(-15deg) scaleX(1.3); }
         }
-        @keyframes driftConfetti {
+        @keyframes glintPulse {
+          0%, 100% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.3; }
+          50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.95; }
+        }
+        @keyframes flareRotate {
+          0%, 100% { transform: translate(-50%, -50%) rotate(0deg) scaleX(0.5); opacity: 0.2; }
+          50% { transform: translate(-50%, -50%) rotate(180deg) scaleX(1.2); opacity: 0.8; }
+        }
+        @keyframes driftDown {
           0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
           90% { opacity: 1; }
-          100% { transform: translateY(460px) rotate(360deg); opacity: 0; }
+          100% { transform: translateY(520px) rotate(360deg); opacity: 0; }
         }
-        @keyframes bounceKid {
-          0%, 100% { transform: translateY(0) scaleY(1); }
-          50% { transform: translateY(-10px) scaleY(1.02); }
-        }
-        @keyframes armWiggle {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-1px) rotate(1.5deg); }
-        }
-        @keyframes eyesBlink {
-          0%, 90%, 100% { transform: scaleY(1); }
-          95% { transform: scaleY(0.1); }
+        @keyframes bannerCardFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
         }
       `}} />
 
-      <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.12)_0%,transparent_80%)]" />
-      
-      <svg className="absolute inset-0 w-full h-full z-0 pointer-events-none" viewBox="0 0 500 500">
-        <g className="stadium-lights-left" style={{ transformOrigin: '0px 500px' }}>
-          <polygon points="0,500 120,0 280,0" fill="url(#lightGradLeft)" opacity="0.3" />
-        </g>
-        <g className="stadium-lights-right" style={{ transformOrigin: '500px 500px' }}>
-          <polygon points="500,500 380,0 220,0" fill="url(#lightGradRight)" opacity="0.3" />
-        </g>
-        
-        <defs>
-          <linearGradient id="lightGradLeft" x1="0" y1="1" x2="0.5" y2="0">
-            <stop offset="0%" stopColor="#38bdf8" stopOpacity="0" />
-            <stop offset="50%" stopColor="#38bdf8" stopOpacity="0.15" />
-            <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.4" />
-          </linearGradient>
-          <linearGradient id="lightGradRight" x1="1" y1="1" x2="0.5" y2="0">
-            <stop offset="0%" stopColor="#38bdf8" stopOpacity="0" />
-            <stop offset="50%" stopColor="#38bdf8" stopOpacity="0.15" />
-            <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.4" />
-          </linearGradient>
-        </defs>
-      </svg>
+      <div className="banner-card-float w-full h-full relative">
+        <div className="stadium-spotlight-left" />
+        <div className="stadium-spotlight-right" />
 
-      <div className="absolute inset-0 z-10 pointer-events-none">
+        <div className="trophy-glint" />
+        <div className="trophy-glint-flare" />
+
         {particles.map((p, idx) => (
           <div
             key={idx}
-            className="particle-item"
+            className="falling-confetti"
             style={{
               left: `${p.left}%`,
               animationDelay: `${p.delay}s`,
@@ -591,130 +599,19 @@ export const AnimatedHeroPlayer = () => {
             }}
           >
             {p.isStar ? (
-              <svg viewBox="0 0 24 24" width="100%" height="100%" fill={p.color}>
+              <svg viewBox="0 0 24 24" width="100%" height="100%" fill={p.color} className="drop-shadow-[0_0_4px_rgba(251,191,36,0.6)]">
                 <path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.787 1.4 8.168L12 18.896l-7.334 3.857 1.4-8.168L.132 9.21l8.2-1.192z" />
               </svg>
             ) : (
-              <div className="w-full h-full rounded-full" style={{ backgroundColor: p.color }} />
+              <div className="w-full h-full rounded-full opacity-80" style={{ backgroundColor: p.color }} />
             )}
           </div>
         ))}
       </div>
-
-      <div className="relative z-20 w-full h-[400px] flex flex-col items-center justify-end select-none">
-        <div className="kid-character w-[240px] h-[340px] relative flex flex-col items-center justify-end">
-          
-          <div className="kid-arms absolute top-[-5px] left-1/2 -translate-x-1/2 z-30 w-[120px] h-[130px] flex flex-col items-center">
-            <div className="relative w-[86px] h-[90px] drop-shadow-[0_4px_12px_rgba(251,191,36,0.5)]">
-              <svg viewBox="0 0 100 100" className="w-full h-full">
-                <rect x="35" y="80" width="30" height="12" rx="3" fill="#334155" />
-                <polygon points="40,80 60,80 50,68" fill="#475569" />
-                <rect x="46" y="55" width="8" height="15" fill="#f59e0b" />
-                <rect x="43" y="52" width="14" height="4" fill="#fbbf24" />
-                <path d="M25,20 C25,52 75,52 75,20 Z" fill="#fbbf24" />
-                <path d="M30,20 C30,46 70,46 70,20 Z" fill="#f59e0b" />
-                <path d="M25,24 C12,24 12,40 25,40" fill="none" stroke="#fbbf24" strokeWidth="6" strokeLinecap="round" />
-                <path d="M75,24 C88,24 88,40 75,40" fill="none" stroke="#fbbf24" strokeWidth="6" strokeLinecap="round" />
-                <path d="M50,25 l2.5,5.1 5.6.8-4.1,4 1,5.6-5-2.6-5,2.6 1-5.6-4-4 5.6-.8z" fill="#fff" opacity="0.9" />
-              </svg>
-              <div className="trophy-shine-mask absolute top-[10px] left-[25px] w-[50px] h-[38px] rounded-b-full">
-                <div className="trophy-shine-line" />
-              </div>
-            </div>
-
-            <svg viewBox="0 0 100 100" className="absolute top-[50px] w-full h-[60px] pointer-events-none">
-              <path d="M20,60 Q30,10 40,25" fill="none" stroke="#fdba74" strokeWidth="12" strokeLinecap="round" />
-              <path d="M80,60 Q70,10 60,25" fill="none" stroke="#fdba74" strokeWidth="12" strokeLinecap="round" />
-              <path d="M17,65 Q23,30 28,38" fill="none" stroke="#2563eb" strokeWidth="14" strokeLinecap="round" />
-              <path d="M83,65 Q77,30 72,38" fill="none" stroke="#2563eb" strokeWidth="14" strokeLinecap="round" />
-            </svg>
-          </div>
-
-          <div className="absolute top-[80px] z-20 w-[95px] h-[95px] flex flex-col items-center">
-            <div className="w-[82px] h-[82px] rounded-full bg-[#fdba74] border-2 border-[#ea580c]/20 relative flex flex-col items-center justify-center">
-              
-              <div className="absolute top-[-10px] left-1/2 -translate-x-1/2 w-[94px] h-[34px]">
-                <svg viewBox="0 0 100 40" className="w-full h-full fill-[#1e293b]">
-                  <path d="M0,30 Q10,-10 30,15 Q50,-15 70,15 Q90,-10 100,30 C90,10 70,5 50,8 C30,5 10,10 0,30 Z" />
-                </svg>
-              </div>
-
-              <div className="absolute left-[-8px] top-[32px] w-[14px] h-[20px] bg-[#fdba74] rounded-l-full border-l border-white/20" />
-              <div className="absolute right-[-8px] top-[32px] w-[14px] h-[20px] bg-[#fdba74] rounded-r-full border-r border-white/20" />
-
-              <div className="kid-eyes absolute top-[36px] w-[56px] flex justify-between px-1">
-                <div className="w-[11px] h-[11px] rounded-full bg-[#0f172a] relative flex items-center justify-center">
-                  <div className="w-[3px] h-[3px] rounded-full bg-white absolute top-[2px] left-[2px]" />
-                </div>
-                <div className="w-[11px] h-[11px] rounded-full bg-[#0f172a] relative flex items-center justify-center">
-                  <div className="w-[3px] h-[3px] rounded-full bg-white absolute top-[2px] left-[2px]" />
-                </div>
-              </div>
-
-              <div className="absolute top-[46px] left-[6px] w-[10px] h-[6px] bg-[#f43f5e] opacity-40 rounded-full blur-[1px]" />
-              <div className="absolute top-[46px] right-[6px] w-[10px] h-[6px] bg-[#f43f5e] opacity-40 rounded-full blur-[1px]" />
-
-              <div className="absolute top-[48px] w-[6px] h-[6px] bg-[#e11d48]/20 rounded-full" />
-
-              <div className="absolute bottom-[16px] w-[22px] h-[11px] overflow-hidden">
-                <svg viewBox="0 0 20 10" className="w-full h-full">
-                  <path d="M0,0 C0,10 20,10 20,0 Z" fill="#991b1b" />
-                  <path d="M4,6 C8,10 12,10 16,6 Z" fill="#f43f5e" />
-                  <path d="M0,0 C0,3 20,3 20,0 Z" fill="#fff" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div className="absolute top-[165px] z-10 w-[84px] h-[85px] flex flex-col items-center">
-            <div className="w-[66px] h-[75px] bg-[#2563eb] rounded-t-xl border-t border-blue-400 relative flex flex-col items-center justify-start overflow-hidden">
-              <div className="absolute top-0 left-0 w-[14px] h-[75px] bg-[#f97316]" />
-              <div className="absolute top-0 right-0 w-[14px] h-[75px] bg-[#f97316]" />
-              <div className="w-[20px] h-[12px] bg-[#f97316] rounded-b-lg border-b border-orange-400" />
-              <span className="text-[28px] font-black italic tracking-tighter text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] mt-3 leading-none select-none">
-                10
-              </span>
-            </div>
-          </div>
-
-          <div className="absolute bottom-[20px] z-0 w-[80px] h-[85px] flex flex-col items-center justify-end">
-            <div className="w-[62px] h-[28px] bg-[#1d4ed8] rounded-b-lg border-t border-[#1e40af] flex justify-between px-[2px] absolute top-0">
-              <div className="w-[26px] h-[28px] bg-[#1d4ed8] border-r border-[#1e40af]/30 rounded-bl-md" />
-              <div className="w-[26px] h-[28px] bg-[#1d4ed8] border-l border-[#1e40af]/30 rounded-br-md" />
-            </div>
-
-            <svg viewBox="0 0 100 80" className="w-[74px] h-[60px] mt-6 z-0">
-              <rect x="24" y="0" width="12" height="40" fill="#fdba74" rx="2" />
-              <rect x="24" y="22" width="12" height="18" fill="#ffffff" />
-              <rect x="24" y="26" width="12" height="3" fill="#2563eb" />
-              <rect x="24" y="32" width="12" height="3" fill="#2563eb" />
-              <rect x="64" y="0" width="12" height="40" fill="#fdba74" rx="2" />
-              <rect x="64" y="22" width="12" height="18" fill="#ffffff" />
-              <rect x="64" y="26" width="12" height="3" fill="#2563eb" />
-              <rect x="64" y="32" width="12" height="3" fill="#2563eb" />
-              <path d="M16,40 C16,36 36,36 36,40 L36,46 L16,46 Z" fill="#1e293b" />
-              <rect x="20" y="44" width="12" height="2" fill="#f97316" />
-              <path d="M64,40 C64,36 84,36 84,40 L84,46 L64,46 Z" fill="#1e293b" />
-              <rect x="68" y="44" width="12" height="2" fill="#f97316" />
-            </svg>
-          </div>
-        </div>
-
-        <div className="w-[160px] h-[65px] bg-gradient-to-b from-[#b45309] to-[#78350f] border-t-4 border-[#f59e0b] rounded-t-xl relative z-10 flex flex-col items-center justify-start py-1 shadow-[0_5px_15px_rgba(0,0,0,0.5)]">
-          <div className="w-[30px] h-[30px] rounded-full bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 border border-yellow-200 flex items-center justify-center shadow-[0_0_8px_rgba(245,158,11,0.5)]">
-            <span className="text-[12px] font-black text-amber-950 italic select-none">1st</span>
-          </div>
-          <span className="text-[8px] font-black uppercase text-amber-200 tracking-widest mt-1 select-none">
-            CHAMPION
-          </span>
-        </div>
-
-        <div className="absolute left-[-20px] bottom-0 w-[50px] h-[80px] bg-black/40 blur-[1px] pointer-events-none rounded-tr-full" />
-        <div className="absolute right-[-20px] bottom-0 w-[50px] h-[80px] bg-black/40 blur-[1px] pointer-events-none rounded-tl-full" />
-      </div>
     </div>
   );
 };
+
 
 const BANNERS = [
   "/wc2026_kids_banner.png",
