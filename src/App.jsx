@@ -1008,6 +1008,8 @@ export default function App() {
   const [profileNewPassword, setProfileNewPassword] = useState("");
   const [profileConfirmPassword, setProfileConfirmPassword] = useState("");
   const [profileEmailInput, setProfileEmailInput] = useState("");
+  const [newUsernameInput, setNewUsernameInput] = useState("");
+  const [isRenaming, setIsRenaming] = useState(false);
 
   // Level Up Modal State
   const [showLevelUpModal, setShowLevelUpModal] = useState(null);
@@ -1034,6 +1036,13 @@ export default function App() {
   const [giftAmount, setGiftAmount] = useState(10);
   const [giftLoading, setGiftLoading] = useState(false);
   const [loadingGlobalPosts, setLoadingGlobalPosts] = useState(false);
+
+  // Gift Card states
+  const [showGiftCardModal, setShowGiftCardModal] = useState(false);
+  const [giftCardLoading, setGiftCardLoading] = useState(false);
+  const [giftCardSearch, setGiftCardSearch] = useState("");
+  const [selectedGiftCard, setSelectedGiftCard] = useState(null);
+  const [giftCardFilterRarity, setGiftCardFilterRarity] = useState("all");
 
   // HLV Social Wall Search & Mention states
   const [socialSearchQuery, setSocialSearchQuery] = useState("");
@@ -1434,6 +1443,11 @@ export default function App() {
           showAlert("🎁 Chúc Mừng!", `Bạn vừa nhận được ${data.coinNotification.amount} xu từ HLV ${data.coinNotification.from}!`);
           set(ref(database, `/users/${currentUser}/coinNotification`), null);
         }
+        if (data.cardNotification) {
+          const rarityLabel = RARITY_TIERS[getCardRarity(data.cardNotification.card)]?.label || "THƯỜNG";
+          showAlert("🎁 Thẻ Cầu Thủ Mới!", `Bạn vừa được HLV ${data.cardNotification.from} tặng thẻ cầu thủ [${data.cardNotification.card.name}] (${rarityLabel})!`);
+          set(ref(database, `/users/${currentUser}/cardNotification`), null);
+        }
         setIsDataLoaded(true);
       } else {
         // Initialize brand-new guest user — fresh start with 3 starter packs + 200 xu
@@ -1805,6 +1819,150 @@ export default function App() {
       showAlert("Lỗi", "Có lỗi xảy ra khi tặng xu!");
     } finally {
       setGiftLoading(false);
+    }
+  };
+
+  const getCardGiftFee = (card) => {
+    const rarity = getCardRarity(card);
+    const fees = {
+      common: 20,
+      rare: 50,
+      epic: 100,
+      legendary: 200,
+      mythic: 400
+    };
+    return fees[rarity] || 20;
+  };
+
+  const handleSendCardGift = async () => {
+    if (!currentUser || !userWallTarget || currentUser === userWallTarget) return;
+    if (!selectedGiftCard) {
+      showAlert("Chưa Chọn Thẻ", "Vui lòng chọn 1 thẻ cầu thủ để tặng!");
+      return;
+    }
+
+    if (level < 5) {
+      showAlert("Cấp Độ Người Gửi Chưa Đủ ⚠️", "Bạn phải đạt Cấp 5 trở lên mới có thể tặng thẻ cầu thủ!");
+      return;
+    }
+
+    // Check squad requirement
+    if (squad.some(s => s.id === selectedGiftCard.id)) {
+      showAlert("Cầu Thể Đang Trong Squad ⚠️", "Không thể tặng cầu thủ đang thi đấu trong đội hình chính! Vui lòng gỡ cầu thủ này khỏi đội hình trước.");
+      return;
+    }
+
+    const fee = getCardGiftFee(selectedGiftCard);
+    if (coins < fee) {
+      showAlert("Không Đủ Xu ⚠️", `Bạn không đủ Xu để tặng thẻ này! Lệ phí chuyển nhượng là ${fee} Xu.`);
+      return;
+    }
+
+    if (!isConnectedToFirebase) {
+      showAlert("Yêu Cầu Kết Nối ⚠️", "Tính năng tặng thẻ chỉ khả dụng ở chế độ trực tuyến!");
+      return;
+    }
+
+    setGiftCardLoading(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const targetUserRef = ref(database, `/users/${userWallTarget}`);
+      const meRef = ref(database, `/users/${currentUser}`);
+
+      const [targetSnap, meSnap] = await Promise.all([
+        get(targetUserRef),
+        get(meRef)
+      ]);
+
+      if (!targetSnap.exists() || !meSnap.exists()) {
+        showAlert("Lỗi Hệ Thống", "Không thể tải dữ liệu người dùng.");
+        setGiftCardLoading(false);
+        return;
+      }
+
+      const targetData = targetSnap.val();
+      const meData = meSnap.val();
+
+      // Check receiver level >= 3
+      const receiverLevel = targetData.level || 1;
+      if (receiverLevel < 3) {
+        showAlert("Cấp Độ Người Nhận Chưa Đủ ⚠️", `HLV ${userWallTarget} phải đạt tối thiểu Cấp 3 mới có thể nhận thẻ cầu thủ!`);
+        setGiftCardLoading(false);
+        return;
+      }
+
+      // Check daily limits
+      const mySentToday = meData.giftCardLimits?.[today]?.sentCards || 0;
+      const targetReceivedToday = targetData.giftCardLimits?.[today]?.receivedCards || 0;
+
+      if (mySentToday >= 3) {
+        showAlert("Vượt Quá Giới Hạn Gửi ⚠️", "Hôm nay bạn đã gửi tối đa 3 thẻ. Hãy quay lại vào ngày mai!");
+        setGiftCardLoading(false);
+        return;
+      }
+
+      if (targetReceivedToday >= 3) {
+        showAlert("Đối Thủ Đạt Giới Hạn Nhận ⚠️", `HLV ${userWallTarget} đã nhận tối đa 3 thẻ trong ngày hôm nay!`);
+        setGiftCardLoading(false);
+        return;
+      }
+
+      // Check if receiver already has the card in collection
+      const targetCollection = targetData.collection || [];
+      if (targetCollection.some(c => c.id === selectedGiftCard.id)) {
+        showAlert("Người Nhận Đã Sở Hữu ⚠️", `HLV ${userWallTarget} đã sở hữu cầu thủ [${selectedGiftCard.name}] trong bộ sưu tập!`);
+        setGiftCardLoading(false);
+        return;
+      }
+
+      // Perform transaction
+      const updates = {};
+      
+      // Deduct coins from sender
+      updates[`/users/${currentUser}/coins`] = (meData.coins || 0) - fee;
+      updates[`/users/${currentUser}/giftCardLimits/${today}/sentCards`] = mySentToday + 1;
+      
+      // Remove card from sender collection
+      const myUpdatedCollection = (meData.collection || []).filter(c => c.id !== selectedGiftCard.id);
+      updates[`/users/${currentUser}/collection`] = myUpdatedCollection;
+
+      // Add coins received limits to target, add card to target collection
+      updates[`/users/${userWallTarget}/giftCardLimits/${today}/receivedCards`] = targetReceivedToday + 1;
+      const targetUpdatedCollection = [...targetCollection, selectedGiftCard];
+      updates[`/users/${userWallTarget}/collection`] = targetUpdatedCollection;
+
+      // Add a popup card notification for target
+      updates[`/users/${userWallTarget}/cardNotification`] = {
+        from: currentUser,
+        card: selectedGiftCard,
+        timestamp: Date.now()
+      };
+
+      await update(ref(database), updates);
+
+      // Optimistic UI updates for sender
+      setCoins(prev => prev - fee);
+      setCollection(prev => prev.filter(c => c.id !== selectedGiftCard.id));
+
+      // Global chat announcement
+      const rarityLabel = RARITY_TIERS[getCardRarity(selectedGiftCard)]?.label || "THƯỜNG";
+      const chatRef = ref(database, '/chat');
+      const newMsg = {
+        sender: 'HỆ THỐNG',
+        text: `🎁 HLV [${currentUser}] đã tặng thẻ [${selectedGiftCard.name}] (${rarityLabel}) cho HLV [${userWallTarget}]! 🎉`,
+        timestamp: serverTimestamp(),
+        type: 'gift'
+      };
+      push(chatRef, newMsg);
+
+      showAlert("Tặng Thẻ Thành Công 🎉", `Đã gửi thẻ [${selectedGiftCard.name}] tới ${userWallTarget} với lệ phí ${fee} Xu!`);
+      setShowGiftCardModal(false);
+      setSelectedGiftCard(null);
+    } catch (error) {
+      console.error("Gift card error:", error);
+      showAlert("Lỗi ❌", "Đã xảy ra lỗi khi tặng thẻ!");
+    } finally {
+      setGiftCardLoading(false);
     }
   };
 
@@ -2317,7 +2475,7 @@ export default function App() {
   const [matchEnvironment, setMatchEnvironment] = useState({ weather: ENV_WEATHER[4], time: ENV_TIME[1] });
 
   // ─── Unified Smart Auth Handler ─────────────────────────────────────────────
-  // Step 1: User enters name → check Firebase
+  // Step 1: User enters name → check Firebase (Case-Insensitive)
   const handleCheckUsername = async (e) => {
     e.preventDefault();
     const name = authUsername.trim();
@@ -2340,8 +2498,28 @@ export default function App() {
 
     setAuthCheckingUser(true);
     try {
-      const snapshot = await get(ref(database, `/users/${name}`));
-      const val = snapshot.val();
+      const lowerName = name.toLowerCase();
+      const nameIndexSnap = await get(ref(database, `/usernames/${lowerName}`));
+      let actualName = name;
+      let val = null;
+
+      if (nameIndexSnap.exists()) {
+        actualName = nameIndexSnap.val();
+        setAuthUsername(actualName); // Normalize casing in state
+        const userSnap = await get(ref(database, `/users/${actualName}`));
+        val = userSnap.val();
+      } else {
+        // Fallback/auto-migrate for legacy users
+        const legacyUserSnap = await get(ref(database, `/users/${name}`));
+        if (legacyUserSnap.exists()) {
+          val = legacyUserSnap.val();
+          actualName = val.username || name;
+          setAuthUsername(actualName);
+          // Set index for future case-insensitive logins
+          await set(ref(database, `/usernames/${lowerName}`), actualName);
+        }
+      }
+
       setAuthCheckingUser(false);
 
       if (!val) {
@@ -2357,7 +2535,7 @@ export default function App() {
           setAuthStep('enter_pin');
         } else {
           // No PIN → login directly (open account)
-          localStorage.setItem('panini_currentUser', name);
+          localStorage.setItem('panini_currentUser', actualName);
           window.location.reload();
         }
       }
@@ -2370,7 +2548,7 @@ export default function App() {
     }
   };
 
-  // Step 2a: Existing user with PIN → verify
+  // Step 2a: Existing user with PIN → verify (Case-Insensitive verified through handleCheckUsername)
   const handleVerifyPin = async (e) => {
     e.preventDefault();
     const name = authUsername.trim();
@@ -2459,7 +2637,12 @@ export default function App() {
 
     setAuthCheckingUser(true);
     try {
-      await set(ref(database, `/users/${name}`), initialData);
+      const lowerName = name.toLowerCase();
+      // Set index first, then user data
+      await Promise.all([
+        set(ref(database, `/usernames/${lowerName}`), name),
+        set(ref(database, `/users/${name}`), initialData)
+      ]);
       localStorage.setItem('panini_currentUser', name);
       window.location.reload();
     } catch {
@@ -2473,7 +2656,7 @@ export default function App() {
 
   // Legacy compat stubs (auth flow now uses handleCheckUsername/handleVerifyPin/handleCreateAccount)
 
-  // Forgot password verify email handler
+  // Forgot password verify email handler (Case-Insensitive)
   const handleForgotPassword = async (e) => {
     e.preventDefault();
     if (!authUsername.trim() || !forgotEmail.trim()) {
@@ -2483,7 +2666,14 @@ export default function App() {
     const cleanUsername = authUsername.trim();
 
     try {
-      const snapshot = await get(ref(database, `/users/${cleanUsername}`));
+      let actualName = cleanUsername;
+      const nameIndexSnap = await get(ref(database, `/usernames/${cleanUsername.toLowerCase()}`));
+      if (nameIndexSnap.exists()) {
+        actualName = nameIndexSnap.val();
+        setAuthUsername(actualName); // Normalize
+      }
+
+      const snapshot = await get(ref(database, `/users/${actualName}`));
       const val = snapshot.val();
       if (!val) {
         showAlert("Không Tồn Tại ❌", "HLV này chưa được đăng ký!");
@@ -2606,6 +2796,181 @@ export default function App() {
       setProfileConfirmPassword("");
     } catch (err) {
       showAlert("Lỗi Máy Chủ ❌", "Không thể cập nhật mật khẩu mới.");
+    }
+  };
+
+  const handleRenameUser = async (e) => {
+    e.preventDefault();
+    const newName = newUsernameInput.trim();
+    if (!newName || newName.length < 2) {
+      showAlert('Tên Quá Ngắn ⚠️', 'Tên HLV mới phải có ít nhất 2 ký tự!');
+      return;
+    }
+    if (!/^[\w\s\u00C0-\u024F\u1E00-\u1EFF]+$/.test(newName)) {
+      showAlert('Tên Không Hợp Lệ ⚠️', 'Tên HLV chỉ được dùng chữ cái, số, dấu cách. Không dùng ký tự đặc biệt!');
+      return;
+    }
+
+    if (newName === currentUser) {
+      showAlert('Không Có Thay Đổi ⚠️', 'Tên mới trùng với tên hiện tại!');
+      return;
+    }
+
+    if (!isConnectedToFirebase) {
+      // Offline mode: just migrate localStorage
+      setIsRenaming(true);
+      try {
+        const keys = Object.keys(localStorage);
+        keys.forEach(key => {
+          if (key.startsWith(`panini_${currentUser}_`)) {
+            const suffix = key.replace(`panini_${currentUser}_`, '');
+            const val = localStorage.getItem(key);
+            localStorage.setItem(`panini_${newName}_${suffix}`, val);
+            localStorage.removeItem(key);
+          }
+        });
+        localStorage.setItem('panini_currentUser', newName);
+        showAlert('Đổi Tên Thành Công 🎉', 'Đã đổi tên HLV thành công (Chế độ ngoại tuyến).');
+        window.location.reload();
+      } catch (err) {
+        console.error(err);
+        showAlert('Lỗi ❌', 'Không thể đổi tên ngoại tuyến.');
+      } finally {
+        setIsRenaming(false);
+      }
+      return;
+    }
+
+    setIsRenaming(true);
+    try {
+      const oldLower = currentUser.toLowerCase();
+      const newLower = newName.toLowerCase();
+
+      // Check if new name is taken
+      if (oldLower !== newLower) {
+        const checkSnap = await get(ref(database, `/usernames/${newLower}`));
+        if (checkSnap.exists()) {
+          showAlert('Tên Đã Được Sử Dụng ⚠️', 'Tên HLV này đã được người khác sử dụng!');
+          setIsRenaming(false);
+          return;
+        }
+      }
+
+      // 1. Fetch old user data
+      const userRef = ref(database, `/users/${currentUser}`);
+      const userSnap = await get(userRef);
+      if (!userSnap.exists()) {
+        showAlert('Lỗi ❌', 'Không tìm thấy dữ liệu HLV hiện tại.');
+        setIsRenaming(false);
+        return;
+      }
+      const userData = userSnap.val();
+      userData.username = newName; // Update internal username
+
+      // 2. Fetch other related data
+      const oldLeaderboardRef = ref(database, `/leaderboard/${currentUser}`);
+      const oldHistoryRef = ref(database, `/pvp_history/${currentUser}`);
+      const oldWallRef = ref(database, `/user_walls/${currentUser}`);
+
+      const [leaderboardSnap, historySnap, wallSnap] = await Promise.all([
+        get(oldLeaderboardRef),
+        get(oldHistoryRef),
+        get(oldWallRef)
+      ]);
+
+      const updates = {};
+      
+      // Update user node
+      updates[`/users/${newName}`] = userData;
+      updates[`/users/${currentUser}`] = null;
+
+      // Update username indexes
+      updates[`/usernames/${newLower}`] = newName;
+      if (oldLower !== newLower) {
+        updates[`/usernames/${oldLower}`] = null;
+      }
+
+      // Update leaderboard
+      if (leaderboardSnap.exists()) {
+        updates[`/leaderboard/${newName}`] = leaderboardSnap.val();
+        updates[`/leaderboard/${currentUser}`] = null;
+      }
+
+      // Update PVP History
+      if (historySnap.exists()) {
+        updates[`/pvp_history/${newName}`] = historySnap.val();
+        updates[`/pvp_history/${currentUser}`] = null;
+      }
+
+      // Update User Wall
+      if (wallSnap.exists()) {
+        updates[`/user_walls/${newName}`] = wallSnap.val();
+        updates[`/user_walls/${currentUser}`] = null;
+      }
+
+      // Migrate private chats
+      const myPrivateChatsRef = ref(database, `/users/${currentUser}/private_chats`);
+      const myChatsSnap = await get(myPrivateChatsRef);
+      if (myChatsSnap.exists()) {
+        const partners = Object.keys(myChatsSnap.val());
+        for (const partner of partners) {
+          const timestamp = myChatsSnap.val()[partner];
+          
+          const oldChatId = [currentUser, partner].sort().join('_');
+          const newChatId = [newName, partner].sort().join('_');
+
+          // Read old private chat messages
+          const chatSnap = await get(ref(database, `/private_chats/${oldChatId}`));
+          if (chatSnap.exists()) {
+            updates[`/private_chats/${newChatId}`] = chatSnap.val();
+            updates[`/private_chats/${oldChatId}`] = null;
+          }
+
+          // Update partner's references
+          updates[`/users/${partner}/private_chats/${currentUser}`] = null;
+          updates[`/users/${partner}/private_chats/${newName}`] = timestamp;
+
+          // Migrate partner's unread marks
+          const unreadSnap = await get(ref(database, `/users/${partner}/unread/${currentUser}`));
+          if (unreadSnap.exists()) {
+            updates[`/users/${partner}/unread/${currentUser}`] = null;
+            updates[`/users/${partner}/unread/${newName}`] = unreadSnap.val();
+          }
+        }
+      }
+
+      // Execute all updates atomically!
+      await update(ref(database), updates);
+
+      // 3. Migrate LocalStorage
+      const keys = Object.keys(localStorage);
+      keys.forEach(key => {
+        if (key.startsWith(`panini_${currentUser}_`)) {
+          const suffix = key.replace(`panini_${currentUser}_`, '');
+          const val = localStorage.getItem(key);
+          localStorage.setItem(`panini_${newName}_${suffix}`, val);
+          localStorage.removeItem(key);
+        }
+      });
+      localStorage.setItem('panini_currentUser', newName);
+
+      // Send a system message to global chat
+      const chatRef = ref(database, '/chat');
+      const newMsg = {
+        sender: 'HỆ THỐNG',
+        text: `📢 HLV [${currentUser}] đã đổi tên thành [${newName}]!`,
+        timestamp: serverTimestamp(),
+        type: 'system'
+      };
+      push(chatRef, newMsg);
+
+      showAlert('Đổi Tên Thành Công 🎉', `Đã đổi tên HLV thành [${newName}] thành công!`);
+      window.location.reload();
+    } catch (err) {
+      console.error("Rename error:", err);
+      showAlert('Lỗi ❌', 'Đã xảy ra lỗi trong quá trình đổi tên.');
+    } finally {
+      setIsRenaming(false);
     }
   };
 
@@ -5086,7 +5451,7 @@ export default function App() {
 
       {/* ============== SETTINGS PAGE ============== */}
       {gameState === 'settings' && (
-        <div className="w-full max-w-3xl mx-auto flex flex-col items-center mt-2 sm:mt-8 animate-fade-in px-2 sm:px-4">
+        <div className="w-full max-w-6xl mx-auto flex flex-col items-center mt-2 sm:mt-8 animate-fade-in px-2 sm:px-4">
           {/* Header */}
           <div className="flex flex-wrap items-center justify-between w-full gap-y-3 mb-8">
             <div className="flex items-center gap-2">
@@ -5113,7 +5478,7 @@ export default function App() {
           </div>
 
           {/* Settings Content */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
 
             {/* Recovery Email Card */}
             <div className="glass-panel rounded-3xl p-7 border border-purple-500/20 shadow-2xl bg-gradient-to-b from-purple-950/20 to-slate-900/60 flex flex-col gap-5 relative overflow-hidden">
@@ -5204,8 +5569,47 @@ export default function App() {
               </form>
             </div>
 
+            {/* Rename HLV Card */}
+            <div className="glass-panel rounded-3xl p-7 border border-emerald-500/20 shadow-2xl bg-gradient-to-b from-emerald-950/20 to-slate-900/60 flex flex-col gap-5 relative overflow-hidden">
+              <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
+                  <User size={18} className="text-white" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-white uppercase tracking-wider">Đổi Tên HLV</h4>
+                  <p className="text-[10px] text-gray-400 font-semibold mt-0.5">Thay đổi danh tính nhà cầm quân</p>
+                </div>
+              </div>
+              <form onSubmit={handleRenameUser} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Tên HLV Hiện Tại</label>
+                  <div className="bg-black/30 border border-white/5 px-4 py-2.5 rounded-xl text-xs text-gray-400 font-extrabold select-none">
+                    {currentUser}
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Tên HLV Mới</label>
+                  <input
+                    type="text"
+                    className="bg-black/50 border border-white/10 px-4 py-3 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors w-full font-medium"
+                    value={newUsernameInput}
+                    onChange={(e) => setNewUsernameInput(e.target.value)}
+                    placeholder="Nhập tên HLV mới..."
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={isRenaming}
+                  className="btn !bg-gradient-to-r !from-emerald-600 !to-teal-600 hover:!from-emerald-500 hover:!to-teal-500 !py-2.5 text-xs font-black tracking-widest uppercase rounded-xl transition-all cursor-pointer shadow-lg shadow-emerald-900/20"
+                >
+                  {isRenaming ? 'Đang Xử Lý...' : '🔄 Đổi Tên HLV'}
+                </button>
+              </form>
+            </div>
+
             {/* Referral Panel — full width */}
-            <div className="md:col-span-2 glass-panel rounded-3xl p-7 border border-amber-500/20 shadow-2xl bg-gradient-to-b from-amber-950/10 to-slate-900/40 flex flex-col gap-5 relative overflow-hidden">
+            <div className="lg:col-span-3 glass-panel rounded-3xl p-7 border border-amber-500/20 shadow-2xl bg-gradient-to-b from-amber-950/10 to-slate-900/40 flex flex-col gap-5 relative overflow-hidden">
               {/* Decorative accent removed for GPU perf */}
               <div className="flex items-center gap-3 border-b border-white/5 pb-4">
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center shadow-lg">
@@ -5838,9 +6242,9 @@ export default function App() {
                     {/* Quick Interactive Actions */}
                     <div className="w-full mt-auto">
                       {userWallTarget !== currentUser ? (
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-3 gap-2">
                           <button 
-                            className="btn !bg-violet-600 hover:!bg-violet-500 flex items-center justify-center gap-1.5 !py-3 font-bold text-[10px] sm:text-xs tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-violet-900/30"
+                            className="btn !bg-violet-600 hover:!bg-violet-500 flex items-center justify-center gap-1 !py-3 font-bold text-[9px] sm:text-xs tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-violet-900/30"
                             onClick={() => {
                               playFx('click');
                               setGameState('lobby');
@@ -5855,21 +6259,34 @@ export default function App() {
                               }, 300);
                             }}
                           >
-                            <MessageSquare size={14} /> Nhắn Tin
+                            <MessageSquare size={12} /> Chat
                           </button>
 
                           <button 
-                            className="btn !bg-yellow-600 hover:!bg-yellow-500 flex items-center justify-center gap-1.5 !py-3 font-bold text-[10px] sm:text-xs tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-yellow-900/30"
+                            className="btn !bg-yellow-600 hover:!bg-yellow-500 flex items-center justify-center gap-1 !py-3 font-bold text-[9px] sm:text-xs tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-yellow-900/30"
                             onClick={() => {
                               playFx('click');
                               setShowGiftModal(true);
                             }}
                           >
-                            🎁 Tặng Xu
+                            🪙 Tặng Xu
+                          </button>
+
+                          <button 
+                            className="btn !bg-emerald-600 hover:!bg-emerald-500 flex items-center justify-center gap-1 !py-3 font-bold text-[9px] sm:text-xs tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-emerald-900/30"
+                            onClick={() => {
+                              playFx('click');
+                              setShowGiftCardModal(true);
+                              setSelectedGiftCard(null);
+                              setGiftCardSearch("");
+                              setGiftCardFilterRarity("all");
+                            }}
+                          >
+                            🎁 Tặng Thẻ
                           </button>
                           
                           <button 
-                            className={`btn col-span-2 flex items-center justify-center gap-2 !py-3 font-black text-xs sm:text-sm tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg ${
+                            className={`btn col-span-3 flex items-center justify-center gap-2 !py-3 font-black text-xs sm:text-sm tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-lg ${
                               squad.length < 11
                                 ? 'opacity-40 !bg-gray-700 cursor-not-allowed text-gray-400' 
                                 : 'bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white shadow-red-900/30'
@@ -7760,9 +8177,9 @@ export default function App() {
         const streak = checkInState.streak || 0;
 
         return (
-          <div className="fixed inset-0 z-[220] flex items-center justify-center bg-black/80  p-4 animate-fade-in" onClick={() => setShowCheckInModal(false)}>
+          <div className="fixed inset-0 z-[220] flex items-center justify-center bg-black/80 p-4 animate-fade-in" onClick={() => setShowCheckInModal(false)}>
             <div 
-              className="glass-panel w-full max-w-2xl rounded-[2.5rem] border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col relative bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/40 p-6 sm:p-8 gap-5 animate-scale-in"
+              className="glass-panel w-full max-w-2xl rounded-[2.5rem] border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col relative bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/40 p-6 sm:p-8 gap-5 animate-scale-in max-h-[92vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <button 
@@ -7864,6 +8281,15 @@ export default function App() {
                 >
                   {alreadyClaimedToday ? "✓ Hôm Nay Đã Điểm Danh" : "📅 Điểm Danh Nhận Quà Ngay"}
                 </button>
+                
+                <button
+                  type="button"
+                  className="btn w-full !bg-slate-800/80 hover:!bg-slate-700 text-gray-300 hover:text-white font-extrabold py-3 rounded-xl transition-all active:scale-95 text-xs sm:text-sm uppercase tracking-wider cursor-pointer border border-white/5"
+                  onClick={() => { playFx('click'); setShowCheckInModal(false); }}
+                >
+                  ✕ Đóng Cửa Sổ / Về Sảnh
+                </button>
+
                 <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest text-center mt-1">
                   Đừng bỏ lỡ ngày nào để duy trì chuỗi điểm danh nhé!
                 </p>
@@ -8015,6 +8441,202 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* 2.1 GIFT CARD MODAL */}
+      {showGiftCardModal && (() => {
+        // Filter collection by search query and rarity filter
+        const filteredCollection = collection.filter(card => {
+          const matchesSearch = card.name.toLowerCase().includes(giftCardSearch.toLowerCase()) || 
+                                (card.nation && card.nation.toLowerCase().includes(giftCardSearch.toLowerCase())) ||
+                                (card.club && card.club.toLowerCase().includes(giftCardSearch.toLowerCase()));
+          const matchesRarity = giftCardFilterRarity === "all" || getCardRarity(card) === giftCardFilterRarity;
+          return matchesSearch && matchesRarity;
+        });
+
+        return (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in" onClick={() => setShowGiftCardModal(false)}>
+            <div 
+              className="glass-panel p-6 sm:p-8 rounded-[2rem] border border-emerald-500/30 max-w-2xl w-full flex flex-col relative bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950/20 shadow-[0_0_50px_rgba(0,0,0,0.8)] max-h-[90vh] overflow-y-auto animate-scale-in"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button 
+                className="absolute top-4 right-4 text-gray-400 hover:text-white bg-black/40 hover:bg-black/80 p-2 rounded-full w-8 h-8 flex items-center justify-center transition-colors z-[130] cursor-pointer"
+                onClick={() => setShowGiftCardModal(false)}
+              >
+                ✕
+              </button>
+
+              <div className="text-center mb-5">
+                <span className="text-[9px] font-black uppercase text-emerald-400 tracking-[0.2em] pl-[0.2em] block mb-1">
+                  🎁 CHUYỂN NHƯỢNG THÊ CẦU THỦ
+                </span>
+                <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-wider">
+                  Tặng Thẻ Cho HLV {userWallTarget}
+                </h2>
+                <p className="text-[10px] text-gray-400 mt-1 leading-relaxed">
+                  Yêu cầu: <span className="text-emerald-400 font-extrabold">Cấp gửi ≥ 5</span> | <span className="text-emerald-400 font-extrabold">Cấp nhận ≥ 3</span> | <span className="text-emerald-400 font-extrabold">Gửi tối đa 3 thẻ/ngày</span>.
+                  <br />
+                  Phí Xu theo Rarity: Thường <span className="text-white font-extrabold">20</span> | Hiếm <span className="text-white font-extrabold">50</span> | Siêu Hiếm <span className="text-white font-extrabold">100</span> | Huyền Thoại <span className="text-white font-extrabold">200</span> | Siêu Sao <span className="text-white font-extrabold">400</span>.
+                </p>
+              </div>
+
+              {/* Sender Level check warning */}
+              {level < 5 && (
+                <div className="bg-rose-950/30 border border-rose-500/20 text-rose-400 text-[10px] font-bold p-3 rounded-xl mb-4 text-center">
+                  ⚠️ Cấp độ của bạn là {level}. Bạn cần đạt tối thiểu Cấp 5 để mở khóa tính năng tặng thẻ cầu thủ!
+                </div>
+              )}
+
+              {/* Search & Filter bar */}
+              <div className="flex flex-col sm:flex-row gap-2.5 mb-4">
+                <input 
+                  type="text" 
+                  placeholder="Tìm cầu thủ, quốc gia, CLB..."
+                  value={giftCardSearch}
+                  onChange={(e) => setGiftCardSearch(e.target.value)}
+                  className="bg-black/50 border border-white/10 px-4 py-2 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 flex-1"
+                />
+                <select
+                  value={giftCardFilterRarity}
+                  onChange={(e) => setGiftCardFilterRarity(e.target.value)}
+                  className="bg-black/50 border border-white/10 px-3 py-2 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-bold"
+                >
+                  <option value="all">Tất Cả Rarity</option>
+                  <option value="common">Thường (Base)</option>
+                  <option value="rare">Hiếm (Rare)</option>
+                  <option value="epic">Siêu Hiếm (Epic)</option>
+                  <option value="legendary">Huyền Thoại (Legendary)</option>
+                  <option value="mythic">Siêu Sao (Mythic)</option>
+                </select>
+              </div>
+
+              {/* Cards Grid */}
+              <div className="flex-1 min-h-[220px] max-h-[340px] overflow-y-auto bg-black/30 border border-white/5 rounded-2xl p-4 mb-5 scrollbar-thin">
+                {filteredCollection.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-gray-500 text-xs italic">
+                    📭 Không tìm thấy thẻ cầu thủ nào hợp lệ trong kho.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {filteredCollection.map(card => {
+                      const rarity = getCardRarity(card);
+                      const tier = RARITY_TIERS[rarity] || RARITY_TIERS.common;
+                      const isInSquad = squad.some(s => s.id === card.id);
+                      
+                      // Check if receiver wall target already has it (we can inspect via wallData.collection or matching)
+                      const receiverHasIt = (wallData.collection || []).some(c => c.id === card.id);
+                      const isSelected = selectedGiftCard && selectedGiftCard.id === card.id;
+
+                      let statusOverlay = null;
+                      if (isInSquad) {
+                        statusOverlay = "Trong Squad 🛡️";
+                      } else if (receiverHasIt) {
+                        statusOverlay = "HLV đã có ✓";
+                      }
+
+                      return (
+                        <div 
+                          key={card.id}
+                          onClick={() => {
+                            if (isInSquad || receiverHasIt || level < 5) return;
+                            playFx('click');
+                            setSelectedGiftCard(isSelected ? null : card);
+                          }}
+                          className={`relative p-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all select-none ${
+                            statusOverlay 
+                              ? 'opacity-40 cursor-not-allowed bg-black/40 border-white/5' 
+                              : isSelected
+                              ? 'bg-emerald-950/40 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)] scale-[1.03] cursor-pointer'
+                              : 'bg-black/50 border-white/5 hover:border-emerald-500/40 cursor-pointer hover:scale-[1.01]'
+                          }`}
+                          style={{
+                            boxShadow: isSelected ? `inset 0 0 10px ${tier.glow}` : 'none'
+                          }}
+                        >
+                          {/* Status Overlay Ribbon */}
+                          {statusOverlay && (
+                            <span className="absolute top-2 left-2 z-10 text-[8px] font-black uppercase tracking-wider bg-black/90 text-yellow-500 px-1.5 py-0.5 rounded border border-yellow-500/20">
+                              {statusOverlay}
+                            </span>
+                          )}
+
+                          {/* Card Photo (Emoji or avatar placeholder) */}
+                          <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl relative shadow-md" style={{ background: tier.glow }}>
+                            ⚽
+                          </div>
+
+                          <div className="text-center w-full">
+                            <div className="font-extrabold text-[11px] text-white truncate uppercase tracking-wide">{card.name}</div>
+                            <div className="text-[8px] font-bold mt-0.5" style={{ color: tier.color }}>
+                              {tier.label} {tier.star}
+                            </div>
+                            <div className="text-[8px] text-gray-500 truncate mt-0.5">{card.club || ""} | {card.nation || ""}</div>
+                          </div>
+
+                          {/* Stat Highlights */}
+                          <div className="flex gap-1.5 mt-1 text-[9px] font-bold text-gray-400">
+                            <span className="text-red-400">ATK {card.stats.attack}</span>
+                            <span className="text-blue-400">DEF {card.stats.defense}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Selected Card Info & Confirmation */}
+              {selectedGiftCard ? (() => {
+                const fee = getCardGiftFee(selectedGiftCard);
+                const rarity = getCardRarity(selectedGiftCard);
+                const tier = RARITY_TIERS[rarity];
+                const canAfford = coins >= fee;
+
+                return (
+                  <div className="bg-emerald-950/20 border border-emerald-500/20 p-4 rounded-2xl flex flex-col gap-3 animate-fade-in">
+                    <div className="flex justify-between items-center text-xs">
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase block">Thẻ Được Chọn</span>
+                        <span className="font-black text-white uppercase">{selectedGiftCard.name}</span>
+                        <span className="ml-1 text-[10px] font-extrabold" style={{ color: tier.color }}>({tier.label})</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] text-gray-400 font-bold uppercase block">Phí Gửi (Xu)</span>
+                        <span className={`font-black flex items-center gap-1 justify-end ${canAfford ? 'text-yellow-400' : 'text-rose-400 font-blink'}`}>
+                          <Coins size={12} /> {fee} Xu
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {!canAfford && (
+                      <p className="text-[10px] text-rose-400 font-semibold text-center bg-rose-950/20 border border-rose-500/10 p-2 rounded-lg">
+                        ⚠️ Bạn không đủ Xu để trả phí giao dịch! Cần thêm {fee - coins} Xu.
+                      </p>
+                    )}
+
+                    <button 
+                      onClick={handleSendCardGift}
+                      disabled={giftCardLoading || !canAfford || level < 5}
+                      className={`btn w-full !py-3 rounded-xl font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-[0.98] ${
+                        giftCardLoading || !canAfford || level < 5
+                          ? 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
+                          : 'bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white shadow-lg shadow-emerald-900/40 cursor-pointer'
+                      }`}
+                    >
+                      {giftCardLoading ? "Đang Gửi..." : "🤝 Xác Nhận Tặng Thẻ"}
+                    </button>
+                  </div>
+                );
+              })() : (
+                <div className="bg-slate-950/40 border border-white/5 p-4 rounded-2xl text-center text-xs text-gray-500 font-bold">
+                  👆 Vui lòng chọn một thẻ cầu thủ từ danh sách trên để xem chi tiết và phí gửi.
+                </div>
+              )}
+
+            </div>
+          </div>
+        );
+      })()}
 
       {/* 3.0 SHARE ACHIEVEMENT MODAL */}
       {activeShareData && (
