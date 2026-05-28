@@ -6155,8 +6155,8 @@ export default function App() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 w-full items-start">
               
               {/* LEFT PROFILE CARD (5/12 cols): Cover, stats, and fast actions */}
-              <div className={`lg:col-span-5 flex-col gap-4 lg:flex w-full ${mobileSubTab === 'profile' ? 'flex' : 'hidden'}`}>
-                <div className="glass-panel rounded-2xl border border-white/10 shadow-2xl overflow-hidden bg-slate-950/40  relative flex flex-col">
+              <div className={`lg:col-span-5 flex-col gap-4 lg:flex w-full ${mobileSubTab === 'profile' || mobileSubTab === 'search' ? 'flex' : 'hidden'}`}>
+                <div className={`glass-panel rounded-2xl border border-white/10 shadow-2xl overflow-hidden bg-slate-950/40 relative flex flex-col ${mobileSubTab === 'profile' ? 'flex' : 'hidden lg:flex'}`}>
                   {/* Premium Cover Banner */}
                   <div className="h-16 sm:h-32 bg-gradient-to-r from-cyan-900 via-indigo-950 to-purple-950 relative overflow-hidden flex items-center justify-center">
                     <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_white_1px,_transparent_1px)] bg-[size:10px_10px]"></div>
@@ -6466,7 +6466,7 @@ export default function App() {
                 {userWallTarget === currentUser && socialWallTab !== 'global' && (
                   <div className="glass-panel rounded-2xl p-3 border border-white/10 shadow-xl bg-slate-950/40 flex gap-2 sm:gap-3">
                     <div 
-                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-full shrink-0 flex items-center justify-center font-black border border-white/10 select-none text-[10px] sm:text-xs"
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-full shrink-0 flex items-center justify-center font-black border border-white/10 select-none text-[11px] sm:text-xs"
                       style={{ background: getAvatarGradient(currentUser) }}
                     >
                       {(currentUser || '').charAt(0).toUpperCase()}
@@ -6479,7 +6479,7 @@ export default function App() {
                         placeholder="Chia sẻ đội hình, chiến thuật... ⚽"
                         maxLength={280}
                         rows={2}
-                        className="w-full bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-xl p-2 text-sm font-semibold placeholder-gray-500 focus:outline-none resize-none transition-colors leading-relaxed text-white"
+                        className="w-full bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-xl p-2 text-sm sm:text-[15px] font-semibold placeholder-gray-500 focus:outline-none resize-none transition-colors leading-relaxed text-white"
                       />
 
                       {/* Mention Autocomplete Dropdown */}
@@ -6639,13 +6639,13 @@ export default function App() {
                       return (
                         <div
                           key={post.id}
-                          className={`glass-panel rounded-xl p-3 sm:p-4 flex flex-col gap-2 hover:border-white/15 transition-all duration-300 shadow-sm ${
+                          className={`glass-panel rounded-xl p-3 sm:p-5 flex flex-col gap-3 hover:border-white/15 transition-all duration-300 shadow-sm ${
                             isMyPost ? 'border border-cyan-500/20 bg-cyan-950/10' : 'border border-white/5 bg-slate-950/20'
                           }`}
                         >
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2.5">
                             <button
-                              className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[10px] font-black border border-white/5 select-none cursor-pointer hover:opacity-80 transition-opacity"
+                              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full shrink-0 flex items-center justify-center text-xs sm:text-sm font-black border border-white/5 select-none cursor-pointer hover:opacity-80 transition-opacity"
                               style={{ background: getAvatarGradient(post.author) }}
                               onClick={() => { if (post.author !== userWallTarget) { setUserWallTarget(post.author); setSocialWallTab('owner'); } }}
                               title={`Xem tường của ${post.author}`}
@@ -6653,51 +6653,51 @@ export default function App() {
                               {(post.author || '').charAt(0).toUpperCase()}
                             </button>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1.5 flex-wrap">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <button
-                                  className="font-extrabold text-xs text-white hover:text-cyan-400 transition-colors cursor-pointer"
+                                  className="font-extrabold text-[13px] sm:text-sm text-white hover:text-cyan-400 transition-colors cursor-pointer"
                                   onClick={() => { setUserWallTarget(post.author); setSocialWallTab('owner'); }}
                                 >
                                   {post.author}
                                 </button>
-                                <span className="text-[7px] bg-white/10 text-gray-400 px-1 py-0.5 rounded border border-white/10 font-bold shrink-0">Lv.{post.authorLevel || 1}</span>
-                                {isMyPost && <span className="text-[7px] bg-cyan-950/40 text-cyan-400 border border-cyan-500/20 px-1 py-0.5 rounded font-extrabold">Bạn</span>}
+                                <span className="text-[8px] sm:text-[9px] bg-white/10 text-gray-400 px-1.5 py-0.5 rounded border border-white/10 font-bold shrink-0">Lv.{post.authorLevel || 1}</span>
+                                {isMyPost && <span className="text-[8px] sm:text-[9px] bg-cyan-950/40 text-cyan-400 border border-cyan-500/20 px-1.5 py-0.5 rounded font-extrabold">Bạn</span>}
                               </div>
-                              <span className="text-[8px] text-gray-500 font-bold font-mono block mt-0.5">{getRelativeTime(post.timestamp)}</span>
+                              <span className="text-[9px] sm:text-[10px] text-gray-500 font-bold font-mono block mt-0.5">{getRelativeTime(post.timestamp)}</span>
                             </div>
                           </div>
 
-                          <p className="text-sm text-gray-100 font-medium leading-relaxed whitespace-pre-wrap px-0.5">
+                          <p className="text-[14px] sm:text-[15px] md:text-[16px] text-gray-100 font-medium leading-relaxed whitespace-pre-wrap px-0.5">
                             {renderPostText(post.content)}
                           </p>
 
-                          <div className="flex items-center gap-4 border-t border-b border-white/5 py-1 px-0.5 mt-1">
+                          <div className="flex items-center gap-4 border-t border-b border-white/5 py-2 px-0.5 mt-1">
                             <button
                               onClick={() => handleLikePost(post.id)}
                               className={`flex items-center gap-1.5 font-bold transition-all active:scale-75 hover:opacity-80 cursor-pointer ${ hasLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-400' }`}
                             >
-                              <span className="text-xs select-none">{hasLiked ? '❤️' : '🤍'}</span>
-                              <span className="text-[9px] font-extrabold">{likesCount} Thích</span>
+                              <span className="text-xs sm:text-sm select-none">{hasLiked ? '❤️' : '🤍'}</span>
+                              <span className="text-[10px] sm:text-[11px] font-extrabold">{likesCount} Thích</span>
                             </button>
                             <div className="flex items-center gap-1.5 font-bold text-gray-500">
-                              <span className="text-xs select-none">💬</span>
-                              <span className="text-[9px] font-extrabold">{commentsList.length} Bình luận</span>
+                              <span className="text-xs sm:text-sm select-none">💬</span>
+                              <span className="text-[10px] sm:text-[11px] font-extrabold">{commentsList.length} Bình luận</span>
                             </div>
                           </div>
 
                           {commentsList.length > 0 && (
-                            <div className="flex flex-col gap-1.5 pl-2 sm:pl-3 border-l border-white/10 mt-1">
+                            <div className="flex flex-col gap-2.5 pl-3 sm:pl-4 border-l border-white/10 mt-1">
                               {commentsList.map((comm) => (
-                                <div key={comm.id} className="flex gap-1.5 items-start bg-black/10 p-2 rounded-lg border border-white/5 animate-fade-in">
-                                  <div className="w-5 h-5 rounded-full shrink-0 flex items-center justify-center text-[7px] font-black border border-white/5 select-none" style={{ background: getAvatarGradient(comm.author) }}>
+                                <div key={comm.id} className="flex gap-2 items-start bg-black/10 p-2.5 rounded-lg border border-white/5 animate-fade-in">
+                                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full shrink-0 flex items-center justify-center text-[9px] sm:text-[10px] font-black border border-white/5 select-none" style={{ background: getAvatarGradient(comm.author) }}>
                                     {(comm.author || '').charAt(0).toUpperCase()}
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-1 flex-wrap">
-                                      <span className="font-extrabold text-[9px] text-white">{comm.author}</span>
-                                      <span className="text-[7px] text-gray-500 font-bold font-mono ml-auto">{getRelativeTime(comm.timestamp)}</span>
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="font-extrabold text-[11px] sm:text-xs text-white">{comm.author}</span>
+                                      <span className="text-[8px] sm:text-[9px] text-gray-500 font-bold font-mono ml-auto">{getRelativeTime(comm.timestamp)}</span>
                                     </div>
-                                    <p className="text-[9px] text-gray-300 font-semibold leading-relaxed mt-0.5 whitespace-pre-wrap">{renderPostText(comm.content)}</p>
+                                    <p className="text-xs sm:text-[13px] text-gray-200 font-medium leading-relaxed mt-0.5 whitespace-pre-wrap">{renderPostText(comm.content)}</p>
                                   </div>
                                 </div>
                               ))}
@@ -6705,7 +6705,7 @@ export default function App() {
                           )}
 
                           <div className="flex gap-2 items-center mt-1 pt-1">
-                            <div className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[8px] font-black border border-white/5 select-none" style={{ background: getAvatarGradient(currentUser) }}>
+                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full shrink-0 flex items-center justify-center text-[9px] sm:text-[10px] font-black border border-white/5 select-none" style={{ background: getAvatarGradient(currentUser) }}>
                               {(currentUser || '').charAt(0).toUpperCase()}
                             </div>
                             <form onSubmit={(e) => { e.preventDefault(); handleCreateComment(post.id); }} className="flex-1 flex gap-2">
@@ -6715,12 +6715,12 @@ export default function App() {
                                 onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))}
                                 placeholder="Bình luận... ✍️"
                                 maxLength={200}
-                                className="flex-1 bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-full px-2.5 py-1 text-[10px] font-semibold focus:outline-none placeholder-gray-500 transition-colors text-white"
+                                className="flex-1 bg-black/40 border border-white/5 focus:border-cyan-500/50 rounded-full px-3 py-1.5 text-xs sm:text-[13px] font-semibold focus:outline-none placeholder-gray-500 transition-colors text-white"
                               />
                               <button
                                 type="submit"
                                 disabled={!(commentInputs[post.id] || "").trim()}
-                                className={`btn !py-1.5 !px-4 text-[10px] font-black uppercase tracking-wider rounded-full shrink-0 cursor-pointer ${ !(commentInputs[post.id] || "").trim() ? 'opacity-40 !bg-gray-800 text-gray-500' : 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-md' }`}
+                                className={`btn !py-2 !px-4 text-xs font-black uppercase tracking-wider rounded-full shrink-0 cursor-pointer ${ !(commentInputs[post.id] || "").trim() ? 'opacity-40 !bg-gray-800 text-gray-500' : 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-md' }`}
                               >
                                 Gửi
                               </button>
