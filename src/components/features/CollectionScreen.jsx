@@ -28,7 +28,6 @@ export function CollectionScreen() {
       localStorage.setItem(`panini_${currentUser}_squad`, JSON.stringify(newSquad));
     }
     
-    showAlert("🗑️ Đã Bỏ Thẻ!", `Thẻ ${card.name} đã bị xóa khỏi bộ sưu tập.`);
     setConfirmDeleteCard(null);
   };
 
@@ -83,24 +82,27 @@ export function CollectionScreen() {
 
       {/* Confirmation Modal */}
       {confirmDeleteCard && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 animate-fade-in backdrop-blur-sm">
-          <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-[0_0_50px_rgba(255,255,255,0.1)] transform animate-scale-in">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">thebongda.vinhninh.com cho biết</h3>
-            <p className="text-gray-700 text-sm leading-relaxed mb-8">
-              Bạn có chắc chắn muốn bỏ thẻ {confirmDeleteCard.name} khỏi bộ sưu tập? Hành động này không thể hoàn tác!
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 p-4 animate-fade-in backdrop-blur-md">
+          <div className="glass-panel p-8 sm:p-10 rounded-[2.5rem] max-w-sm w-full flex flex-col items-center shadow-[0_0_80px_rgba(56,189,248,0.2)] border border-sky-500/30 text-center relative bg-gradient-to-b from-slate-900 via-slate-950 to-black">
+            <h3 className="text-xl font-black text-sky-400 tracking-widest uppercase mb-4 flex items-center gap-2 justify-center w-full">
+              <Trash2 size={24} /> BỎ THẺ NÀY?
+            </h3>
+            <p className="text-gray-300 text-sm leading-relaxed mb-8 font-semibold">
+              Thẻ <span className="text-white font-bold">{confirmDeleteCard.name}</span> sẽ bị xóa vĩnh viễn khỏi bộ sưu tập của bạn.
             </p>
-            <div className="flex justify-end gap-3 mt-4">
-              <button 
-                onClick={executeDelete}
-                className="px-8 py-2.5 rounded-full bg-[#1a56db] text-white font-bold text-sm hover:bg-blue-700 transition-colors outline outline-2 outline-offset-2 outline-[#1a56db]"
-              >
-                OK
-              </button>
+            
+            <div className="flex w-full gap-3">
               <button 
                 onClick={() => setConfirmDeleteCard(null)}
-                className="px-6 py-2.5 rounded-full bg-[#dce4fb] text-[#1e3a8a] font-bold text-sm hover:bg-[#c6d3f8] transition-colors"
+                className="flex-1 py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-widest transition-all cursor-pointer bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white"
               >
                 Huỷ
+              </button>
+              <button 
+                onClick={executeDelete}
+                className="flex-1 py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-widest transition-all cursor-pointer bg-blue-600 hover:bg-blue-500 shadow-[0_0_20px_rgba(37,99,235,0.4)] text-white"
+              >
+                Đồng Ý
               </button>
             </div>
           </div>
