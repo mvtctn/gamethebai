@@ -13,7 +13,6 @@ import {
 
 import { useGameContext } from '../../context/GameContext';
 import { AnimatedHeroPlayer } from '../ui/SharedComponents';
-import { BANNERS } from '../../constants';
 
 export function LandingPage() {
   const {  } = useGameContext();
