@@ -7,22 +7,29 @@ import { Trash2 } from 'lucide-react';
 export function CollectionScreen() {
   const { setGameState, collection, setCollection, squad, setSquad, setSelectedUpgradeCard, showAlert, currentUser } = useGameContext();
 
+  const [confirmDeleteCard, setConfirmDeleteCard] = React.useState(null);
+
   const handleQuickDelete = (e, card) => {
     e.stopPropagation(); // Prevent opening the profile modal
     playFx('click');
-    if (window.confirm(`Bạn có chắc chắn muốn bỏ thẻ ${card.name} khỏi bộ sưu tập? Hành động này không thể hoàn tác!`)) {
-      const newCollection = collection.filter(c => c.id !== card.id);
-      setCollection(newCollection);
-      
-      const inSquad = squad.some(s => s.id === card.id);
-      if (inSquad) {
-        const newSquad = squad.filter(s => s.id !== card.id);
-        setSquad(newSquad);
-        localStorage.setItem(`panini_${currentUser}_squad`, JSON.stringify(newSquad));
-      }
-      
-      showAlert("🗑️ Đã Bỏ Thẻ!", `Thẻ ${card.name} đã bị xóa khỏi bộ sưu tập.`);
+    setConfirmDeleteCard(card);
+  };
+
+  const executeDelete = () => {
+    if (!confirmDeleteCard) return;
+    const card = confirmDeleteCard;
+    const newCollection = collection.filter(c => c.id !== card.id);
+    setCollection(newCollection);
+    
+    const inSquad = squad.some(s => s.id === card.id);
+    if (inSquad) {
+      const newSquad = squad.filter(s => s.id !== card.id);
+      setSquad(newSquad);
+      localStorage.setItem(`panini_${currentUser}_squad`, JSON.stringify(newSquad));
     }
+    
+    showAlert("🗑️ Đã Bỏ Thẻ!", `Thẻ ${card.name} đã bị xóa khỏi bộ sưu tập.`);
+    setConfirmDeleteCard(null);
   };
 
   return (
@@ -73,6 +80,33 @@ export function CollectionScreen() {
           </div>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      {confirmDeleteCard && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 animate-fade-in backdrop-blur-sm">
+          <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-[0_0_50px_rgba(255,255,255,0.1)] transform animate-scale-in">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">thebongda.vinhninh.com cho biết</h3>
+            <p className="text-gray-700 text-sm leading-relaxed mb-8">
+              Bạn có chắc chắn muốn bỏ thẻ {confirmDeleteCard.name} khỏi bộ sưu tập? Hành động này không thể hoàn tác!
+            </p>
+            <div className="flex justify-end gap-3 mt-4">
+              <button 
+                onClick={executeDelete}
+                className="px-8 py-2.5 rounded-full bg-[#1a56db] text-white font-bold text-sm hover:bg-blue-700 transition-colors outline outline-2 outline-offset-2 outline-[#1a56db]"
+              >
+                OK
+              </button>
+              <button 
+                onClick={() => setConfirmDeleteCard(null)}
+                className="px-6 py-2.5 rounded-full bg-[#dce4fb] text-[#1e3a8a] font-bold text-sm hover:bg-[#c6d3f8] transition-colors"
+              >
+                Huỷ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
