@@ -17,7 +17,7 @@ import { useGameContext } from '../../context/GameContext';
 import { AnimatedHeroPlayer } from '../ui/SharedComponents';
 
 export function LandingPage() {
-  const {  } = useGameContext();
+  const { setGameState, activeBannerIdx, authStep, authUsername, setAuthUsername, handleCheckUsername, authCheckingUser, handleVerifyPin, authPin, setAuthPin, setAuthStep, setAuthFoundUser, handleCreateAccount } = useGameContext();
 
   return (
     <div className="landing-page-wrapper">
