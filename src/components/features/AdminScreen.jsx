@@ -2,14 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { database, isConnectedToFirebase } from '../../firebase';
 import { ref, get, set, update } from 'firebase/database';
 import { useGameContext } from '../../context/GameContext';
-import { Users, Settings, Ban, CheckCircle, Save } from 'lucide-react';
-import { playFx } from '../../utils';
+import { Users, Settings, Ban, CheckCircle, Save, Edit, Key, Shield, Coins, Gift, TrendingUp, User, X } from 'lucide-react';
+import { playFx, hashPIN } from '../../utils';
 
 export function AdminScreen() {
   const { currentUser, setGameState, showAlert, gameConfig } = useGameContext();
-  const [activeTab, setActiveTab] = useState('users'); // 'users' or 'config'
+  const [activeTab, setActiveTab] = useState('users'); 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedUser, setSelectedUser] = useState(null); // For Modal
   
   // Config state
   const [configForm, setConfigForm] = useState({
@@ -22,14 +23,12 @@ export function AdminScreen() {
       setGameState('lobby');
       return;
     }
-    
     if (gameConfig) {
       setConfigForm({
         initialCoins: gameConfig.initialCoins || 500,
         checkInRewardBase: gameConfig.checkInRewardBase || 50
       });
     }
-
     fetchUsers();
   }, [currentUser, gameConfig]);
 
@@ -44,7 +43,6 @@ export function AdminScreen() {
           username: key,
           ...data[key]
         }));
-        // Sort by level descending
         usersList.sort((a, b) => (b.level || 0) - (a.level || 0));
         setUsers(usersList);
       }
@@ -61,13 +59,10 @@ export function AdminScreen() {
     }
     const isBanned = user.banned || false;
     const newBannedState = !isBanned;
-    
     try {
-      await update(ref(database, `/users/${user.username}`), {
-        banned: newBannedState
-      });
+      await update(ref(database, `/users/${user.username}`), { banned: newBannedState });
       showAlert('Thành Công', `Đã ${newBannedState ? 'KHÓA' : 'MỞ KHÓA'} tài khoản ${user.username}.`);
-      fetchUsers(); // refresh list
+      fetchUsers();
     } catch (err) {
       showAlert('Lỗi', 'Có lỗi xảy ra khi cập nhật trạng thái.');
     }
@@ -100,7 +95,7 @@ export function AdminScreen() {
         <h2 className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-rose-600 uppercase tracking-widest text-center">
           🛡️ Admin Panel
         </h2>
-        <div className="w-24"></div> {/* spacer */}
+        <div className="w-24"></div> 
       </div>
 
       {/* Tabs */}
@@ -120,7 +115,7 @@ export function AdminScreen() {
       </div>
 
       {/* Content */}
-      <div className="glass-panel w-full p-6 rounded-3xl border border-white/10 shadow-2xl bg-black/40">
+      <div className="glass-panel w-full p-6 rounded-3xl border border-white/10 shadow-2xl bg-black/40 relative">
         
         {activeTab === 'users' && (
           <div className="w-full overflow-x-auto">
@@ -133,7 +128,6 @@ export function AdminScreen() {
                     <th className="pb-3 px-4 font-black">Tài Khoản</th>
                     <th className="pb-3 px-4 font-black text-center">Cấp Độ</th>
                     <th className="pb-3 px-4 font-black text-center">Xu</th>
-                    <th className="pb-3 px-4 font-black text-center">Số Thẻ</th>
                     <th className="pb-3 px-4 font-black text-center">Trạng Thái</th>
                     <th className="pb-3 px-4 font-black text-center">Hành Động</th>
                   </tr>
@@ -148,7 +142,6 @@ export function AdminScreen() {
                       </td>
                       <td className="py-3 px-4 text-center font-bold text-cyan-400">Lv.{user.level || 1}</td>
                       <td className="py-3 px-4 text-center font-bold text-yellow-400">{user.coins || 0}</td>
-                      <td className="py-3 px-4 text-center font-bold text-fuchsia-400">{(user.collection || []).length} thẻ</td>
                       <td className="py-3 px-4 text-center">
                         {user.banned ? (
                           <span className="bg-red-900/50 text-red-400 border border-red-500/30 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider">Bị Khóa</span>
@@ -156,7 +149,13 @@ export function AdminScreen() {
                           <span className="bg-green-900/50 text-green-400 border border-green-500/30 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider">Bình Thường</span>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-center">
+                      <td className="py-3 px-4 text-center flex justify-center gap-2">
+                        <button 
+                          className="btn !py-1 !px-3 text-[10px] rounded border uppercase font-bold tracking-widest !bg-blue-700 hover:!bg-blue-600 border-blue-500/50"
+                          onClick={() => setSelectedUser(user)}
+                        >
+                          <Edit size={12} className="inline mr-1 -mt-0.5"/> Quản Lý
+                        </button>
                         {user.username !== 'Solomon' && (
                           <button 
                             className={`btn !py-1 !px-3 text-[10px] rounded border uppercase font-bold tracking-widest ${user.banned ? '!bg-green-700 hover:!bg-green-600 border-green-500/50' : '!bg-red-700 hover:!bg-red-600 border-red-500/50'}`}
@@ -178,7 +177,6 @@ export function AdminScreen() {
           <div className="w-full max-w-2xl mx-auto flex flex-col gap-6 py-6">
             <div className="bg-black/30 p-6 rounded-2xl border border-white/5">
               <h3 className="text-lg font-black text-white uppercase tracking-wider mb-4 border-b border-white/10 pb-2">Tham Số Mặc Định</h3>
-              
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-2">
                   <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Xu Khởi Tạo (Cho User Mới)</label>
@@ -190,7 +188,6 @@ export function AdminScreen() {
                   />
                   <p className="text-[10px] text-gray-500">Số lượng Xu mặc định tặng cho người chơi khi họ mới tạo tài khoản.</p>
                 </div>
-
                 <div className="flex flex-col gap-2">
                   <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Thưởng Check-in (Xu Cơ Bản)</label>
                   <input 
@@ -202,7 +199,6 @@ export function AdminScreen() {
                   <p className="text-[10px] text-gray-500">Mức Xu cơ bản cho phần thưởng điểm danh hàng ngày.</p>
                 </div>
               </div>
-
               <div className="mt-8">
                 <button 
                   className="btn !bg-red-600 hover:!bg-red-500 w-full !py-3 font-black text-sm uppercase tracking-widest rounded-xl shadow-lg shadow-red-900/40"
@@ -215,6 +211,271 @@ export function AdminScreen() {
           </div>
         )}
 
+      </div>
+
+      {/* User Management Modal */}
+      {selectedUser && (
+        <AdminUserModal 
+          user={selectedUser} 
+          onClose={() => { setSelectedUser(null); fetchUsers(); }} 
+          showAlert={showAlert} 
+        />
+      )}
+    </div>
+  );
+}
+
+// -------------------------------------------------------------
+// Helper Component: Admin User Management Modal
+// -------------------------------------------------------------
+function AdminUserModal({ user, onClose, showAlert }) {
+  const [coins, setCoins] = useState(user.coins || 0);
+  const [level, setLevel] = useState(user.level || 1);
+  const [xp, setXp] = useState(user.xp || 0);
+  const [freePacks, setFreePacks] = useState(user.freePacks || 0);
+  const [newPassword, setNewPassword] = useState('');
+  const [newUsername, setNewUsername] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleUpdateStats = async () => {
+    setIsProcessing(true);
+    try {
+      await update(ref(database, `/users/${user.username}`), {
+        coins: Number(coins),
+        level: Number(level),
+        xp: Number(xp),
+        freePacks: Number(freePacks)
+      });
+      showAlert('Thành Công', `Đã cập nhật chỉ số cho ${user.username}`);
+    } catch (err) {
+      showAlert('Lỗi', 'Không thể cập nhật chỉ số.');
+    }
+    setIsProcessing(false);
+  };
+
+  const handleResetPassword = async () => {
+    if (!newPassword || newPassword.length < 4) {
+      showAlert('Lỗi', 'Mật khẩu phải có ít nhất 4 ký tự!');
+      return;
+    }
+    setIsProcessing(true);
+    try {
+      const hashedNew = await hashPIN(newPassword);
+      await update(ref(database, `/users/${user.username}`), {
+        pin: hashedNew,
+        password: hashedNew
+      });
+      showAlert('Thành Công', `Đã đổi mật khẩu cho HLV ${user.username}.`);
+      setNewPassword('');
+    } catch (err) {
+      showAlert('Lỗi', 'Không thể đổi mật khẩu.');
+    }
+    setIsProcessing(false);
+  };
+
+  const handleRename = async () => {
+    if (user.username === 'Solomon') {
+      showAlert('Lỗi', 'Không thể đổi tên Super Admin!');
+      return;
+    }
+    const targetName = newUsername.trim();
+    if (!targetName || targetName.length < 2) {
+      showAlert('Lỗi', 'Tên quá ngắn!');
+      return;
+    }
+    if (targetName === user.username) return;
+    
+    setIsProcessing(true);
+    try {
+      const oldLower = user.username.toLowerCase();
+      const newLower = targetName.toLowerCase();
+      
+      const checkSnap = await get(ref(database, `/usernames/${newLower}`));
+      if (checkSnap.exists()) {
+        showAlert('Lỗi', 'Tên này đã có người sử dụng!');
+        setIsProcessing(false);
+        return;
+      }
+
+      // Fetch all related data
+      const oldUserRef = ref(database, `/users/${user.username}`);
+      const oldLeaderboardRef = ref(database, `/leaderboard/${user.username}`);
+      const oldHistoryRef = ref(database, `/pvp_history/${user.username}`);
+      const oldWallRef = ref(database, `/user_walls/${user.username}`);
+      
+      const [userSnap, leaderboardSnap, historySnap, wallSnap] = await Promise.all([
+        get(oldUserRef), get(oldLeaderboardRef), get(oldHistoryRef), get(oldWallRef)
+      ]);
+      
+      if (!userSnap.exists()) {
+        showAlert('Lỗi', 'Dữ liệu HLV không tồn tại.');
+        setIsProcessing(false);
+        return;
+      }
+      
+      const userData = userSnap.val();
+      userData.username = targetName;
+      
+      const updates = {};
+      updates[`/users/${targetName}`] = userData;
+      updates[`/users/${user.username}`] = null;
+      updates[`/usernames/${newLower}`] = targetName;
+      updates[`/usernames/${oldLower}`] = null;
+      
+      if (leaderboardSnap.exists()) {
+        updates[`/leaderboard/${targetName}`] = leaderboardSnap.val();
+        updates[`/leaderboard/${user.username}`] = null;
+      }
+      if (historySnap.exists()) {
+        updates[`/pvp_history/${targetName}`] = historySnap.val();
+        updates[`/pvp_history/${user.username}`] = null;
+      }
+      if (wallSnap.exists()) {
+        updates[`/user_walls/${targetName}`] = wallSnap.val();
+        updates[`/user_walls/${user.username}`] = null;
+      }
+
+      await update(ref(database), updates);
+      showAlert('Thành Công', `Đã đổi tên HLV từ ${user.username} thành ${targetName}`);
+      onClose();
+    } catch (err) {
+      console.error(err);
+      showAlert('Lỗi', 'Có lỗi khi đổi tên HLV.');
+    }
+    setIsProcessing(false);
+  };
+
+  const joinDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Không rõ';
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+      <div className="glass-panel w-full max-w-3xl rounded-3xl border border-white/10 shadow-2xl bg-slate-950 flex flex-col max-h-[90vh]">
+        {/* Header */}
+        <div className="p-4 border-b border-white/10 flex items-center justify-between bg-black/40 rounded-t-3xl">
+          <h3 className="font-black text-xl text-white uppercase tracking-wider flex items-center gap-2">
+            <User className="text-blue-400" /> Quản Lý HLV: <span className="text-cyan-400">{user.username}</span>
+          </h3>
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white">
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Scrollable Content */}
+        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar space-y-6">
+          
+          {/* Section 1: Overview */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-black/30 p-4 rounded-2xl border border-white/5 text-center">
+              <div className="text-[10px] text-gray-500 font-bold uppercase mb-1">Ngày Tham Gia</div>
+              <div className="font-black text-sm text-white">{joinDate}</div>
+            </div>
+            <div className="bg-black/30 p-4 rounded-2xl border border-white/5 text-center">
+              <div className="text-[10px] text-gray-500 font-bold uppercase mb-1">Tổng Trận</div>
+              <div className="font-black text-xl text-white">{user.stats?.played || 0}</div>
+            </div>
+            <div className="bg-black/30 p-4 rounded-2xl border border-white/5 text-center">
+              <div className="text-[10px] text-gray-500 font-bold uppercase mb-1">Tỉ Lệ Thắng</div>
+              <div className="font-black text-xl text-green-400">
+                {user.stats?.played > 0 ? Math.round((user.stats.wins / user.stats.played) * 100) : 0}%
+              </div>
+            </div>
+            <div className="bg-black/30 p-4 rounded-2xl border border-white/5 text-center">
+              <div className="text-[10px] text-gray-500 font-bold uppercase mb-1">Tổng Thẻ</div>
+              <div className="font-black text-xl text-fuchsia-400">{(user.collection || []).length}</div>
+            </div>
+          </div>
+
+          {/* Section 2: Update Resources */}
+          <div className="bg-slate-900/50 p-6 rounded-2xl border border-blue-500/20 shadow-[inset_0_0_20px_rgba(59,130,246,0.1)]">
+            <h4 className="font-black uppercase text-xs text-blue-400 tracking-widest border-b border-blue-500/20 pb-2 mb-4 flex items-center gap-2">
+              <TrendingUp size={14} /> Chỉnh Sửa Tài Nguyên
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              <div>
+                <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1 block">Xu (Coins)</label>
+                <div className="flex items-center gap-2 bg-black/50 p-1.5 rounded-lg border border-white/10">
+                  <Coins size={14} className="text-yellow-400 ml-2" />
+                  <input type="number" className="bg-transparent text-white font-bold w-full focus:outline-none" value={coins} onChange={e => setCoins(e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1 block">Gói Quà (Packs)</label>
+                <div className="flex items-center gap-2 bg-black/50 p-1.5 rounded-lg border border-white/10">
+                  <Gift size={14} className="text-fuchsia-400 ml-2" />
+                  <input type="number" className="bg-transparent text-white font-bold w-full focus:outline-none" value={freePacks} onChange={e => setFreePacks(e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1 block">Cấp Độ (Level)</label>
+                <div className="flex items-center gap-2 bg-black/50 p-1.5 rounded-lg border border-white/10">
+                  <Shield size={14} className="text-cyan-400 ml-2" />
+                  <input type="number" className="bg-transparent text-white font-bold w-full focus:outline-none" value={level} onChange={e => setLevel(e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1 block">Điểm XP</label>
+                <div className="flex items-center gap-2 bg-black/50 p-1.5 rounded-lg border border-white/10">
+                  <span className="text-indigo-400 ml-2 font-black text-[10px]">XP</span>
+                  <input type="number" className="bg-transparent text-white font-bold w-full focus:outline-none" value={xp} onChange={e => setXp(e.target.value)} />
+                </div>
+              </div>
+            </div>
+            <button 
+              className="btn !bg-blue-600 hover:!bg-blue-500 w-full !py-2.5 text-xs font-black uppercase tracking-widest rounded-xl"
+              onClick={handleUpdateStats} disabled={isProcessing}
+            >
+              Lưu Tài Nguyên
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Section 3: Reset Password */}
+            <div className="bg-red-950/20 p-6 rounded-2xl border border-red-500/20">
+              <h4 className="font-black uppercase text-xs text-red-400 tracking-widest border-b border-red-500/20 pb-2 mb-4 flex items-center gap-2">
+                <Key size={14} /> Đổi Mật Khẩu / PIN
+              </h4>
+              <div className="flex flex-col gap-3">
+                <input 
+                  type="text" 
+                  placeholder="Nhập PIN hoặc Mật Khẩu mới" 
+                  className="auth-input !bg-black/50 !border-red-500/30 !text-white !p-3 rounded-xl focus:!border-red-500"
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                />
+                <button 
+                  className="btn !bg-red-700 hover:!bg-red-600 w-full !py-2.5 text-xs font-black uppercase tracking-widest rounded-xl"
+                  onClick={handleResetPassword} disabled={isProcessing}
+                >
+                  Đổi Mật Khẩu
+                </button>
+              </div>
+            </div>
+
+            {/* Section 4: Rename User */}
+            <div className="bg-amber-950/20 p-6 rounded-2xl border border-amber-500/20">
+              <h4 className="font-black uppercase text-xs text-amber-400 tracking-widest border-b border-amber-500/20 pb-2 mb-4 flex items-center gap-2">
+                <Edit size={14} /> Đổi Tên HLV
+              </h4>
+              <div className="flex flex-col gap-3">
+                <input 
+                  type="text" 
+                  placeholder="Nhập tên mới..." 
+                  className="auth-input !bg-black/50 !border-amber-500/30 !text-white !p-3 rounded-xl focus:!border-amber-500"
+                  value={newUsername}
+                  onChange={e => setNewUsername(e.target.value)}
+                />
+                <button 
+                  className="btn !bg-amber-700 hover:!bg-amber-600 w-full !py-2.5 text-xs font-black uppercase tracking-widest rounded-xl"
+                  onClick={handleRename} disabled={isProcessing}
+                >
+                  Xác Nhận Đổi Tên
+                </button>
+              </div>
+              <p className="text-[9px] text-gray-500 mt-2 leading-tight">Lưu ý: Quá trình này sẽ dời toàn bộ dữ liệu của HLV sang tên mới. HLV có thể bị văng khỏi game nếu đang online.</p>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   );
