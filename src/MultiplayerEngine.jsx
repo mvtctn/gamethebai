@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Peer } from 'peerjs';
 import { Shield, Swords, Wifi, Zap, Trophy, History, Copy, ChevronLeft, User } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -162,7 +162,7 @@ const buildRandomSquad = (collection) => {
 
 export default function MultiplayerEngine({ squad, collection = [], randomMode = false, currentUser, onExit, onWin, initialJoinId, CardComponent, onShare }) {
   // If randomMode: build a random squad from collection, else use squad as-is
-  const effectiveSquad = React.useMemo(() => {
+  const effectiveSquad = useMemo(() => {
     if (randomMode && collection.length >= 11) {
       return buildRandomSquad(collection) || squad;
     }
