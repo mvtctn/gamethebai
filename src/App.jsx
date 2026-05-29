@@ -30,6 +30,7 @@ export default function App() {
   const {
     currentUser,
     collection,
+    setCollection,
     squad,
     setSquad,
     coins,
@@ -430,6 +431,25 @@ export default function App() {
                   }
                 }}>
                     {inSquad ? "❌ Rút Khỏi Đội Hình" : squad.length >= 11 ? "🚫 Đội Hình Chính Đầy (11/11)" : "⚽ Đưa Vào Đội Hình Chính"}
+                  </button>
+
+                  <button className="w-full mt-2 py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-widest transition-all cursor-pointer bg-red-900/20 border border-red-500/40 text-red-400 hover:bg-red-600 hover:text-white" onClick={() => {
+                  playFx('click');
+                  if (window.confirm("Bạn có chắc chắn muốn bỏ thẻ này khỏi bộ sưu tập? Hành động này không thể hoàn tác!")) {
+                    const newCollection = collection.filter(c => c.id !== selectedUpgradeCard.id);
+                    setCollection(newCollection);
+                    
+                    if (inSquad) {
+                      const newSquad = squad.filter(s => s.id !== selectedUpgradeCard.id);
+                      setSquad(newSquad);
+                      localStorage.setItem(`panini_${currentUser}_squad`, JSON.stringify(newSquad));
+                    }
+                    
+                    setSelectedUpgradeCard(null);
+                    showAlert("🗑️ Đã Bỏ Thẻ!", `Thẻ ${selectedUpgradeCard.name} đã bị xóa khỏi bộ sưu tập.`);
+                  }
+                }}>
+                    🗑️ Bỏ Thẻ Này
                   </button>
                 </div>
               </div>
