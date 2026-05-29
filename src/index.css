@@ -85,6 +85,20 @@ body::-webkit-scrollbar {
   will-change: transform;
 }
 
+@keyframes hero-cartoon-bounce {
+  0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 10px 15px rgba(251,191,36,0.5)); }
+  50% { transform: translateY(-10px) scale(1.05); filter: drop-shadow(0 20px 25px rgba(251,191,36,0.9)); }
+}
+
+.hero-cartoon-anim {
+  animation: hero-cartoon-bounce 3s ease-in-out infinite;
+  will-change: transform, filter;
+  transition: all 0.3s;
+}
+.hero-cartoon-anim:hover {
+  transform: scale(1.1) rotate(5deg);
+}
+
 /* Glassmorphism Menu — FIX GPU: Giảm blur từ 20-24px → 12px */
 .glass-panel {
   background: rgba(15, 23, 42, 0.6);

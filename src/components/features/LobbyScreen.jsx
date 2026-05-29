@@ -23,6 +23,11 @@ export function LobbyScreen() {
 
   return (
     (() => {
+  const [randomCartoon, setRandomCartoon] = React.useState(1);
+  React.useEffect(() => {
+    setRandomCartoon(Math.floor(Math.random() * 5) + 1);
+  }, []);
+
   const uniqueCards = new Set(collection.map(c => c.id)).size;
   const totalCards = playersData.length;
   const completionPercent = Math.round(uniqueCards / totalCards * 100) || 0;
@@ -35,7 +40,13 @@ export function LobbyScreen() {
                     <div className="relative flex flex-col items-center mb-12 sm:mb-16">
                       {/* Decorative glow removed for GPU perf - using radial bg on parent instead */}
                       
-                      <Trophy size={150} className="text-yellow-400 trophy-hero mb-4 drop-shadow-[0_0_40px_rgba(251,191,36,0.8)]" />
+                      <div className="relative mb-4 group cursor-pointer" onClick={() => setRandomCartoon(Math.floor(Math.random() * 5) + 1)}>
+                         <img 
+                            src={`/cartoons/${randomCartoon}.png`} 
+                            alt="Cartoon Player" 
+                            className="w-[180px] h-[180px] object-cover rounded-full mix-blend-screen drop-shadow-[0_0_40px_rgba(251,191,36,0.8)] hero-cartoon-anim" 
+                         />
+                      </div>
                       
                       <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-blue-100 to-blue-400 drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] mb-2 uppercase text-center leading-none pr-4">
                         World Cup
