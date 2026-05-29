@@ -3,7 +3,8 @@ import { Peer } from 'peerjs';
 import { Shield, Swords, Wifi, Zap, Trophy, History, Copy, ChevronLeft, User } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import confetti from 'canvas-confetti';
-import { ENV_WEATHER, ENV_TIME, FORM_STATES, generateCardForm, getSquadChemistry, getPlayerChemistryBoost } from './App';
+import { ENV_WEATHER, ENV_TIME, FORM_STATES } from './constants';
+import { generateCardForm, getSquadChemistry, getPlayerChemistryBoost } from './utils';
 import { MatchHistoryModal } from './MatchHistoryModal';
 
 const playFx = (type) => {
