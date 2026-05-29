@@ -162,12 +162,12 @@ const buildRandomSquad = (collection) => {
 
 export default function MultiplayerEngine({ squad, collection = [], randomMode = false, currentUser, onExit, onWin, initialJoinId, CardComponent, onShare }) {
   // If randomMode: build a random squad from collection, else use squad as-is
-  const effectiveSquad = (() => {
+  const effectiveSquad = React.useMemo(() => {
     if (randomMode && collection.length >= 11) {
       return buildRandomSquad(collection) || squad;
     }
     return squad;
-  })();
+  }, [randomMode, squad]); // collection is omitted to prevent regenerating mid-game if collection updates
   const [peerId, setPeerId] = useState('');
   const [remotePeerId, setRemotePeerId] = useState(initialJoinId || '');
   const [status, setStatus] = useState('lobby'); // 'lobby', 'connecting', 'playing', 'gameover'

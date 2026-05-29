@@ -2163,7 +2163,8 @@ const sendChallengeInvite = (targetUser, targetPeerId) => {
     if (status === 'accepted') {
       unsubscribeStatus();
       set(targetInviteRef, null);
-      setActivePvpTarget(targetPeerId);
+      setIsRandomPvp(false);
+      setActivePvpTarget("");
       setGameState('multiplayer');
     } else if (status === 'declined') {
       unsubscribeStatus();
@@ -2203,7 +2204,7 @@ const sendRandomChallengeInvite = (targetUser, targetPeerId) => {
       unsubscribeStatus();
       set(targetInviteRef, null);
       setIsRandomPvp(true);
-      setActivePvpTarget(targetPeerId);
+      setActivePvpTarget("");
       setGameState('multiplayer');
     } else if (status === 'declined') {
       unsubscribeStatus();
