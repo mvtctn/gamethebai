@@ -568,25 +568,27 @@ export default function App() {
               </div>
 
               {/* Action Button */}
-              <div className="flex flex-col items-center mt-3 gap-2">
-                <button className={`btn w-full font-black py-4 rounded-xl shadow-lg transition-all active:scale-95 text-base uppercase tracking-widest cursor-pointer ${alreadyClaimedToday ? '!bg-slate-800 text-gray-400 border border-white/5 cursor-not-allowed' : '!bg-gradient-to-r from-yellow-500 to-amber-600 text-black shadow-yellow-500/10 hover:shadow-yellow-500/20 hover:from-yellow-400 hover:to-amber-500'}`} onClick={() => {
+              <div className="grid grid-cols-2 gap-3 w-full mt-3">
+                <button className={`btn w-full font-black py-4 rounded-lg shadow-lg transition-all active:scale-95 text-xs sm:text-sm uppercase tracking-widest cursor-pointer ${alreadyClaimedToday ? '!bg-slate-800 text-gray-400 border border-white/5 cursor-not-allowed' : '!bg-gradient-to-r from-yellow-500 to-amber-600 text-black shadow-yellow-500/10 hover:shadow-yellow-500/20 hover:from-yellow-400 hover:to-amber-500'}`} onClick={() => {
                 if (!alreadyClaimedToday) {
                   performCheckIn();
                 } else {
                   showAlert("📅 Ngày Mai Quay Lại!", "Hôm nay bạn đã điểm danh rồi. Hãy quay lại vào ngày mai để nhận quà tiếp theo nhé!");
                 }
               }}>
-                  {alreadyClaimedToday ? "✓ Hôm Nay Đã Điểm Danh" : "📅 Điểm Danh Nhận Quà Ngay"}
+                  {alreadyClaimedToday ? "✓ Đã Điểm Danh" : "📅 Nhận Quà"}
                 </button>
                 
-                <button type="button" className="btn w-full !bg-slate-800/80 hover:!bg-slate-700 text-gray-300 hover:text-white font-extrabold py-3 rounded-xl transition-all active:scale-95 text-xs sm:text-sm uppercase tracking-wider cursor-pointer border border-white/5" onClick={() => {
+                <button type="button" className="btn w-full !bg-slate-800/80 hover:!bg-slate-700 text-gray-300 hover:text-white font-extrabold py-4 rounded-lg transition-all active:scale-95 text-xs sm:text-sm uppercase tracking-wider cursor-pointer border border-white/5" onClick={() => {
                 playFx('click');
                 setShowCheckInModal(false);
               }}>
-                  ✕ Đóng Cửa Sổ / Về Sảnh
+                  ✕ Đóng Lại
                 </button>
+              </div>
 
-                <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest text-center mt-1">
+              <div className="w-full flex justify-center">
+                <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest text-center mt-3">
                   Đừng bỏ lỡ ngày nào để duy trì chuỗi điểm danh nhé!
                 </p>
               </div>
