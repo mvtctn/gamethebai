@@ -19,7 +19,7 @@ import { Card, AnimatedHeroPlayer, ShareModal } from '../ui/SharedComponents';
 import { QRCodeSVG } from 'qrcode.react';
 
 export function PvpOnlineLobbyScreen() {
-  const { setGameState, coins, level, onlineUsers, setUserWallTarget, setActivePrivatePartner, setChatTab, squad, collection, sendChallengeInvite, sendRandomChallengeInvite, chatTab, unreadPartners, chatMessages, currentUser, chatInput, sendChatMessage, setChatInput, activePrivatePartner, privateMessages, sendPrivateMessage, privateChatInput, setPrivateChatInput, myPrivateChats, pvpHistory } = useGameContext();
+  const { setGameState, coins, level, onlineUsers, setUserWallTarget, setActivePrivatePartner, setChatTab, squad, collection, sendChallengeInvite, sendRandomChallengeInvite, chatTab, unreadPartners, chatMessages, currentUser, chatInput, sendChatMessage, setChatInput, activePrivatePartner, privateMessages, sendPrivateMessage, privateChatInput, setPrivateChatInput, myPrivateChats, pvpHistory, showPvpJoinModal, setShowPvpJoinModal, pvpJoinInput, setPvpJoinInput, setActivePvpTarget, showAlert } = useGameContext();
 
   return (
     <div className="pvp-lobby relative z-10 p-4 sm:p-8 pt-20 min-h-screen flex flex-col max-w-7xl mx-auto w-full">
@@ -31,6 +31,17 @@ export function PvpOnlineLobbyScreen() {
         setGameState('lobby');
       }}>
                 <ChevronLeft size={16} /> Về Sảnh
+              </button>
+              
+              <button className="btn !bg-emerald-600 hover:!bg-emerald-500 !py-2 !px-4 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 rounded-full border border-white/10 cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.3)] animate-pulse" onClick={() => {
+        playFx('click');
+        if (squad.length === 11) {
+          setShowPvpJoinModal(true);
+        } else {
+          showAlert("⚽ Đội hình chưa đủ!", "Bạn cần chọn đủ 11 cầu thủ xuất sắc trong đội hình trước khi tham chiến PvP Online!");
+        }
+      }}>
+                <Wifi size={16} /> Nhập Mã / Trận Mới
               </button>
             </div>
             
@@ -353,6 +364,33 @@ export function PvpOnlineLobbyScreen() {
             </div>
             
           </div>
+          
+          {showPvpJoinModal && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80  p-4 animate-fade-in">
+              <div className="glass-panel p-8 sm:p-10 rounded-[2rem] max-w-sm w-full flex flex-col items-center bg-gradient-to-t from-red-900/40 to-slate-900 shadow-[0_0_50px_rgba(0,0,0,0.8)] relative border border-white/10">
+                <button className="absolute top-4 right-4 text-gray-400 hover:text-white bg-black/40 hover:bg-black/80 p-2 rounded-full w-8 h-8 flex items-center justify-center transition-colors" onClick={() => setShowPvpJoinModal(false)}>
+                  ✕
+                </button>
+                <Wifi size={48} className="text-red-400 mb-6 drop-shadow-[0_0_15px_rgba(248,113,113,0.8)]" />
+                <h2 className="text-2xl font-black text-white mb-2 uppercase tracking-widest text-center">Đấu PVP</h2>
+                <p className="text-sm text-gray-400 text-center mb-6">Tạo trận mới hoặc nhập mã để tham gia trận của bạn bè.</p>
+                
+                <input type="text" className="w-full bg-black/50 border border-white/20 rounded-xl p-3 text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 mb-4 text-center font-mono text-lg" placeholder="Nhập mã trận đấu..." value={pvpJoinInput} onChange={e => setPvpJoinInput(e.target.value)} />
+                
+                <div className="flex flex-col gap-3 w-full">
+                  <button className="btn !bg-red-600 hover:!bg-red-500 w-full" onClick={() => {
+                    if (pvpJoinInput.trim()) {
+                      setActivePvpTarget(pvpJoinInput.trim());
+                    } else {
+                      setActivePvpTarget(null); // Tạo trận mới
+                    }
+                    setGameState('multiplayer');
+                    setShowPvpJoinModal(false);
+                  }}>
+                    {pvpJoinInput.trim() ? 'Tham Gia Trận' : 'Tạo Trận Mới'}
+                  </button>
+                </div>
+              </div>
+            </div>}
         </div>
   );
 }
