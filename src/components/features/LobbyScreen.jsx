@@ -19,7 +19,7 @@ import { Card, AnimatedHeroPlayer, ShareModal } from '../ui/SharedComponents';
 import { QRCodeSVG } from 'qrcode.react';
 
 export function LobbyScreen() {
-  const { collection, coins, freePacks, setOpenedCards, setGameState, showAlert, squad, setShowCheckInModal, chatTab, setChatTab, unreadPartners, onlineUsers, chatMessages, currentUser, setUserWallTarget, chatInput, sendChatMessage, setChatInput, activePrivatePartner, setActivePrivatePartner, privateMessages, sendPrivateMessage, privateChatInput, setPrivateChatInput, myPrivateChats, sendChallengeInvite, showPvpJoinModal, setShowPvpJoinModal, pvpJoinInput, setPvpJoinInput, setActivePvpTarget } = useGameContext();
+  const { collection, coins, freePacks, setOpenedCards, setGameState, showAlert, squad, setShowCheckInModal, chatTab, setChatTab, unreadPartners, onlineUsers, chatMessages, currentUser, setUserWallTarget, chatInput, sendChatMessage, setChatInput, activePrivatePartner, setActivePrivatePartner, privateMessages, sendPrivateMessage, privateChatInput, setPrivateChatInput, myPrivateChats, sendChallengeInvite, sendRandomChallengeInvite, showPvpJoinModal, setShowPvpJoinModal, pvpJoinInput, setPvpJoinInput, setActivePvpTarget } = useGameContext();
 
   return (
     (() => {
@@ -385,6 +385,13 @@ export function LobbyScreen() {
                   }
                 }} title={squad.length < 11 ? 'Đội hình cần đủ 11 người để thách đấu' : `Thách đấu ngay với ${user.username}`}>
                                       <Swords size={10} /> Đấu
+                                    </button>
+                                    <button className={`btn !py-2 !px-3 text-[10px] flex items-center gap-1 shadow-md transition-all uppercase font-black tracking-widest cursor-pointer ${collection.length < 11 ? 'opacity-40 !bg-gray-700 cursor-not-allowed text-gray-400' : 'bg-gradient-to-r from-fuchsia-700 to-purple-700 hover:from-fuchsia-600 hover:to-purple-600 text-white border border-fuchsia-400/20 hover:scale-105'}`} disabled={collection.length < 11} onClick={() => {
+                  if (collection.length >= 11) {
+                    sendRandomChallengeInvite(user.username, user.peerId);
+                  }
+                }} title={collection.length < 11 ? 'Cần ít nhất 11 thẻ để Đấu Random' : `Thách đấu Random với ${user.username}`}>
+                                      🎲 Random
                                     </button>
                                   </div>
                                 </div>)}

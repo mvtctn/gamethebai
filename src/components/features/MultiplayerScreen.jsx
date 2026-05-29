@@ -20,12 +20,12 @@ import { PackageOpen, Users, Swords, ChevronRight, CheckCircle2, Lock, Coins, Sp
 import { Card, AnimatedHeroPlayer, ShareModal } from '../ui/SharedComponents';
 import { QRCodeSVG } from 'qrcode.react';
 
-export function MultiplayerScreen() {
-  const { squad, currentUser, activePvpTarget, handlePvpEnd, setCoins, setActiveShareData } = useGameContext();
+export function MultiplayerScreen({ randomMode = false }) {
+  const { squad, collection, currentUser, activePvpTarget, handlePvpEnd, setCoins, setActiveShareData } = useGameContext();
 
   return (
     <Suspense fallback={<div className="flex flex-col items-center justify-center py-20 gap-4 w-full h-full text-cyan-400 font-extrabold tracking-widest text-xs uppercase animate-pulse"><div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>Đang tải Đấu trường...</div>}>
-          <MultiplayerEngine squad={squad} currentUser={currentUser} initialJoinId={activePvpTarget} CardComponent={Card} onExit={handlePvpEnd} onWin={() => {
+          <MultiplayerEngine squad={squad} collection={collection} randomMode={randomMode} currentUser={currentUser} initialJoinId={activePvpTarget} CardComponent={Card} onExit={handlePvpEnd} onWin={() => {
     setCoins(c => c + 100);
   }} onShare={(result, opponentName, myScore, opponentScore) => {
     setActiveShareData({

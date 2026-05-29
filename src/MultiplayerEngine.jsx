@@ -106,7 +106,68 @@ const playFx = (type) => {
   }
 };
 
-export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, initialJoinId, CardComponent, onShare }) {
+// --- RANDOM PVP: Build a mixed-tier squad from user's collection ---
+const buildRandomSquad = (collection) => {
+  if (!collection || collection.length < 11) return null;
+
+  const shuffle = (arr) => {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+
+  const byRarity = {
+    Icon: shuffle(collection.filter(c => c.rarity === 'Icon')),
+    Legendary: shuffle(collection.filter(c => c.rarity === 'Legendary')),
+    Diamond: shuffle(collection.filter(c => c.rarity === 'Diamond')),
+    Platinum: shuffle(collection.filter(c => c.rarity === 'Platinum')),
+    Gold: shuffle(collection.filter(c => c.rarity === 'Gold')),
+    Silver: shuffle(collection.filter(c => c.rarity === 'Silver')),
+    Bronze: shuffle(collection.filter(c => c.rarity === 'Bronze')),
+  };
+
+  const picked = [];
+  const take = (tier, n) => {
+    const available = byRarity[tier] || [];
+    const count = Math.min(n, available.length);
+    for (let i = 0; i < count && picked.length < 11; i++) {
+      picked.push(available[i]);
+    }
+  };
+
+  // Pick by tier quota
+  take('Icon', 1);
+  take('Legendary', Math.min(1, 2 - picked.length));
+  take('Diamond', Math.min(3, 4 - picked.length));
+  take('Platinum', Math.min(2, 7 - picked.length));
+  take('Gold', Math.min(2, 9 - picked.length));
+  take('Silver', Math.min(1, 10 - picked.length));
+  take('Bronze', Math.min(1, 11 - picked.length));
+
+  // If still not 11, fill from any remaining cards not yet picked
+  if (picked.length < 11) {
+    const pickedIds = new Set(picked.map(c => c.id));
+    const remaining = shuffle(collection.filter(c => !pickedIds.has(c.id)));
+    for (const card of remaining) {
+      if (picked.length >= 11) break;
+      picked.push(card);
+    }
+  }
+
+  return shuffle(picked).slice(0, 11);
+};
+
+export default function MultiplayerEngine({ squad, collection = [], randomMode = false, currentUser, onExit, onWin, initialJoinId, CardComponent, onShare }) {
+  // If randomMode: build a random squad from collection, else use squad as-is
+  const effectiveSquad = (() => {
+    if (randomMode && collection.length >= 11) {
+      return buildRandomSquad(collection) || squad;
+    }
+    return squad;
+  })();
   const [peerId, setPeerId] = useState('');
   const [remotePeerId, setRemotePeerId] = useState(initialJoinId || '');
   const [status, setStatus] = useState('lobby'); // 'lobby', 'connecting', 'playing', 'gameover'
@@ -114,8 +175,8 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
   const peerInstance = useRef(null);
   const connRef = useRef(null);
 
-  const [myDeck, setMyDeck] = useState([...squad]);
-  const [opponentDeckCount, setOpponentDeckCount] = useState(squad.length);
+  const [myDeck, setMyDeck] = useState([...effectiveSquad]);
+  const [opponentDeckCount, setOpponentDeckCount] = useState(effectiveSquad.length);
   const [myScore, setMyScore] = useState(0);
   const [opponentScore, setOpponentScore] = useState(0);
   const [opponentUsername, setOpponentUsername] = useState('Đối Thủ');
@@ -147,7 +208,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
 
   const myScoreRef = useRef(0);
   const opponentScoreRef = useRef(0);
-  const opponentDeckCountRef = useRef(squad.length);
+  const opponentDeckCountRef = useRef(effectiveSquad.length);
 
   useEffect(() => { myScoreRef.current = myScore; }, [myScore]);
   useEffect(() => { opponentScoreRef.current = opponentScore; }, [opponentScore]);
@@ -162,7 +223,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
   };
 
   // Stable references for connection callbacks to prevent stale state issues
-  const myDeckRef = useRef([...squad]);
+  const myDeckRef = useRef([...effectiveSquad]);
   const myPlayedCardRef = useRef(null);
   const opponentPlayedCardRef = useRef(null);
   const opponentPlayedStatRef = useRef(null);
@@ -272,11 +333,11 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     const envBonus2 = formResult2.envBonus || 0; // guest
 
     // Squad Chemistry Boost (host uses squad, guest uses opponentSquad)
-    const chemBonus1 = getPlayerChemistryBoost(hostCard, squad); // host
+    const chemBonus1 = getPlayerChemistryBoost(hostCard, effectiveSquad); // host
     const chemBonus2 = getPlayerChemistryBoost(guestCard, opponentSquadRef.current); // guest
 
     // Captain Boost (+3 OVR)
-    const capBonus1 = (squad.length > 0 && hostCard.id === squad[0].id) ? 3 : 0;
+    const capBonus1 = (effectiveSquad.length > 0 && hostCard.id === effectiveSquad[0].id) ? 3 : 0;
     const capBonus2 = (opponentSquadRef.current.length > 0 && guestCard.id === opponentSquadRef.current[0].id) ? 3 : 0;
 
     const hostLvlBonus = ((hostCard.level || 1) - 1) * 2;
@@ -404,7 +465,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
         result: winner === 'guest' ? 'win' : winner === 'host' ? 'loss' : 'draw'
       }
     });
-  }, [squad, sendData]);
+  }, [effectiveSquad, sendData]);
 
   // Apply a round result (from local calculation or received from host)
   const applyRoundResult = useCallback(({
@@ -464,7 +525,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     updatePhase('result');
     roundCountRef.current += 1;
     setRoundCount(prev => prev + 1);
-    const isGameOver = roundCountRef.current >= squad.length;
+    const isGameOver = roundCountRef.current >= effectiveSquad.length;
 
     if (roundTimeoutRef.current) {
       clearTimeout(roundTimeoutRef.current);
@@ -508,7 +569,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
         }
       }
     }, 2500);
-  }, [squad.length, sendData]);
+  }, [effectiveSquad.length, sendData]);
 
   const handleNetworkData = useCallback((data) => {
     if (data.type === 'ready') {
@@ -533,7 +594,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       updateActiveStat(firstStat);
       updatePhase('select_card');
       setTimeout(() => {
-        sendData({ type: 'start_round', stat: firstStat, roundIndex: 0, weatherIdx, timeIdx, seed: roundSeed, squad: squad, username: currentUser });
+        sendData({ type: 'start_round', stat: firstStat, roundIndex: 0, weatherIdx, timeIdx, seed: roundSeed, squad: effectiveSquad, username: currentUser });
       }, 300);
     }
     else if (data.type === 'start_round') {
@@ -632,7 +693,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
     else if (data.type === 'pong') {
       window.lastPvpPong = Date.now();
     }
-  }, [calculateRoundResult, applyRoundResult, sendData, squad]);
+  }, [calculateRoundResult, applyRoundResult, sendData, effectiveSquad]);
 
   const setupConnectionHandlers = useCallback((conn) => {
     conn.on('data', (data) => {
@@ -713,7 +774,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
             setupConnectionHandlers(conn);
             // GUEST sends ready signal once open!
             setTimeout(() => {
-              conn.send({ type: 'ready', squad: squad, username: currentUser });
+              conn.send({ type: 'ready', squad: effectiveSquad, username: currentUser });
             }, 500);
           });
         } else {
@@ -846,7 +907,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
       setupConnectionHandlers(conn);
       // GUEST sends ready signal on manual connect
       setTimeout(() => {
-        conn.send({ type: 'ready', squad: squad, username: currentUser });
+        conn.send({ type: 'ready', squad: effectiveSquad, username: currentUser });
       }, 500);
     });
   };
@@ -955,9 +1016,19 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
             <ChevronLeft size={18} /> Về Sảnh
           </button>
         </div>
-        <h2 className="text-3xl sm:text-5xl font-black italic tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-amber-500 mb-6 uppercase text-center flex justify-center items-center gap-3 drop-shadow-[0_4px_10px_rgba(239,68,68,0.3)]">
+        <h2 className="text-3xl sm:text-5xl font-black italic tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-amber-500 mb-3 uppercase text-center flex justify-center items-center gap-3 drop-shadow-[0_4px_10px_rgba(239,68,68,0.3)]">
           <Wifi size={36} className="text-red-500 animate-pulse" /> PVP ONLINE
         </h2>
+        {randomMode && (
+          <div className="flex items-center justify-center gap-2 mb-5 bg-gradient-to-r from-fuchsia-900/40 via-purple-900/40 to-indigo-900/40 border border-fuchsia-500/40 px-6 py-2.5 rounded-2xl shadow-[0_0_20px_rgba(168,85,247,0.3)]">
+            <span className="text-2xl animate-bounce-subtle">🎲</span>
+            <div className="text-center">
+              <div className="text-fuchsia-300 font-black text-sm uppercase tracking-widest">Chế Độ Random PVP</div>
+              <div className="text-purple-400 text-[10px] font-medium">Đội hình được tạo ngẫu nhiên từ bộ sưu tập của bạn</div>
+            </div>
+            <span className="text-2xl animate-bounce-subtle">🎲</span>
+          </div>
+        )}
         <div className="flex flex-col gap-5 w-full">
           {/* TẠO PHÒNG */}
           <div className="glass-panel p-5 sm:p-7 rounded-3xl flex flex-col items-center text-center gap-3 border border-amber-500/20 shadow-[0_0_30px_rgba(251,191,36,0.15)]">
@@ -1052,7 +1123,7 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
 
         <div className="flex flex-col items-center">
           <div className="text-[9px] font-bold tracking-widest text-gray-500 uppercase mb-0.5">
-            Vòng {Math.min(roundCount + 1, squad.length)}/{squad.length}
+            Vòng {Math.min(roundCount + 1, effectiveSquad.length)}/{effectiveSquad.length}
           </div>
           <div className="text-xl sm:text-2xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-blue-400">VS</div>
         </div>
@@ -1329,8 +1400,8 @@ export default function MultiplayerEngine({ squad, currentUser, onExit, onWin, i
             <div className="overflow-x-auto hide-scrollbar" style={{ height: 'clamp(140px, 20vh, 180px)' }}>
               <div className="flex flex-row items-center h-full px-3 py-2 gap-2 min-w-max">
                 {myDeck.map((player, idx) => {
-                  const isCap = squad.length > 0 && player.id === squad[0].id;
-                  const chemBoost = getPlayerChemistryBoost(player, squad);
+                  const isCap = effectiveSquad.length > 0 && player.id === effectiveSquad[0].id;
+                  const chemBoost = getPlayerChemistryBoost(player, effectiveSquad);
                   
                   return (
                     <div key={player.id}

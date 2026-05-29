@@ -19,7 +19,7 @@ import { Card, AnimatedHeroPlayer, ShareModal } from '../ui/SharedComponents';
 import { QRCodeSVG } from 'qrcode.react';
 
 export function PvpOnlineLobbyScreen() {
-  const { setGameState, coins, level, onlineUsers, setUserWallTarget, setActivePrivatePartner, setChatTab, squad, sendChallengeInvite, chatTab, unreadPartners, chatMessages, currentUser, chatInput, sendChatMessage, setChatInput, activePrivatePartner, privateMessages, sendPrivateMessage, privateChatInput, setPrivateChatInput, myPrivateChats, pvpHistory } = useGameContext();
+  const { setGameState, coins, level, onlineUsers, setUserWallTarget, setActivePrivatePartner, setChatTab, squad, collection, sendChallengeInvite, sendRandomChallengeInvite, chatTab, unreadPartners, chatMessages, currentUser, chatInput, sendChatMessage, setChatInput, activePrivatePartner, privateMessages, sendPrivateMessage, privateChatInput, setPrivateChatInput, myPrivateChats, pvpHistory } = useGameContext();
 
   return (
     <div className="pvp-lobby relative z-10 p-4 sm:p-8 pt-20 min-h-screen flex flex-col max-w-7xl mx-auto w-full">
@@ -121,6 +121,13 @@ export function PvpOnlineLobbyScreen() {
                 }
               }}>
                             <Swords size={12} /> Thách Đấu
+                          </button>
+                          <button className={`btn !py-2 !px-2 text-[10px] flex items-center justify-center gap-1 shadow-md transition-all uppercase font-black tracking-widest cursor-pointer rounded-xl ${collection.length < 11 ? 'opacity-40 !bg-gray-700 cursor-not-allowed text-gray-400 border border-transparent' : 'bg-gradient-to-r from-fuchsia-700 to-purple-700 hover:from-fuchsia-600 hover:to-purple-600 text-white border border-fuchsia-400/20 shadow-[0_0_12px_rgba(168,85,247,0.25)]'}`} disabled={collection.length < 11} onClick={() => {
+                if (collection.length >= 11) {
+                  sendRandomChallengeInvite(user.username, user.peerId);
+                }
+              }} title="Đấu ngẫu nhiên từ bộ sưu tập">
+                            🎲
                           </button>
                         </div>
                       </div>;

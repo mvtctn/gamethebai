@@ -1808,6 +1808,8 @@ const [chatInput, setChatInput] = useState('');
 
 const [pvpHistory, setPvpHistory] = useState([]);
 
+const [isRandomPvp, setIsRandomPvp] = useState(false);
+
 // Local Match History Loader (Offline / Cache Fallback)
 
 // Local Match History Loader (Offline / Cache Fallback)
@@ -2094,6 +2096,46 @@ const sendChallengeInvite = (targetUser, targetPeerId) => {
   });
 };
 
+const sendRandomChallengeInvite = (targetUser, targetPeerId) => {
+  if (!currentUser || !isConnectedToFirebase) return;
+  if (collection.length < 11) {
+    showAlert('⚠️ Không Đủ Thẻ', 'Bạn cần có ít nhất 11 thẻ trong bộ sưu tập để tham gia Đấu Random!');
+    return;
+  }
+  playFx('click');
+  const targetInviteRef = ref(database, `/invites/${targetUser}`);
+  const myPeerId = sessionStorage.getItem('panini_room_code') || '';
+  set(targetInviteRef, {
+    host: currentUser,
+    hostPeerId: myPeerId,
+    hostRating: collection.length,
+    status: 'pending',
+    mode: 'random'
+  });
+  const chatRef = ref(database, '/chat');
+  push(chatRef, {
+    sender: 'HỆ THỐNG 📣',
+    text: `🎲 [${currentUser}] đã thách đấu [${targetUser}] bằng chế độ RANDOM PVP!`,
+    timestamp: serverTimestamp()
+  });
+  showAlert('🎲 Lời Mời Random Đã Gửi!', `Đã gửi lời mời Đấu Random tới ${targetUser}! Vui lòng chờ đối thủ phản hồi...`);
+  const statusRef = ref(database, `/invites/${targetUser}/status`);
+  const unsubscribeStatus = onValue(statusRef, snap => {
+    const status = snap.val();
+    if (status === 'accepted') {
+      unsubscribeStatus();
+      set(targetInviteRef, null);
+      setIsRandomPvp(true);
+      setActivePvpTarget(targetPeerId);
+      setGameState('multiplayer');
+    } else if (status === 'declined') {
+      unsubscribeStatus();
+      set(targetInviteRef, null);
+      showAlert('😢 Lời Mời Bị Từ Chối', `Đối thủ ${targetUser} đã từ chối lời mời Đấu Random!`);
+    }
+  });
+};
+
 const acceptChallenge = invite => {
   if (!currentUser || !isConnectedToFirebase) return;
   playFx('click');
@@ -2102,6 +2144,11 @@ const acceptChallenge = invite => {
     ...invite,
     status: 'accepted'
   });
+  if (invite.mode === 'random') {
+    setIsRandomPvp(true);
+  } else {
+    setIsRandomPvp(false);
+  }
   setActivePvpTarget(invite.hostPeerId);
   setGameState('multiplayer');
   setTimeout(() => {
@@ -3626,5 +3673,5 @@ const handlePvpEnd = (result, opponentName = null, myScore = null, opponentScore
   setCurrentAiCard(null);
 };
 
-return { gameConfig, currentUser, collection, squad, setSquad, coins, setCoins, gameState, setGameState, activePvpTarget, setActivePvpTarget, showPvpJoinModal, setShowPvpJoinModal, pvpJoinInput, setPvpJoinInput, activeBannerIdx, referredBy, referrals, refCodeInput, setRefCodeInput, showSharePoster, setShowSharePoster, selectedUpgradeCard, setSelectedUpgradeCard, upgradeCard, submitReferralCode, claimReferralReward, performCheckIn, authUsername, setAuthUsername, authPin, setAuthPin, authStep, setAuthStep, authCheckingUser, setAuthFoundUser, isPackOpeningAnim, openedCards, setOpenedCards, quests, setQuests, lastReward, level, xp, stats, email, profileOldPassword, setProfileOldPassword, profileNewPassword, setProfileNewPassword, profileConfirmPassword, setProfileConfirmPassword, profileEmailInput, setProfileEmailInput, newUsernameInput, setNewUsernameInput, isRenaming, showLevelUpModal, setShowLevelUpModal, userWallTarget, setUserWallTarget, wallData, userWallPosts, globalPosts, socialWallTab, setSocialWallTab, mobileSubTab, setMobileSubTab, newPostText, commentInputs, setCommentInputs, loadingWall, showGiftModal, setShowGiftModal, giftAmount, setGiftAmount, giftLoading, loadingGlobalPosts, showGiftCardModal, setShowGiftCardModal, giftCardLoading, giftCardSearch, setGiftCardSearch, selectedGiftCard, setSelectedGiftCard, giftCardFilterRarity, setGiftCardFilterRarity, socialSearchQuery, setSocialSearchQuery, showMentionDropdown, activePrivatePartner, setActivePrivatePartner, privateMessages, myPrivateChats, privateChatInput, setPrivateChatInput, unreadPartners, rewardedMilestones, claimedLevelRewards, freePacks, pityCounter, setRevealingCards, packType, setPackType, leaderboardData, loadingLeaderboard, leaderboardTab, setLeaderboardTab, checkInState, alreadyClaimedToday, equippedTitle, setEquippedTitle, claimedAchievements, setClaimedAchievements, customAvatar, setCustomAvatar, customBanner, setCustomBanner, isCustomizingProfile, setIsCustomizingProfile, previewAvatar, setPreviewAvatar, previewBanner, setPreviewBanner, showCheckInModal, setShowCheckInModal, activeShareData, setActiveShareData, showroomFilterState, setShowroomFilterState, showroomHoverState, setShowroomHoverState, claimMilestone, renderPostText, handleComposerChange, getAutocompleteSuggestions, insertMention, insertEmoji, handleCreatePost, handleSendGift, getCardGiftFee, handleSendCardGift, handleLikePost, handleCreateComment, sendPrivateMessage, onlineUsers, chatMessages, activeInvite, chatTab, setChatTab, chatInput, setChatInput, pvpHistory, sendChatMessage, sendChallengeInvite, acceptChallenge, declineChallenge, difficulty, setDifficulty, matchPhase, setMatchPhase, playerHand, aiHand, matchScore, matchHistory, showHistoryModal, setShowHistoryModal, selectedPlayerCard, setSelectedPlayerCard, selectedStat, setSelectedStat, currentAiCard, setCurrentAiCard, playedCardIds, matchEnvironment, handleCheckUsername, handleVerifyPin, handleCreateAccount, handleUpdateEmail, handleUpdatePassword, handleRenameUser, handleLogout, RARITY_TIERS, getCardRarity, PACK_CONFIGS, openPack, startMatch, triggerAiTurn, playRoundAiTurn, playRound, nextRound, dismissRoundResult, returnToLobby, gameAlert, setGameAlert, showAlert, handlePvpEnd };
+return { gameConfig, currentUser, collection, squad, setSquad, coins, setCoins, gameState, setGameState, activePvpTarget, setActivePvpTarget, showPvpJoinModal, setShowPvpJoinModal, pvpJoinInput, setPvpJoinInput, activeBannerIdx, referredBy, referrals, refCodeInput, setRefCodeInput, showSharePoster, setShowSharePoster, selectedUpgradeCard, setSelectedUpgradeCard, upgradeCard, submitReferralCode, claimReferralReward, performCheckIn, authUsername, setAuthUsername, authPin, setAuthPin, authStep, setAuthStep, authCheckingUser, setAuthFoundUser, isPackOpeningAnim, openedCards, setOpenedCards, quests, setQuests, lastReward, level, xp, stats, email, profileOldPassword, setProfileOldPassword, profileNewPassword, setProfileNewPassword, profileConfirmPassword, setProfileConfirmPassword, profileEmailInput, setProfileEmailInput, newUsernameInput, setNewUsernameInput, isRenaming, showLevelUpModal, setShowLevelUpModal, userWallTarget, setUserWallTarget, wallData, userWallPosts, globalPosts, socialWallTab, setSocialWallTab, mobileSubTab, setMobileSubTab, newPostText, commentInputs, setCommentInputs, loadingWall, showGiftModal, setShowGiftModal, giftAmount, setGiftAmount, giftLoading, loadingGlobalPosts, showGiftCardModal, setShowGiftCardModal, giftCardLoading, giftCardSearch, setGiftCardSearch, selectedGiftCard, setSelectedGiftCard, giftCardFilterRarity, setGiftCardFilterRarity, socialSearchQuery, setSocialSearchQuery, showMentionDropdown, activePrivatePartner, setActivePrivatePartner, privateMessages, myPrivateChats, privateChatInput, setPrivateChatInput, unreadPartners, rewardedMilestones, claimedLevelRewards, freePacks, pityCounter, setRevealingCards, packType, setPackType, leaderboardData, loadingLeaderboard, leaderboardTab, setLeaderboardTab, checkInState, alreadyClaimedToday, equippedTitle, setEquippedTitle, claimedAchievements, setClaimedAchievements, customAvatar, setCustomAvatar, customBanner, setCustomBanner, isCustomizingProfile, setIsCustomizingProfile, previewAvatar, setPreviewAvatar, previewBanner, setPreviewBanner, showCheckInModal, setShowCheckInModal, activeShareData, setActiveShareData, showroomFilterState, setShowroomFilterState, showroomHoverState, setShowroomHoverState, claimMilestone, renderPostText, handleComposerChange, getAutocompleteSuggestions, insertMention, insertEmoji, handleCreatePost, handleSendGift, getCardGiftFee, handleSendCardGift, handleLikePost, handleCreateComment, sendPrivateMessage, onlineUsers, chatMessages, activeInvite, chatTab, setChatTab, chatInput, setChatInput, pvpHistory, sendChatMessage, sendChallengeInvite, sendRandomChallengeInvite, isRandomPvp, acceptChallenge, declineChallenge, difficulty, setDifficulty, matchPhase, setMatchPhase, playerHand, aiHand, matchScore, matchHistory, showHistoryModal, setShowHistoryModal, selectedPlayerCard, setSelectedPlayerCard, selectedStat, setSelectedStat, currentAiCard, setCurrentAiCard, playedCardIds, matchEnvironment, handleCheckUsername, handleVerifyPin, handleCreateAccount, handleUpdateEmail, handleUpdatePassword, handleRenameUser, handleLogout, RARITY_TIERS, getCardRarity, PACK_CONFIGS, openPack, startMatch, triggerAiTurn, playRoundAiTurn, playRound, nextRound, dismissRoundResult, returnToLobby, gameAlert, setGameAlert, showAlert, handlePvpEnd };
 }

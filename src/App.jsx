@@ -182,6 +182,7 @@ export default function App() {
     pvpHistory,
     sendChatMessage,
     sendChallengeInvite,
+    isRandomPvp,
     acceptChallenge,
     declineChallenge,
     difficulty,
@@ -234,17 +235,29 @@ export default function App() {
 
       {currentUser && <>
           {activeInvite && <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/95  p-4 animate-fade-in ">
-              <div className="glass-panel p-8 sm:p-10 rounded-[2.5rem] max-w-sm w-full flex flex-col items-center bg-gradient-to-b from-red-950/80 via-slate-900 to-black shadow-[0_0_80px_rgba(239,68,68,0.4)] border border-red-500/30 text-center relative">
-                <div className="w-20 h-20 bg-red-900/60 rounded-full flex items-center justify-center border-4 border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.6)] mb-6 animate-bounce">
-                  <Swords size={40} className="text-red-400" />
+              <div className={`glass-panel p-8 sm:p-10 rounded-[2.5rem] max-w-sm w-full flex flex-col items-center shadow-[0_0_80px_rgba(239,68,68,0.4)] border text-center relative ${activeInvite.mode === 'random' ? 'bg-gradient-to-b from-fuchsia-950/80 via-slate-900 to-black border-fuchsia-500/30' : 'bg-gradient-to-b from-red-950/80 via-slate-900 to-black border-red-500/30'}`}>
+                <div className={`w-20 h-20 rounded-full flex items-center justify-center border-4 mb-6 animate-bounce ${activeInvite.mode === 'random' ? 'bg-fuchsia-900/60 border-fuchsia-500 shadow-[0_0_30px_rgba(168,85,247,0.6)]' : 'bg-red-900/60 border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.6)]'}`}>
+                  {activeInvite.mode === 'random' ? <span className="text-4xl">🎲</span> : <Swords size={40} className="text-red-400" />}
                 </div>
                 
-                <h3 className="text-sm font-black text-red-500 tracking-widest uppercase mb-1">Thử Thách PVP Tuyệt Đối ⚔️</h3>
-                <h2 className="text-2xl font-black text-white mb-4 uppercase tracking-wider">LỜI THÁCH ĐẤU!</h2>
-                
-                <p className="text-gray-300 text-sm leading-relaxed mb-6 font-semibold">
-                  HLV <span className="text-amber-400 font-extrabold">{activeInvite.host}</span> (Đội hình: <span className="text-cyan-400 font-black">{activeInvite.hostRating} OVR</span>) muốn thách đấu PVP với bạn! Bạn có dám chấp nhận?
-                </p>
+                {activeInvite.mode === 'random' ? (
+                  <>
+                    <h3 className="text-sm font-black text-fuchsia-400 tracking-widest uppercase mb-1">Thách Đấu Random PVP 🎲</h3>
+                    <h2 className="text-2xl font-black text-white mb-4 uppercase tracking-wider">LỜI THÁCH RANDOM!</h2>
+                    <p className="text-gray-300 text-sm leading-relaxed mb-2 font-semibold">
+                      HLV <span className="text-amber-400 font-extrabold">{activeInvite.host}</span> muốn thách đấu <span className="text-fuchsia-400 font-black">RANDOM PVP</span> với bạn!
+                    </p>
+                    <p className="text-purple-400 text-xs mb-6 leading-relaxed bg-fuchsia-950/30 border border-fuchsia-500/20 px-4 py-2 rounded-xl">🎲 Đội hình sẽ được tạo ngẫu nhiên từ bộ sưu tập của mỗi người. Ai chọn thẻ tốt hơn sẽ chiến thắng!</p>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-sm font-black text-red-500 tracking-widest uppercase mb-1">Thử Thách PVP Tuyệt Đối ⚔️</h3>
+                    <h2 className="text-2xl font-black text-white mb-4 uppercase tracking-wider">LỜI THÁCH ĐẤU!</h2>
+                    <p className="text-gray-300 text-sm leading-relaxed mb-6 font-semibold">
+                      HLV <span className="text-amber-400 font-extrabold">{activeInvite.host}</span> (Đội hình: <span className="text-cyan-400 font-black">{activeInvite.hostRating} OVR</span>) muốn thách đấu PVP với bạn! Bạn có dám chấp nhận?
+                    </p>
+                  </>
+                )}
                 
                 <div className="flex gap-4 w-full mt-2">
                   <button className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-full border border-emerald-500/40 bg-emerald-950/20 text-emerald-300 hover:text-white hover:bg-gradient-to-r hover:from-emerald-600 hover:to-green-500 hover:border-transparent hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] active:scale-95 transition-all duration-300 font-extrabold uppercase text-xs tracking-widest cursor-pointer " onClick={() => acceptChallenge(activeInvite)}>
@@ -312,7 +325,7 @@ export default function App() {
 
       {gameState === 'pvpOnlineLobby' && <PvpOnlineLobbyScreen />}
 
-      {gameState === 'multiplayer' && <MultiplayerScreen />}
+      {gameState === 'multiplayer' && <MultiplayerScreen randomMode={isRandomPvp} />}
 
       {gameState === 'quests' && <QuestsScreen />}
 
