@@ -159,7 +159,7 @@ export function LandingPage() {
                     <form onSubmit={handleVerifyPin} className="flex flex-col gap-4">
                       <div className="landing-form-group">
                         <label className="landing-label">🔑 Mã PIN 4 Số</label>
-                        <input type="number" inputMode="numeric" pattern="[0-9]*" maxLength={4} className="landing-input text-center text-2xl font-black tracking-[0.5em]" value={authPin} onChange={e => {
+                        <input type="password" inputMode="numeric" pattern="[0-9]*" maxLength={4} className="landing-input text-center text-2xl font-black tracking-[0.5em]" value={authPin} onChange={e => {
                 if (e.target.value.length <= 4) setAuthPin(e.target.value);
               }} placeholder="••••" autoFocus />
                       </div>
@@ -191,7 +191,7 @@ export function LandingPage() {
                     <form onSubmit={handleCreateAccount} className="flex flex-col gap-4">
                       <div className="landing-form-group">
                         <label className="landing-label">🔑 Mã PIN 4 Số (Tuỳ chọn)</label>
-                        <input type="number" inputMode="numeric" pattern="[0-9]*" maxLength={4} className="landing-input text-center text-2xl font-black tracking-[0.5em]" value={authPin} onChange={e => {
+                        <input type="password" inputMode="numeric" pattern="[0-9]*" maxLength={4} className="landing-input text-center text-2xl font-black tracking-[0.5em]" value={authPin} onChange={e => {
                 if (e.target.value.length <= 4) setAuthPin(e.target.value);
               }} placeholder="Ví dụ: 1234" />
                         <p className="text-[10px] text-gray-500 mt-1 text-center">Chọn số dễ nhớ như ngày sinh · Không cần email</p>
