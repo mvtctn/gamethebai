@@ -121,6 +121,22 @@ export function LobbyScreen() {
                         <p className="text-gray-300 text-center font-medium text-xs">Đấu với bạn bè qua mạng.</p>
                       </button>
 
+                      <button className={`glass-menu-card p-6 rounded-3xl flex flex-col items-center group cursor-pointer ${squad.length < 11 ? 'opacity-50 grayscale' : ''}`} onClick={() => {
+          if (squad.length === 11) {
+            playFx('click');
+            setGameState('tournamentHub');
+          } else {
+            showAlert("⚽ Đội hình chưa đủ!", "Bạn cần chọn đủ 11 cầu thủ xuất sắc trong đội hình trước khi thi đấu Giải!");
+          }
+        }}>
+                        <div className="relative mb-3">
+                          <Trophy size={48} className="text-emerald-400 group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-300 drop-shadow-[0_0_15px_rgba(52,211,153,0.6)]" />
+                          <span className="absolute -top-1.5 -right-2 bg-emerald-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]">NEW</span>
+                        </div>
+                        <h3 className="text-lg sm:text-xl font-black italic uppercase tracking-wider mb-1 text-white">GIẢI ĐẤU</h3>
+                        <p className="text-gray-300 text-center font-medium text-xs">Tạo cúp & đấu vòng tròn.</p>
+                      </button>
+
                       <button className="glass-menu-card p-6 rounded-3xl flex flex-col items-center group cursor-pointer" onClick={() => {
           playFx('click');
           setGameState('leaderboard');

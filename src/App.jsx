@@ -15,6 +15,8 @@ const QuestsScreen = React.lazy(() => import('./components/features/QuestsScreen
 const SettingsScreen = React.lazy(() => import('./components/features/SettingsScreen').then(module => ({ default: module.SettingsScreen })));
 const ProfileScreen = React.lazy(() => import('./components/features/ProfileScreen').then(module => ({ default: module.ProfileScreen })));
 const UserWallScreen = React.lazy(() => import('./components/features/UserWallScreen').then(module => ({ default: module.UserWallScreen })));
+const TournamentHubScreen = React.lazy(() => import('./components/features/tournament/TournamentHubScreen').then(module => ({ default: module.TournamentHubScreen })));
+const TournamentDashboardScreen = React.lazy(() => import('./components/features/tournament/TournamentDashboardScreen').then(module => ({ default: module.TournamentDashboardScreen })));
 const LeaderboardScreen = React.lazy(() => import('./components/features/LeaderboardScreen').then(module => ({ default: module.LeaderboardScreen })));
 const ShowroomScreen = React.lazy(() => import('./components/features/ShowroomScreen').then(module => ({ default: module.ShowroomScreen })));
 const PackOpeningScreen = React.lazy(() => import('./components/features/PackOpeningScreen').then(module => ({ default: module.PackOpeningScreen })));
@@ -342,6 +344,9 @@ export default function App() {
 
       {/* ============== USER WALL / X SOCIAL NETWORK ============== */}
       {gameState === 'userWall' && <UserWallScreen />}
+      
+      {gameState === 'tournamentHub' && <TournamentHubScreen />}
+      {gameState === 'tournamentDashboard' && <TournamentDashboardScreen />}
 
       {gameState === 'leaderboard' && <LeaderboardScreen />}
 
