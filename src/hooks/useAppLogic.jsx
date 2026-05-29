@@ -88,9 +88,14 @@ const STATE_MAP = Object.fromEntries(Object.entries(ROUTE_MAP).map(([k, v]) => [
 
 const getInitialGameState = (pvpTarget) => {
   const path = window.location.pathname;
+  const currentUser = localStorage.getItem('panini_currentUser');
+
+  if ((path === '/' || path === '') && currentUser) {
+    return 'lobby';
+  }
+
   if (ROUTE_MAP[path]) return ROUTE_MAP[path];
   
-  const currentUser = localStorage.getItem('panini_currentUser');
   if (currentUser && pvpTarget) {
     const storedSquad = JSON.parse(localStorage.getItem(`panini_${currentUser}_squad`)) || [];
     const finalSquad = storedSquad.length === 11 ? storedSquad : playersData.filter(p => p.type === 'Base').slice(0, 11);
@@ -101,15 +106,7 @@ const getInitialGameState = (pvpTarget) => {
     return 'teamBuilder';
   }
   
-  // Return lobby by default if user is logged in but no path specified or path is '/'
-  if (currentUser) {
-    if (path === '/' || path === '') return 'lobby';
-    // Otherwise fallback to 'lobby' anyway since landing is for unauthenticated
-  } else {
-     if (path === '/' || path === '') return 'landing';
-  }
-
-  return 'lobby';
+  return currentUser ? 'lobby' : 'landing';
 };
 
 const [gameState, setGameState] = useState(() => getInitialGameState(pvpTarget));
