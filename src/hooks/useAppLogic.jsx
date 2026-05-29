@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { database, isConnectedToFirebase } from '../firebase';
-import { ref, set, push, onValue, onDisconnect, serverTimestamp, get, update } from 'firebase/database';
+import { ref, set, push, onValue, onDisconnect, serverTimestamp, get, update, query, orderByChild, limitToLast } from 'firebase/database';
 import { QRCodeSVG } from 'qrcode.react';
 import playersData from '../players.json';
 
@@ -922,7 +922,7 @@ const syncLeaderboard = async (username, stats) => {
 useEffect(() => {
   if (gameState === 'leaderboard' || gameState === 'userWall') {
     setLoadingLeaderboard(true);
-    const lbRef = ref(database, 'leaderboard');
+    const lbRef = query(ref(database, 'leaderboard'), orderByChild('level'), limitToLast(100));
     get(lbRef).then(snapshot => {
       if (snapshot.exists()) {
         const lbObj = snapshot.val();
@@ -1928,7 +1928,8 @@ useEffect(() => {
   });
 
   // 2. Listen to all online users
-  const presenceListRef = ref(database, '/presence');
+  // 2. Listen to online users (limit to 100 to prevent lag)
+  const presenceListRef = query(ref(database, '/presence'), limitToLast(100));
   const unsubscribePresence = onValue(presenceListRef, snapshot => {
     const users = [];
     snapshot.forEach(childSnapshot => {
@@ -1941,7 +1942,7 @@ useEffect(() => {
   });
 
   // 3. Listen to chat messages (limit to 50)
-  const chatRef = ref(database, '/chat');
+  const chatRef = query(ref(database, '/chat'), limitToLast(50));
   const unsubscribeChat = onValue(chatRef, snapshot => {
     let msgs = [];
     snapshot.forEach(childSnapshot => {
@@ -2007,7 +2008,7 @@ useEffect(() => {
     return;
   }
   setLoadingGlobalPosts(true);
-  const globalPostsRef = ref(database, '/global_posts');
+  const globalPostsRef = query(ref(database, '/global_posts'), orderByChild('timestamp'), limitToLast(100));
   const unsubGlobal = onValue(globalPostsRef, snapshot => {
     const val = snapshot.val();
     if (val) {
