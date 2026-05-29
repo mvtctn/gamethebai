@@ -54,8 +54,9 @@ export function TournamentDashboardScreen() {
   const matches = Object.entries(tournamentData.matches || {}).map(([id, m]) => ({ id, ...m }));
 
   const copyRoomCode = () => {
-    navigator.clipboard.writeText(activeTournamentId);
-    showAlert("Thành công", "Đã sao chép mã giải đấu vào khay nhớ tạm!");
+    const link = `${window.location.origin}/?t=${activeTournamentId}`;
+    navigator.clipboard.writeText(link);
+    showAlert("Thành công", `Đã sao chép Link tham gia vào khay nhớ tạm!\n\nBạn có thể gửi link này cho người khác để họ ấn vào là tham gia ngay.`);
   };
 
   const handleSendMessage = (e) => {
@@ -86,7 +87,7 @@ export function TournamentDashboardScreen() {
           className="btn !bg-slate-700 hover:!bg-slate-600 !py-2 !px-4 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 rounded-full"
           onClick={() => setGameState('tournamentHub')}
         >
-          <ChevronLeft size={16} /> Thoát
+          <ChevronLeft size={16} /> Về Giải Đấu
         </button>
         
         <div className="flex flex-col items-center">
@@ -99,12 +100,18 @@ export function TournamentDashboardScreen() {
         </div>
 
         {status === 'gathering' && (
-          <button 
-            className="btn !bg-blue-600/20 text-blue-400 border border-blue-500/50 hover:!bg-blue-600/40 !py-2 !px-4 text-xs font-black uppercase tracking-wider flex items-center gap-2 rounded-full"
-            onClick={copyRoomCode}
-          >
-            Mã: <span className="text-white bg-blue-600 px-2 py-0.5 rounded">{activeTournamentId}</span> <Copy size={14}/>
-          </button>
+          <div className="flex gap-2">
+            <div className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-full px-4 py-1.5">
+              <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">Mã:</span>
+              <span className="text-blue-400 font-black text-sm tracking-widest">{activeTournamentId}</span>
+            </div>
+            <button 
+              className="btn !bg-blue-600 hover:!bg-blue-500 !py-1.5 !px-4 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 rounded-full shadow-blue-500/20"
+              onClick={copyRoomCode}
+            >
+              <Copy size={14} /> Copy Link
+            </button>
+          </div>
         )}
         {status !== 'gathering' && <div className="w-[100px] hidden md:block"></div>}
       </div>

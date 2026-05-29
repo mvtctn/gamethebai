@@ -11,10 +11,24 @@ export function TournamentHubScreen() {
     activeTournamentId
   } = useGameContext();
 
-  const [joinId, setJoinId] = useState('');
+  const urlParams = new URLSearchParams(window.location.search);
+  const tParam = urlParams.get('t');
+
+  const [joinId, setJoinId] = useState(tParam || '');
   const [createName, setCreateName] = useState('');
   const [createFormat, setCreateFormat] = useState('single');
   const [activeTab, setActiveTab] = useState('join'); // 'join' or 'create'
+  const [hasAutoJoined, setHasAutoJoined] = useState(false);
+
+  // If URL has ?t=xxx, auto-trigger join
+  React.useEffect(() => {
+    if (tParam && !activeTournamentId && !hasAutoJoined) {
+      setHasAutoJoined(true);
+      // Clean up URL without refreshing
+      window.history.replaceState({}, document.title, window.location.pathname);
+      joinTournament(tParam);
+    }
+  }, [tParam, activeTournamentId, hasAutoJoined, joinTournament]);
 
   // If already in a tournament, automatically route to dashboard
   React.useEffect(() => {

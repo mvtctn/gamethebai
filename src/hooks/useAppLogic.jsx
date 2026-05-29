@@ -66,6 +66,7 @@ const [isDataLoaded, setIsDataLoaded] = useState(false);
 const urlParams = new URLSearchParams(window.location.search);
 
 const pvpTarget = urlParams.get('pvp');
+const tournamentTarget = urlParams.get('t');
 
 const ROUTE_MAP = {
   '/': 'landing',
@@ -84,26 +85,31 @@ const ROUTE_MAP = {
   '/cai-dat': 'settings',
   '/huong-dan': 'howToPlay',
   '/pvp-online': 'pvpOnlineLobby',
+  '/giai-dau': 'tournamentHub',
   '/gioi-thieu-game': 'seo_intro',
   '/cam-nang-doi-hinh': 'seo_guide'
 };
 
 const STATE_MAP = Object.fromEntries(Object.entries(ROUTE_MAP).map(([k, v]) => [v, k]));
 
-const getInitialGameState = (pvpTarget) => {
+const getInitialGameState = (pvpTarget, tournamentTarget) => {
   const path = window.location.pathname;
   const currentUser = localStorage.getItem('panini_currentUser');
 
   if ((path === '/' || path === '') && currentUser) {
+    if (tournamentTarget) return 'tournamentHub';
     return 'lobby';
   }
 
   if (ROUTE_MAP[path]) return ROUTE_MAP[path];
   
-  if (currentUser && pvpTarget) {
+  if (currentUser && (pvpTarget || tournamentTarget)) {
     const storedSquad = JSON.parse(localStorage.getItem(`panini_${currentUser}_squad`)) || [];
     const finalSquad = storedSquad.length === 11 ? storedSquad : playersData.filter(p => p.type === 'Base').slice(0, 11);
-    if (finalSquad.length === 11) return 'multiplayer';
+    
+    if (tournamentTarget && finalSquad.length === 11) return 'tournamentHub';
+    if (pvpTarget && finalSquad.length === 11) return 'multiplayer';
+
     const storedCollection = JSON.parse(localStorage.getItem(`panini_${currentUser}_collection`)) || [];
     const finalCollection = storedCollection.length >= 11 ? storedCollection : playersData.filter(p => p.type === 'Base').slice(0, 11);
     if (finalCollection.length < 11) return 'packOpening';
@@ -113,7 +119,7 @@ const getInitialGameState = (pvpTarget) => {
   return currentUser ? 'lobby' : 'landing';
 };
 
-const [gameState, setGameState] = useState(() => getInitialGameState(pvpTarget));
+const [gameState, setGameState] = useState(() => getInitialGameState(pvpTarget, tournamentTarget));
 
 // 'lobby', 'packOpening', 'teamBuilder', 'matchEngine', 'quests', 'multiplayer'
 
@@ -140,6 +146,8 @@ useEffect(() => {
     'settings': 'Cài Đặt',
     'howToPlay': 'Hướng Dẫn',
     'pvpOnlineLobby': 'PVP Online',
+    'tournamentHub': 'Giải Đấu',
+    'tournamentDashboard': 'Giải Đấu',
     'collection': 'Bộ Sưu Tập',
     'seo_intro': 'Giới Thiệu Game',
     'seo_guide': 'Cẩm Nang Đội Hình'
