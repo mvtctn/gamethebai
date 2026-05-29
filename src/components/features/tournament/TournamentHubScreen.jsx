@@ -65,7 +65,7 @@ export function TournamentHubScreen() {
               <input
                 type="text"
                 className="w-full bg-black/50 border border-white/20 rounded-2xl p-4 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-center font-mono text-xl uppercase tracking-widest"
-                placeholder="VD: T-ABCDEF"
+                placeholder="VD: 1234"
                 value={joinId}
                 onChange={e => setJoinId(e.target.value)}
               />

@@ -21,6 +21,7 @@
       }
     },
     "leaderboard": {
+      ".indexOn": ["level", "coins", "wins"],
       "$username": {
         ".validate": "$username.length > 0 && $username.length < 50",
         "coins": {
@@ -36,6 +37,9 @@
           ".validate": "newData.isNumber() && newData.val() >= 0"
         }
       }
+    },
+    "global_posts": {
+      ".indexOn": ["timestamp"]
     }
   }
 }

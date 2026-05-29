@@ -48,7 +48,7 @@ export function useTournamentLogic(currentUser, level, showAlert) {
   }, [activeTournamentId, isConnectedToFirebase, showAlert]);
 
   const generateTournamentId = () => {
-    return 'T-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    return Math.floor(1000 + Math.random() * 9000).toString();
   };
 
   const createTournament = async (name, format) => {

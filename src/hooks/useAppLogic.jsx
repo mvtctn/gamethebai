@@ -2212,11 +2212,18 @@ const sendChallengeInvite = (targetUser, targetPeerId, tournamentId = null, tour
   const statusRef = ref(database, `/invites/${targetUser}/status`);
   const unsubscribeStatus = onValue(statusRef, snap => {
     const status = snap.val();
-    if (status === 'accepted') {
+      if (status === 'accepted') {
       unsubscribeStatus();
       set(targetInviteRef, null);
       setGameAlert(null);
       setIsRandomPvp(false);
+      
+      if (tournamentId && tournamentMatchId) {
+        setActiveTournamentMatchId({ tournamentId, matchId: tournamentMatchId });
+      } else {
+        setActiveTournamentMatchId(null);
+      }
+
       setActivePvpTarget("");
       setGameState('multiplayer');
     } else if (status === 'declined') {
@@ -2281,6 +2288,14 @@ const acceptChallenge = invite => {
   } else {
     setIsRandomPvp(false);
   }
+
+  // Set tournament match id if present
+  if (invite.tournamentId && invite.tournamentMatchId) {
+    setActiveTournamentMatchId({ tournamentId: invite.tournamentId, matchId: invite.tournamentMatchId });
+  } else {
+    setActiveTournamentMatchId(null);
+  }
+
   setActivePvpTarget(invite.hostPeerId);
   setGameState('multiplayer');
   setTimeout(() => {
@@ -3793,6 +3808,72 @@ const handlePvpEnd = (result, opponentName = null, myScore = null, opponentScore
       });
     }
     logLocalPvpMatch(result, opponentName, actualMyScore, actualOpponentScore);
+  }
+
+  if (activeTournamentMatchId && isConnectedToFirebase) {
+    const { tournamentId, matchId } = activeTournamentMatchId;
+    const actualMyScore = myScore !== null ? myScore : 0;
+    const actualOpponentScore = opponentScore !== null ? opponentScore : 0;
+    const tRef = ref(database, `/tournaments/${tournamentId}`);
+    get(tRef).then(snap => {
+      if (snap.exists()) {
+        const tData = snap.val();
+        const matchInfo = tData.matches && tData.matches[matchId];
+        // Both users can trigger the update. It is idempotent since they read the same snapshot
+        // and calculate the exact same resulting points to write.
+        if (matchInfo && matchInfo.status === 'pending') {
+          const isP1 = matchInfo.p1 === currentUser;
+          const score1 = isP1 ? actualMyScore : actualOpponentScore;
+          const score2 = isP1 ? actualOpponentScore : actualMyScore;
+          
+          let p1Points = tData.participants[matchInfo.p1].points || 0;
+          let p2Points = tData.participants[matchInfo.p2].points || 0;
+          let p1Won = tData.participants[matchInfo.p1].won || 0;
+          let p2Won = tData.participants[matchInfo.p2].won || 0;
+          let p1Draw = tData.participants[matchInfo.p1].draw || 0;
+          let p2Draw = tData.participants[matchInfo.p2].draw || 0;
+          let p1Lost = tData.participants[matchInfo.p1].lost || 0;
+          let p2Lost = tData.participants[matchInfo.p2].lost || 0;
+          
+          if (score1 > score2) { p1Points += 3; p1Won++; p2Lost++; }
+          else if (score2 > score1) { p2Points += 3; p2Won++; p1Lost++; }
+          else { p1Points += 1; p2Points += 1; p1Draw++; p2Draw++; }
+
+          const updates = {};
+          updates[`/tournaments/${tournamentId}/matches/${matchId}/status`] = 'completed';
+          updates[`/tournaments/${tournamentId}/matches/${matchId}/score1`] = score1;
+          updates[`/tournaments/${tournamentId}/matches/${matchId}/score2`] = score2;
+          
+          updates[`/tournaments/${tournamentId}/participants/${matchInfo.p1}/played`] = (tData.participants[matchInfo.p1].played || 0) + 1;
+          updates[`/tournaments/${tournamentId}/participants/${matchInfo.p1}/points`] = p1Points;
+          updates[`/tournaments/${tournamentId}/participants/${matchInfo.p1}/won`] = p1Won;
+          updates[`/tournaments/${tournamentId}/participants/${matchInfo.p1}/draw`] = p1Draw;
+          updates[`/tournaments/${tournamentId}/participants/${matchInfo.p1}/lost`] = p1Lost;
+          updates[`/tournaments/${tournamentId}/participants/${matchInfo.p1}/gf`] = (tData.participants[matchInfo.p1].gf || 0) + score1;
+          updates[`/tournaments/${tournamentId}/participants/${matchInfo.p1}/ga`] = (tData.participants[matchInfo.p1].ga || 0) + score2;
+          
+          updates[`/tournaments/${tournamentId}/participants/${matchInfo.p2}/played`] = (tData.participants[matchInfo.p2].played || 0) + 1;
+          updates[`/tournaments/${tournamentId}/participants/${matchInfo.p2}/points`] = p2Points;
+          updates[`/tournaments/${tournamentId}/participants/${matchInfo.p2}/won`] = p2Won;
+          updates[`/tournaments/${tournamentId}/participants/${matchInfo.p2}/draw`] = p2Draw;
+          updates[`/tournaments/${tournamentId}/participants/${matchInfo.p2}/lost`] = p2Lost;
+          updates[`/tournaments/${tournamentId}/participants/${matchInfo.p2}/gf`] = (tData.participants[matchInfo.p2].gf || 0) + score2;
+          updates[`/tournaments/${tournamentId}/participants/${matchInfo.p2}/ga`] = (tData.participants[matchInfo.p2].ga || 0) + score1;
+          
+          update(ref(database), updates);
+        }
+      }
+    });
+    
+    setActiveTournamentMatchId(null);
+    setGameState('tournamentDashboard');
+    setMatchPhase('setup');
+    setPlayerHand([]);
+    setAiHand([]);
+    setSelectedPlayerCard(null);
+    setSelectedStat(null);
+    setCurrentAiCard(null);
+    return;
   }
 
   // Return to the PvP Online Lobby
