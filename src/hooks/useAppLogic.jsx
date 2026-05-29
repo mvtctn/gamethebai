@@ -1872,9 +1872,9 @@ useEffect(() => {
         ...childSnapshot.val()
       });
     });
-    // Hide chats that occurred before the user created their account
+    // Hide chats that occurred before the user created their account (with 24h grace period for clock skew)
     if (userCreatedAt) {
-      msgs = msgs.filter(m => m.timestamp >= userCreatedAt);
+      msgs = msgs.filter(m => !m.timestamp || typeof m.timestamp !== 'number' || m.timestamp >= (userCreatedAt - 86400000));
     }
     setChatMessages(msgs.slice(-50)); // Last 50 messages
   });
