@@ -12,6 +12,10 @@ export function AdminScreen() {
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null); // For Modal
   
+  // Search and Filter
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all'); // 'all', 'active', 'banned'
+
   // Config state
   const [configForm, setConfigForm] = useState({
     initialCoins: 500,
@@ -80,6 +84,13 @@ export function AdminScreen() {
     }
   };
 
+  const filteredUsers = users.filter(u => {
+    if (filterStatus === 'banned' && !u.banned) return false;
+    if (filterStatus === 'active' && u.banned) return false;
+    if (searchQuery && !u.username.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    return true;
+  });
+
   if (currentUser !== 'Solomon') return null;
 
   return (
@@ -118,22 +129,46 @@ export function AdminScreen() {
       <div className="glass-panel w-full p-6 rounded-3xl border border-white/10 shadow-2xl bg-black/40 relative">
         
         {activeTab === 'users' && (
-          <div className="w-full overflow-x-auto">
-            {loading ? (
-              <div className="text-center text-gray-400 py-10 animate-pulse">Đang tải dữ liệu...</div>
-            ) : (
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-white/10 text-gray-400 uppercase tracking-widest text-[10px]">
-                    <th className="pb-3 px-4 font-black">Tài Khoản</th>
-                    <th className="pb-3 px-4 font-black text-center">Cấp Độ</th>
-                    <th className="pb-3 px-4 font-black text-center">Xu</th>
-                    <th className="pb-3 px-4 font-black text-center">Trạng Thái</th>
-                    <th className="pb-3 px-4 font-black text-center">Hành Động</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((user, idx) => (
+          <div className="w-full flex flex-col gap-4">
+            {/* Filter & Search Bar */}
+            <div className="flex flex-col sm:flex-row gap-4 items-center bg-black/30 p-4 rounded-2xl border border-white/5">
+              <input 
+                type="text" 
+                placeholder="🔍 Tìm tên HLV..." 
+                className="w-full sm:w-64 bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl focus:border-red-500 text-sm"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
+              <select 
+                className="w-full sm:w-auto bg-slate-900 border border-slate-700 text-white p-2.5 rounded-xl focus:border-red-500 text-sm"
+                value={filterStatus}
+                onChange={e => setFilterStatus(e.target.value)}
+              >
+                <option value="all">Tất cả trạng thái</option>
+                <option value="active">Bình thường</option>
+                <option value="banned">Đã bị khóa</option>
+              </select>
+              <div className="text-xs text-gray-400 font-bold ml-auto">
+                Hiển thị: {filteredUsers.length} HLV
+              </div>
+            </div>
+
+            <div className="w-full overflow-x-auto">
+              {loading ? (
+                <div className="text-center text-gray-400 py-10 animate-pulse">Đang tải dữ liệu...</div>
+              ) : (
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-white/10 text-gray-400 uppercase tracking-widest text-[10px]">
+                      <th className="pb-3 px-4 font-black">Tài Khoản</th>
+                      <th className="pb-3 px-4 font-black text-center">Cấp Độ</th>
+                      <th className="pb-3 px-4 font-black text-center">Xu</th>
+                      <th className="pb-3 px-4 font-black text-center">Trạng Thái</th>
+                      <th className="pb-3 px-4 font-black text-center">Hành Động</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.map((user, idx) => (
                     <tr key={user.username} className={`border-b border-white/5 hover:bg-white/5 transition-colors ${user.banned ? 'opacity-50' : ''}`}>
                       <td className="py-3 px-4 font-bold text-white flex items-center gap-2">
                         <span className="text-gray-500 w-4">{idx + 1}.</span> 
