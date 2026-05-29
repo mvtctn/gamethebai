@@ -71,6 +71,7 @@ const ROUTE_MAP = {
   '/sanh': 'lobby',
   '/mo-the': 'packOpening',
   '/doi-hinh': 'teamBuilder',
+  '/bo-suu-tap': 'collection',
   '/thi-dau': 'matchEngine',
   '/nhiem-vu': 'quests',
   '/pvp': 'multiplayer',
@@ -81,7 +82,9 @@ const ROUTE_MAP = {
   '/admin': 'admin',
   '/cai-dat': 'settings',
   '/huong-dan': 'howToPlay',
-  '/pvp-online': 'pvpOnlineLobby'
+  '/pvp-online': 'pvpOnlineLobby',
+  '/gioi-thieu-game': 'seo_intro',
+  '/cam-nang-doi-hinh': 'seo_guide'
 };
 
 const STATE_MAP = Object.fromEntries(Object.entries(ROUTE_MAP).map(([k, v]) => [v, k]));
@@ -135,7 +138,10 @@ useEffect(() => {
     'admin': 'Admin',
     'settings': 'Cài Đặt',
     'howToPlay': 'Hướng Dẫn',
-    'pvpOnlineLobby': 'PVP Online'
+    'pvpOnlineLobby': 'PVP Online',
+    'collection': 'Bộ Sưu Tập',
+    'seo_intro': 'Giới Thiệu Game',
+    'seo_guide': 'Cẩm Nang Đội Hình'
   };
   document.title = `The Bóng Đá - ${titleMap[gameState] || 'WC 2026'}`;
 }, [gameState]);

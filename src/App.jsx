@@ -19,6 +19,8 @@ const LeaderboardScreen = React.lazy(() => import('./components/features/Leaderb
 const ShowroomScreen = React.lazy(() => import('./components/features/ShowroomScreen').then(module => ({ default: module.ShowroomScreen })));
 const PackOpeningScreen = React.lazy(() => import('./components/features/PackOpeningScreen').then(module => ({ default: module.PackOpeningScreen })));
 const TeamBuilderScreen = React.lazy(() => import('./components/features/TeamBuilderScreen').then(module => ({ default: module.TeamBuilderScreen })));
+const CollectionScreen = React.lazy(() => import('./components/features/CollectionScreen').then(module => ({ default: module.CollectionScreen })));
+const SeoLandingPage = React.lazy(() => import('./components/features/SeoLandingPage').then(module => ({ default: module.SeoLandingPage })));
 const MatchEngineScreen = React.lazy(() => import('./components/features/MatchEngineScreen').then(module => ({ default: module.MatchEngineScreen })));
 const LandingPage = React.lazy(() => import('./components/features/LandingPage').then(module => ({ default: module.LandingPage })));
 const AdminScreen = React.lazy(() => import('./components/features/AdminScreen').then(module => ({ default: module.AdminScreen })));
@@ -234,6 +236,9 @@ export default function App() {
       {/* ═══ TRANG HƯỚNG DẪN CHƠI — hiển thị cho mọi trạng thái ═══ */}
       {gameState === 'howToPlay' && <HowToPlayScreen />}
 
+      {/* ═══ TRANG SEO LANDING PAGE ═══ */}
+      {gameState.startsWith('seo_') && <SeoLandingPage />}
+
       {currentUser && <>
           {activeInvite && <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/95  p-4 animate-fade-in ">
               <div className={`glass-panel p-8 sm:p-10 rounded-[2.5rem] max-w-sm w-full flex flex-col items-center shadow-[0_0_80px_rgba(239,68,68,0.4)] border text-center relative ${activeInvite.mode === 'random' ? 'bg-gradient-to-b from-fuchsia-950/80 via-slate-900 to-black border-fuchsia-500/30' : 'bg-gradient-to-b from-red-950/80 via-slate-900 to-black border-red-500/30'}`}>
@@ -248,14 +253,13 @@ export default function App() {
                     <p className="text-gray-300 text-sm leading-relaxed mb-2 font-semibold">
                       HLV <span className="text-amber-400 font-extrabold">{activeInvite.host}</span> muốn thách đấu <span className="text-fuchsia-400 font-black">RANDOM PVP</span> với bạn!
                     </p>
-                    <p className="text-purple-400 text-xs mb-6 leading-relaxed bg-fuchsia-950/30 border border-fuchsia-500/20 px-4 py-2 rounded-xl">🎲 Đội hình sẽ được tạo ngẫu nhiên từ bộ sưu tập của mỗi người. Ai chọn thẻ tốt hơn sẽ chiến thắng!</p>
                   </>
                 ) : (
                   <>
-                    <h3 className="text-sm font-black text-red-500 tracking-widest uppercase mb-1">Thử Thách PVP Tuyệt Đối ⚔️</h3>
-                    <h2 className="text-2xl font-black text-white mb-4 uppercase tracking-wider">LỜI THÁCH ĐẤU!</h2>
-                    <p className="text-gray-300 text-sm leading-relaxed mb-6 font-semibold">
-                      HLV <span className="text-amber-400 font-extrabold">{activeInvite.host}</span> (Đội hình: <span className="text-cyan-400 font-black">{activeInvite.hostRating} OVR</span>) muốn thách đấu PVP với bạn! Bạn có dám chấp nhận?
+                    <h3 className="text-sm font-black text-red-400 tracking-widest uppercase mb-1">Thách Đấu Online</h3>
+                    <h2 className="text-2xl font-black text-white mb-4 uppercase tracking-wider">LỜI KHIÊU CHIẾN!</h2>
+                    <p className="text-gray-300 text-sm leading-relaxed mb-2 font-semibold">
+                      HLV <span className="text-amber-400 font-extrabold">{activeInvite.host}</span> đang muốn so tài với đội hình của bạn!
                     </p>
                   </>
                 )}
@@ -346,6 +350,10 @@ export default function App() {
       {gameState === 'packOpening' && <PackOpeningScreen />}
 
       {gameState === 'teamBuilder' && <TeamBuilderScreen />}
+      
+      {gameState === 'collection' && <CollectionScreen />}
+      
+      {gameState.startsWith('seo_') && <SeoLandingPage />}
 
       {gameState === 'matchEngine' && <MatchEngineScreen />}
       

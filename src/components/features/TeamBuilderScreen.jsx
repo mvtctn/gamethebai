@@ -38,24 +38,26 @@ export function TeamBuilderScreen() {
                 PVP Online
               </button>
             </div>
+
             <h2 className="text-xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-100 to-gray-400 drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)]">Xây Dựng Đội Hình</h2>
             <div className="flex gap-4 items-center bg-black/60 px-4 py-2 rounded-xl border border-white/10">
               <span className="text-lg sm:text-xl font-bold text-blue-400">{squad.length}<span className="text-gray-500">/11</span></span>
             </div>
           </div>
           
-          <div className="team-layout flex-col md:flex-row">
-            <div className="collection">
-              <h3>Bộ sưu tập của bạn</h3>
-              <div className="mini-cards-grid">
-                {collection.filter(p => !squad.find(s => s.id === p.id)).map(card => <Card key={card.id} player={card} isSelectable onClick={() => setSelectedUpgradeCard(card)} />)}
-              </div>
-            </div>
-            <div className="squad">
-              <h3>Đội hình chính (11)</h3>
-              <div className="mini-cards-grid">
-                {squad.map(card => <Card key={card.id} player={card} isSelectable isSelected onClick={() => setSelectedUpgradeCard(card)} />)}
-              </div>
+          <div className="bg-black/40 rounded-[2rem] border border-white/10 p-6 flex-1 min-h-[500px]">
+            <h3 className="text-xl font-bold text-white mb-6 uppercase tracking-widest text-center border-b border-white/10 pb-4">Đội hình chính (11)</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 justify-center max-w-6xl mx-auto">
+              {squad.map(card => <Card key={card.id} player={card} isSelectable isSelected onClick={() => setSelectedUpgradeCard(card)} />)}
+              {Array.from({ length: 11 - squad.length }).map((_, i) => (
+                <div key={`empty-${i}`} className="aspect-[2/3] rounded-2xl border-2 border-dashed border-white/20 bg-black/20 flex flex-col items-center justify-center text-white/30 cursor-pointer hover:bg-white/5 hover:border-white/40 transition-colors" onClick={() => {
+                  playFx('click');
+                  setGameState('collection');
+                }}>
+                  <div className="text-4xl mb-2">+</div>
+                  <div className="text-xs font-bold uppercase tracking-widest text-center px-2">Thêm từ Bộ Sưu Tập</div>
+                </div>
+              ))}
             </div>
           </div>
 

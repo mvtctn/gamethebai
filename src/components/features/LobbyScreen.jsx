@@ -87,7 +87,16 @@ export function LobbyScreen() {
                       <button className={`glass-menu-card p-6 rounded-3xl flex flex-col items-center group cursor-pointer ${collection.length === 0 ? 'opacity-50 grayscale' : ''}`} onClick={() => collection.length > 0 && setGameState('teamBuilder')}>
                         <Users size={48} className="text-blue-400 mb-3 group-hover:scale-110 transition-transform duration-300 drop-shadow-[0_0_15px_rgba(96,165,250,0.6)]" />
                         <h3 className="text-lg sm:text-xl font-black italic uppercase tracking-wider mb-1 text-white">Đội Hình</h3>
-                        <p className="text-gray-300 text-center font-medium text-xs">Chọn 11 cầu thủ xuất sắc.</p>
+                        <p className="text-gray-300 text-center font-medium text-xs">Quản lý đội hình 11 cầu thủ.</p>
+                      </button>
+
+                      <button className="glass-menu-card p-6 rounded-3xl flex flex-col items-center group cursor-pointer" onClick={() => setGameState('collection')}>
+                        <div className="relative mb-3">
+                           <div className="absolute inset-0 bg-fuchsia-500/20 blur-xl rounded-full scale-150 group-hover:scale-110 transition-transform" />
+                           <span className="text-5xl group-hover:scale-110 transition-transform duration-300 inline-block drop-shadow-[0_0_15px_rgba(217,70,239,0.5)]">🗃️</span>
+                        </div>
+                        <h3 className="text-lg sm:text-xl font-black italic uppercase tracking-wider mb-1 text-white">Bộ Sưu Tập</h3>
+                        <p className="text-gray-300 text-center font-medium text-xs">Xem & xóa thẻ hiện có.</p>
                       </button>
 
                       <button className={`glass-menu-card p-6 rounded-3xl flex flex-col items-center group cursor-pointer ${squad.length < 11 ? 'opacity-50 grayscale' : ''}`} onClick={() => squad.length === 11 && setGameState('matchEngine')}>

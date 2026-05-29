@@ -181,6 +181,14 @@ export function LandingPage() {
                   <span className="landing-stat-label">Xu Tặng</span>
                 </div>
               </div>
+              {/* Footer SEO Links */}
+              <div className="absolute bottom-4 w-full text-center z-10 px-4 flex flex-col sm:flex-row justify-center items-center gap-4 text-xs font-semibold text-gray-500">
+                <a href="/gioi-thieu-game" className="hover:text-blue-400 transition-colors uppercase tracking-widest bg-black/40 px-3 py-1.5 rounded-full border border-white/5 hover:border-blue-500/30">Giới Thiệu Trò Chơi</a>
+                <span className="hidden sm:inline text-gray-700">•</span>
+                <a href="/cam-nang-doi-hinh" className="hover:text-fuchsia-400 transition-colors uppercase tracking-widest bg-black/40 px-3 py-1.5 rounded-full border border-white/5 hover:border-fuchsia-500/30">Cẩm Nang Đội Hình</a>
+                <span className="hidden sm:inline text-gray-700">•</span>
+                <a href="/huong-dan" className="hover:text-amber-400 transition-colors uppercase tracking-widest bg-black/40 px-3 py-1.5 rounded-full border border-white/5 hover:border-amber-500/30">Hướng Dẫn Cách Chơi</a>
+              </div>
             </div>
           </div>
         </div>

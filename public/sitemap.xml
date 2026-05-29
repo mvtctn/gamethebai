@@ -40,4 +40,14 @@
     <changefreq>hourly</changefreq>
     <priority>0.8</priority>
   </url>
+  <url>
+    <loc>https://thebongda.vinhninh.com/gioi-thieu-game</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://thebongda.vinhninh.com/cam-nang-doi-hinh</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>

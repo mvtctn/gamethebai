@@ -188,6 +188,20 @@ export function HowToPlayScreen() {
                 </div>
               </div>
 
+              <div className="htp-step-card">
+                <div className="htp-step-num">🎲</div>
+                <div className="htp-step-body">
+                  <h3>Bước 9 — Đấu Random PVP</h3>
+                  <p>
+                    Ở sảnh PVP Online, bạn có thể chọn <strong style={{
+              color: '#c084fc'
+            }}>Đấu Random 🎲</strong>. Hệ thống sẽ trộn chung toàn bộ thẻ của bạn và chọn ra 11 thẻ ngẫu nhiên theo công thức cân bằng.
+                    Chế độ này đòi hỏi kỹ năng chiến thuật cực cao và không phụ thuộc vào độ hiếm thẻ gốc của bạn!
+                  </p>
+                  <span className="htp-tip text-fuchsia-300">💡 Lời mời Random PVP có màu tím đặc trưng</span>
+                </div>
+              </div>
+
               <div className="htp-step-card" style={{
         border: '1px solid rgba(239, 68, 68, 0.4)',
         background: 'linear-gradient(to right, rgba(0,0,0,0.8), rgba(239,68,68,0.15))'
