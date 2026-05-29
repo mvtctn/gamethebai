@@ -22,6 +22,22 @@ const currentUser = localStorage.getItem('panini_currentUser');
 // Load state directly based on currentUser prefix — new users start EMPTY (must open packs to progress)
 
 // Load state directly based on currentUser prefix — new users start EMPTY (must open packs to progress)
+const [gameConfig, setGameConfig] = useState({
+  initialCoins: 500,
+  checkInRewardBase: 50
+});
+
+useEffect(() => {
+  if (!isConnectedToFirebase) return;
+  const configRef = ref(database, '/config');
+  const unsubscribe = onValue(configRef, snap => {
+    if (snap.exists()) {
+      setGameConfig(prev => ({ ...prev, ...snap.val() }));
+    }
+  });
+  return () => unsubscribe();
+}, []);
+
 const [collection, setCollection] = useState(() => {
   if (!currentUser) return [];
   const saved = localStorage.getItem(`panini_${currentUser}_collection`);
@@ -2185,6 +2201,13 @@ const handleCheckUsername = async e => {
     if (userSnap.exists()) {
       val = userSnap.val();
     }
+    
+    if (val && val.banned) {
+      setAuthCheckingUser(false);
+      showAlert('Tài Khoản Bị Khóa ⛔', 'Tài khoản của bạn đã bị khóa do vi phạm nội quy game. Vui lòng liên hệ Admin.');
+      return;
+    }
+    
     setAuthCheckingUser(false);
     if (!val) {
       // NEW user → go to optional PIN setting step
@@ -2280,8 +2303,7 @@ const handleCreateAccount = async e => {
     pin: hashedPin,
     // optional hashed PIN
     email: '',
-    coins: 200,
-    // Thành viên mới được 200 Xu để bắt đầu mở thẻ
+    coins: gameConfig?.initialCoins !== undefined ? gameConfig.initialCoins : 500,
     startingBonus: true,
     collection: [],
     squad: [],
@@ -3598,5 +3620,5 @@ const handlePvpEnd = (result, opponentName = null, myScore = null, opponentScore
   setCurrentAiCard(null);
 };
 
-return { currentUser, collection, squad, setSquad, coins, setCoins, gameState, setGameState, activePvpTarget, setActivePvpTarget, showPvpJoinModal, setShowPvpJoinModal, pvpJoinInput, setPvpJoinInput, activeBannerIdx, referredBy, referrals, refCodeInput, setRefCodeInput, showSharePoster, setShowSharePoster, selectedUpgradeCard, setSelectedUpgradeCard, upgradeCard, submitReferralCode, claimReferralReward, performCheckIn, authUsername, setAuthUsername, authPin, setAuthPin, authStep, setAuthStep, authCheckingUser, setAuthFoundUser, isPackOpeningAnim, openedCards, setOpenedCards, quests, setQuests, lastReward, level, xp, stats, email, profileOldPassword, setProfileOldPassword, profileNewPassword, setProfileNewPassword, profileConfirmPassword, setProfileConfirmPassword, profileEmailInput, setProfileEmailInput, newUsernameInput, setNewUsernameInput, isRenaming, showLevelUpModal, setShowLevelUpModal, userWallTarget, setUserWallTarget, wallData, userWallPosts, globalPosts, socialWallTab, setSocialWallTab, mobileSubTab, setMobileSubTab, newPostText, commentInputs, setCommentInputs, loadingWall, showGiftModal, setShowGiftModal, giftAmount, setGiftAmount, giftLoading, loadingGlobalPosts, showGiftCardModal, setShowGiftCardModal, giftCardLoading, giftCardSearch, setGiftCardSearch, selectedGiftCard, setSelectedGiftCard, giftCardFilterRarity, setGiftCardFilterRarity, socialSearchQuery, setSocialSearchQuery, showMentionDropdown, activePrivatePartner, setActivePrivatePartner, privateMessages, myPrivateChats, privateChatInput, setPrivateChatInput, unreadPartners, rewardedMilestones, claimedLevelRewards, freePacks, pityCounter, setRevealingCards, packType, setPackType, leaderboardData, loadingLeaderboard, leaderboardTab, setLeaderboardTab, checkInState, alreadyClaimedToday, equippedTitle, setEquippedTitle, claimedAchievements, setClaimedAchievements, customAvatar, setCustomAvatar, customBanner, setCustomBanner, isCustomizingProfile, setIsCustomizingProfile, previewAvatar, setPreviewAvatar, previewBanner, setPreviewBanner, showCheckInModal, setShowCheckInModal, activeShareData, setActiveShareData, showroomFilterState, setShowroomFilterState, showroomHoverState, setShowroomHoverState, claimMilestone, renderPostText, handleComposerChange, getAutocompleteSuggestions, insertMention, insertEmoji, handleCreatePost, handleSendGift, getCardGiftFee, handleSendCardGift, handleLikePost, handleCreateComment, sendPrivateMessage, onlineUsers, chatMessages, activeInvite, chatTab, setChatTab, chatInput, setChatInput, pvpHistory, sendChatMessage, sendChallengeInvite, acceptChallenge, declineChallenge, difficulty, setDifficulty, matchPhase, setMatchPhase, playerHand, aiHand, matchScore, matchHistory, showHistoryModal, setShowHistoryModal, selectedPlayerCard, setSelectedPlayerCard, selectedStat, setSelectedStat, currentAiCard, setCurrentAiCard, playedCardIds, matchEnvironment, handleCheckUsername, handleVerifyPin, handleCreateAccount, handleUpdateEmail, handleUpdatePassword, handleRenameUser, handleLogout, RARITY_TIERS, getCardRarity, PACK_CONFIGS, openPack, startMatch, triggerAiTurn, playRoundAiTurn, playRound, nextRound, dismissRoundResult, returnToLobby, gameAlert, setGameAlert, showAlert, handlePvpEnd };
+return { gameConfig, currentUser, collection, squad, setSquad, coins, setCoins, gameState, setGameState, activePvpTarget, setActivePvpTarget, showPvpJoinModal, setShowPvpJoinModal, pvpJoinInput, setPvpJoinInput, activeBannerIdx, referredBy, referrals, refCodeInput, setRefCodeInput, showSharePoster, setShowSharePoster, selectedUpgradeCard, setSelectedUpgradeCard, upgradeCard, submitReferralCode, claimReferralReward, performCheckIn, authUsername, setAuthUsername, authPin, setAuthPin, authStep, setAuthStep, authCheckingUser, setAuthFoundUser, isPackOpeningAnim, openedCards, setOpenedCards, quests, setQuests, lastReward, level, xp, stats, email, profileOldPassword, setProfileOldPassword, profileNewPassword, setProfileNewPassword, profileConfirmPassword, setProfileConfirmPassword, profileEmailInput, setProfileEmailInput, newUsernameInput, setNewUsernameInput, isRenaming, showLevelUpModal, setShowLevelUpModal, userWallTarget, setUserWallTarget, wallData, userWallPosts, globalPosts, socialWallTab, setSocialWallTab, mobileSubTab, setMobileSubTab, newPostText, commentInputs, setCommentInputs, loadingWall, showGiftModal, setShowGiftModal, giftAmount, setGiftAmount, giftLoading, loadingGlobalPosts, showGiftCardModal, setShowGiftCardModal, giftCardLoading, giftCardSearch, setGiftCardSearch, selectedGiftCard, setSelectedGiftCard, giftCardFilterRarity, setGiftCardFilterRarity, socialSearchQuery, setSocialSearchQuery, showMentionDropdown, activePrivatePartner, setActivePrivatePartner, privateMessages, myPrivateChats, privateChatInput, setPrivateChatInput, unreadPartners, rewardedMilestones, claimedLevelRewards, freePacks, pityCounter, setRevealingCards, packType, setPackType, leaderboardData, loadingLeaderboard, leaderboardTab, setLeaderboardTab, checkInState, alreadyClaimedToday, equippedTitle, setEquippedTitle, claimedAchievements, setClaimedAchievements, customAvatar, setCustomAvatar, customBanner, setCustomBanner, isCustomizingProfile, setIsCustomizingProfile, previewAvatar, setPreviewAvatar, previewBanner, setPreviewBanner, showCheckInModal, setShowCheckInModal, activeShareData, setActiveShareData, showroomFilterState, setShowroomFilterState, showroomHoverState, setShowroomHoverState, claimMilestone, renderPostText, handleComposerChange, getAutocompleteSuggestions, insertMention, insertEmoji, handleCreatePost, handleSendGift, getCardGiftFee, handleSendCardGift, handleLikePost, handleCreateComment, sendPrivateMessage, onlineUsers, chatMessages, activeInvite, chatTab, setChatTab, chatInput, setChatInput, pvpHistory, sendChatMessage, sendChallengeInvite, acceptChallenge, declineChallenge, difficulty, setDifficulty, matchPhase, setMatchPhase, playerHand, aiHand, matchScore, matchHistory, showHistoryModal, setShowHistoryModal, selectedPlayerCard, setSelectedPlayerCard, selectedStat, setSelectedStat, currentAiCard, setCurrentAiCard, playedCardIds, matchEnvironment, handleCheckUsername, handleVerifyPin, handleCreateAccount, handleUpdateEmail, handleUpdatePassword, handleRenameUser, handleLogout, RARITY_TIERS, getCardRarity, PACK_CONFIGS, openPack, startMatch, triggerAiTurn, playRoundAiTurn, playRound, nextRound, dismissRoundResult, returnToLobby, gameAlert, setGameAlert, showAlert, handlePvpEnd };
 }

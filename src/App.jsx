@@ -21,6 +21,7 @@ const PackOpeningScreen = React.lazy(() => import('./components/features/PackOpe
 const TeamBuilderScreen = React.lazy(() => import('./components/features/TeamBuilderScreen').then(module => ({ default: module.TeamBuilderScreen })));
 const MatchEngineScreen = React.lazy(() => import('./components/features/MatchEngineScreen').then(module => ({ default: module.MatchEngineScreen })));
 const LandingPage = React.lazy(() => import('./components/features/LandingPage').then(module => ({ default: module.LandingPage })));
+const AdminScreen = React.lazy(() => import('./components/features/AdminScreen').then(module => ({ default: module.AdminScreen })));
 const MultiplayerEngine = React.lazy(() => import('./MultiplayerEngine'));
 import { MatchHistoryModal } from './MatchHistoryModal';
 import { Card, AnimatedHeroPlayer, ShareModal } from './components/ui/SharedComponents';
@@ -333,6 +334,8 @@ export default function App() {
       {gameState === 'teamBuilder' && <TeamBuilderScreen />}
 
       {gameState === 'matchEngine' && <MatchEngineScreen />}
+      
+      {gameState === 'admin' && <AdminScreen />}
         </div>
         </>}
 

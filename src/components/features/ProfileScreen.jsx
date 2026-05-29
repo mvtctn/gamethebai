@@ -40,6 +40,14 @@ export function ProfileScreen() {
     }}>
               ⚙️ Cài Đặt
             </button>
+            {currentUser === 'Solomon' && (
+              <button className="btn !bg-red-700 hover:!bg-red-600 transition-colors flex items-center gap-2 text-xs font-black uppercase tracking-wider !py-2 rounded-full border border-red-500/30 shadow-lg shadow-red-900/30" onClick={() => {
+                playFx('click');
+                setGameState('admin');
+              }}>
+                🛡️ Admin Panel
+              </button>
+            )}
           </div>
 
           {/* TWO-COLUMN Dashboard: Profile Info (5/12) + 3D Pitch (7/12) */}
