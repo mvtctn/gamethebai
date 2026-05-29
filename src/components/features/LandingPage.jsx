@@ -51,43 +51,15 @@ export function LandingPage() {
                         width: 100%;
                         height: 100%;
                         object-fit: cover;
-                        animation: kenBurnsZoom 16s ease-in-out infinite alternate;
                       }
                       .stadium-spotlight-left-all {
-                        position: absolute;
-                        bottom: 0;
-                        left: 10%;
-                        width: 80px;
-                        height: 100%;
-                        background: linear-gradient(to right, transparent, rgba(56,189,248,0.2), transparent);
-                        transform-origin: bottom center;
-                        animation: sweepLightLeft 7s ease-in-out infinite;
-                        pointer-events: none;
-                        mix-blend-mode: screen;
-                        filter: blur(8px);
+                        display: none;
                       }
                       .stadium-spotlight-right-all {
-                        position: absolute;
-                        bottom: 0;
-                        right: 10%;
-                        width: 80px;
-                        height: 100%;
-                        background: linear-gradient(to right, transparent, rgba(56,189,248,0.2), transparent);
-                        transform-origin: bottom center;
-                        animation: sweepLightRight 7s ease-in-out infinite;
-                        pointer-events: none;
-                        mix-blend-mode: screen;
-                        filter: blur(8px);
+                        display: none;
                       }
                       .falling-confetti-all {
-                        position: absolute;
-                        top: -20px;
-                        animation: driftDown linear infinite;
-                        pointer-events: none;
-                      }
-                      @keyframes kenBurnsZoom {
-                        0% { transform: scale(1.0); }
-                        100% { transform: scale(1.12); }
+                        display: none;
                       }
                     `
           }} />

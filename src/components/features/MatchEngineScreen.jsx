@@ -17,6 +17,7 @@ import { useGameContext } from '../../context/GameContext';
 import { PackageOpen, Users, Swords, ChevronRight, CheckCircle2, Lock, Coins, Sparkles, Play, Trophy, Shield, Target, Wifi, User, ChevronLeft, Send, MessageSquare, Mail, History } from 'lucide-react';
 import { Card, AnimatedHeroPlayer, ShareModal } from '../ui/SharedComponents';
 import { QRCodeSVG } from 'qrcode.react';
+import { MatchHistoryModal } from '../../MatchHistoryModal';
 
 export function MatchEngineScreen() {
   const { matchPhase, playedCardIds, matchEnvironment, dismissRoundResult, setGameState, difficulty, setDifficulty, startMatch, matchScore, lastReward, setActiveShareData, setShowHistoryModal, returnToLobby, showHistoryModal, matchHistory, selectedPlayerCard, setSelectedPlayerCard, playRound, currentAiCard, nextRound, currentUser, playerHand, squad, playRoundAiTurn, setMatchPhase, setSelectedStat, setCurrentAiCard, triggerAiTurn, aiHand, selectedStat } = useGameContext();
