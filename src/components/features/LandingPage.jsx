@@ -1,4 +1,16 @@
 import React from 'react';
+import playersData from '../../players.json';
+import { 
+  PITCH_POSITIONS, TIERS, AVATAR_PRESETS, BANNER_PRESETS, LEVEL_MILESTONES, 
+  CARD_TYPE_BONUS, ACTIVITY_MILESTONES, RARITY_LABEL, CHECK_IN_REWARDS, 
+  ENV_WEATHER, ENV_TIME, FORM_STATES, BANNERS 
+} from '../../constants';
+import { 
+  hashPIN, triggerConfetti, getPlayerTier, getAvatarGradient, getCardTypeBonus, 
+  playFx, getPlayerAttr, checkAttrAdvantage, generateCardForm, getNationEmoji, 
+  getRelativeTime, getSquadChemistry, getPlayerChemistryBoost 
+} from '../../utils';
+
 import { useGameContext } from '../../context/GameContext';
 import { AnimatedHeroPlayer } from '../ui/SharedComponents';
 import { BANNERS } from '../../constants';
