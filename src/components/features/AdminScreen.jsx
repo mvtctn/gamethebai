@@ -205,6 +205,7 @@ export function AdminScreen() {
                 </tbody>
               </table>
             )}
+            </div>
           </div>
         )}
 
