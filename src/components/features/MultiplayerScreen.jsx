@@ -1,7 +1,7 @@
 import React, { Suspense } from 'react';
 import { isConnectedToFirebase } from '../../firebase';
 
-const MultiplayerEngine = React.lazy(() => import('../../MultiplayerEngine').then(module => ({ default: module.MultiplayerEngine })));
+const MultiplayerEngine = React.lazy(() => import('../../MultiplayerEngine'));
 
 import playersData from '../../players.json';
 import { 
