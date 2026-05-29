@@ -45,56 +45,7 @@ export function LandingPage() {
             <div className="landing-banner-col">
               <div className="landing-banner-card">
                 {activeBannerIdx === 0 ? <AnimatedHeroPlayer /> : <div className="relative w-full h-full overflow-hidden select-none">
-                    <style dangerouslySetInnerHTML={{
-            __html: `
-                      .ken-burns-banner {
-                        width: 100%;
-                        height: 100%;
-                        object-fit: cover;
-                      }
-                      .stadium-spotlight-left-all {
-                        display: none;
-                      }
-                      .stadium-spotlight-right-all {
-                        display: none;
-                      }
-                      .falling-confetti-all {
-                        display: none;
-                      }
-                    `
-          }} />
-                    
-                    <img key={activeBannerIdx} src={BANNERS[activeBannerIdx]} alt="World Cup 2026 Banner" className="ken-burns-banner banner-fade-in" />
-
-                    {/* Active Stadium spotlight beams sweeping across all slides */}
-                    <div className="stadium-spotlight-left-all" />
-                    <div className="stadium-spotlight-right-all" />
-
-                    {/* Drifting star/confetti overlays for consistent theme energy */}
-                    {Array.from({
-            length: 15
-          }).map((_, idx) => {
-            const left = idx * 6.6 + Math.random() * 4;
-            const delay = Math.random() * 8;
-            const duration = 4.5 + Math.random() * 3.5;
-            const size = 6 + Math.random() * 8;
-            const colors = ['#fbbf24', '#38bdf8', '#f43f5e', '#10b981', '#a78bfa', '#c4f000'];
-            const color = colors[idx % colors.length];
-            const isStar = idx % 3 === 0;
-            return <div key={idx} className="falling-confetti-all" style={{
-              left: `${left}%`,
-              animationDelay: `${delay}s`,
-              animationDuration: `${duration}s`,
-              width: `${size}px`,
-              height: `${size}px`
-            }}>
-                          {isStar ? <svg viewBox="0 0 24 24" width="100%" height="100%" fill={color} className="drop-shadow-[0_0_3px_rgba(255,255,255,0.4)]">
-                              <path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.787 1.4 8.168L12 18.896l-7.334 3.857 1.4-8.168L.132 9.21l8.2-1.192z" />
-                            </svg> : <div className="w-full h-full rounded-full opacity-70" style={{
-                backgroundColor: color
-              }} />}
-                        </div>;
-          })}
+                    <img key={activeBannerIdx} src={BANNERS[activeBannerIdx]} alt="World Cup 2026 Banner" className="w-full h-full object-cover banner-fade-in" />
                   </div>}
               </div>
 

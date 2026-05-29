@@ -86,13 +86,14 @@ body::-webkit-scrollbar {
 }
 
 @keyframes hero-cartoon-bounce {
-  0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 20px rgba(251,191,36,0.6)) brightness(1.1) contrast(1.1); }
-  50% { transform: translateY(-15px) scale(1.05); filter: drop-shadow(0 0 50px rgba(251,191,36,1)) brightness(1.25) contrast(1.15); }
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-15px) scale(1.05); }
 }
 
 .hero-cartoon-anim {
   animation: hero-cartoon-bounce 3s ease-in-out infinite;
-  will-change: transform, filter;
+  will-change: transform;
+  filter: drop-shadow(0 0 20px rgba(251,191,36,0.6)) brightness(1.1) contrast(1.1);
   transition: all 0.3s;
 }
 .hero-cartoon-anim:hover {
@@ -994,19 +995,15 @@ h2 {
 @keyframes bannerWobbleFloat {
   0%, 100% {
     transform: translateY(0) rotate(0deg) scale(1);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 35px rgba(196,240,0,0.15);
   }
   25% {
     transform: translateY(-8px) rotate(-1.5deg) scale(1.008);
-    box-shadow: 0 28px 48px rgba(0,0,0,0.65), 0 0 45px rgba(196,240,0,0.25);
   }
   50% {
     transform: translateY(-12px) rotate(1deg) scale(1.015);
-    box-shadow: 0 35px 55px rgba(0,0,0,0.7), 0 0 55px rgba(196,240,0,0.3);
   }
   75% {
     transform: translateY(-5px) rotate(-0.5deg) scale(1.008);
-    box-shadow: 0 24px 44px rgba(0,0,0,0.65), 0 0 40px rgba(196,240,0,0.2);
   }
 }
 
