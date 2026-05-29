@@ -2177,25 +2177,13 @@ const handleCheckUsername = async e => {
   }
   setAuthCheckingUser(true);
   try {
-    const lowerName = name.toLowerCase();
-    const nameIndexSnap = await get(ref(database, `/usernames/${lowerName}`));
-    let actualName = name;
+    const actualName = name;
     let val = null;
-    if (nameIndexSnap.exists()) {
-      actualName = nameIndexSnap.val();
-      setAuthUsername(actualName); // Normalize casing in state
-      const userSnap = await get(ref(database, `/users/${actualName}`));
+    
+    // Check direct match
+    const userSnap = await get(ref(database, `/users/${actualName}`));
+    if (userSnap.exists()) {
       val = userSnap.val();
-    } else {
-      // Fallback/auto-migrate for legacy users
-      const legacyUserSnap = await get(ref(database, `/users/${name}`));
-      if (legacyUserSnap.exists()) {
-        val = legacyUserSnap.val();
-        actualName = val.username || name;
-        setAuthUsername(actualName);
-        // Set index for future case-insensitive logins
-        await set(ref(database, `/usernames/${lowerName}`), actualName);
-      }
     }
     setAuthCheckingUser(false);
     if (!val) {
