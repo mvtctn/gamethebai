@@ -83,7 +83,7 @@ export function ProfileScreen() {
               background: customAvatar || getAvatarGradient(currentUser),
               boxShadow: '0 0 30px rgba(244,63,94,0.35)'
             }}>
-                      <span className="text-4xl sm:text-5xl font-black text-white">{(currentUser || '').charAt(0).toUpperCase()}</span>
+                      <span className="text-4xl sm:text-5xl font-black text-white">{(!customAvatar || !customAvatar.includes('url')) ? (currentUser || '').charAt(0).toUpperCase() : ''}</span>
                     </div>
                     <span className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-500 to-amber-600 text-slate-950 text-[11px] font-black px-2 py-0.5 rounded-full border-2 border-slate-950 shadow-md">Lv.{level}</span>
                     <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity"><span className="text-lg">✏️</span></div>

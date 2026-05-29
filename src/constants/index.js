@@ -24,24 +24,23 @@ export const TIERS = [
 
 export const AVATAR_PRESETS = [
   { id: 'auto',    label: 'Mặc Định', value: null },
+  { id: 'img_boy', label: 'Cậu Bé Vàng', value: 'url(/assets/custom/avatar_cool_boy.png) center/cover no-repeat' },
+  { id: 'img_girl',label: 'Bóng Hồng', value: 'url(/assets/custom/avatar_anime_girl.png) center/cover no-repeat' },
+  { id: 'img_pro', label: 'Huyền Thoại', value: 'url(/assets/custom/avatar_pro.png) center/cover no-repeat' },
+  { id: 'img_masc',label: 'Linh Vật', value: 'url(/assets/custom/avatar_mascot.png) center/cover no-repeat' },
   { id: 'cyblue',  label: 'Xanh Điện', value: 'linear-gradient(135deg, #06b6d4, #2563eb)' },
   { id: 'purpink', label: 'Tím Hồng',  value: 'linear-gradient(135deg, #a855f7, #ec4899)' },
-  { id: 'emeteal', label: 'Xanh Ngọc', value: 'linear-gradient(135deg, #10b981, #0d9488)' },
-  { id: 'rosorg',  label: 'Hồng Cam',  value: 'linear-gradient(135deg, #f43f5e, #f97316)' },
-  { id: 'indvio',  label: 'Chàm Tím',  value: 'linear-gradient(135deg, #6366f1, #7c3aed)' },
-  { id: 'goldyel', label: 'Vàng Kim',  value: 'linear-gradient(135deg, #f59e0b, #eab308)' },
-  { id: 'obsidian',label: 'Hắc Diệu',  value: 'linear-gradient(135deg, #1e293b, #0f172a)' },
-  { id: 'crimgold',label: 'Son Vàng',  value: 'linear-gradient(135deg, #b91c1c, #d97706)' },
+  { id: 'obsidian',label: 'Hắc Diệu',  value: 'linear-gradient(135deg, #1e293b, #0f172a)' }
 ];
 
 export const BANNER_PRESETS = [
   { id: 'default', label: 'Mặc Định',    value: null },
+  { id: 'img_stad',label: '🏟️ Sân Vận Động', value: 'url(/assets/custom/banner_stadium.png) center/cover no-repeat' },
+  { id: 'img_cyb', label: '👾 Cyberpunk', value: 'url(/assets/custom/banner_cyberpunk.png) center/cover no-repeat' },
+  { id: 'img_champ',label:'🏆 Vô Địch', value: 'url(/assets/custom/banner_champions.png) center/cover no-repeat' },
   { id: 'galaxy',  label: '🌌 Dải Ngân Hà', value: 'linear-gradient(135deg, #0f0c29 0%, #302b63 40%, #24243e 100%)' },
   { id: 'neongrn', label: '💚 Xanh Neon', value: 'linear-gradient(135deg, #064e3b 0%, #065f46 30%, #0d9488 60%, #0f766e 100%)' },
-  { id: 'cyberpnk',label: '🟣 Cyberpunk', value: 'linear-gradient(135deg, #1a0533 0%, #3b0764 30%, #6d28d9 60%, #db2777 100%)' },
-  { id: 'crimgold2',label: '🔴 Son Vàng', value: 'linear-gradient(135deg, #450a0a 0%, #7f1d1d 35%, #b45309 70%, #78350f 100%)' },
   { id: 'sunset',  label: '🌅 Hoàng Hôn', value: 'linear-gradient(135deg, #0c4a6e 0%, #1e40af 25%, #7c3aed 50%, #db2777 75%, #f97316 100%)' },
-  { id: 'carbon',  label: '⚙️ Carbon',    value: 'repeating-linear-gradient(45deg, #0f172a 0px, #0f172a 4px, #1e293b 4px, #1e293b 8px)' },
   { id: 'aurora',  label: '🎇 Aurora',    value: 'linear-gradient(135deg, #042f2e 0%, #134e4a 25%, #0e7490 50%, #1e3a5f 75%, #312e81 100%)' },
   { id: 'midnite', label: '🌃 Đêm Đen',  value: 'linear-gradient(180deg, #020617 0%, #0f172a 50%, #1e1b4b 100%)' },
 ];

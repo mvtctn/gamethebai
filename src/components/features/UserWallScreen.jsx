@@ -137,7 +137,7 @@ export function UserWallScreen() {
               background: wallData.customAvatar || getAvatarGradient(userWallTarget),
               boxShadow: `0 0 20px rgba(${userWallTarget === currentUser ? '244,63,94' : '59,130,246'}, 0.35)`
             }}>
-                        <span className="text-2xl sm:text-3xl font-black text-white">{(userWallTarget || '').charAt(0).toUpperCase()}</span>
+                        <span className="text-2xl sm:text-3xl font-black text-white">{(!wallData.customAvatar || !wallData.customAvatar.includes('url')) ? (userWallTarget || '').charAt(0).toUpperCase() : ''}</span>
                       </div>
                       <span className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-500 to-amber-600 text-slate-950 text-[9px] font-black px-1.5 py-0.5 rounded-full border border-slate-950 shadow-md">
                         Lv.{wallData.level || 1}
