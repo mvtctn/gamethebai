@@ -66,7 +66,30 @@ const urlParams = new URLSearchParams(window.location.search);
 
 const pvpTarget = urlParams.get('pvp');
 
-const [gameState, setGameState] = useState(() => {
+const ROUTE_MAP = {
+  '/': 'landing',
+  '/sanh': 'lobby',
+  '/mo-the': 'packOpening',
+  '/doi-hinh': 'teamBuilder',
+  '/thi-dau': 'matchEngine',
+  '/nhiem-vu': 'quests',
+  '/pvp': 'multiplayer',
+  '/bxh': 'leaderboard',
+  '/ho-so': 'profile',
+  '/san-khau': 'showroom',
+  '/mang-xa-hoi': 'userWall',
+  '/admin': 'admin',
+  '/cai-dat': 'settings',
+  '/huong-dan': 'howToPlay',
+  '/pvp-online': 'pvpOnlineLobby'
+};
+
+const STATE_MAP = Object.fromEntries(Object.entries(ROUTE_MAP).map(([k, v]) => [v, k]));
+
+const getInitialGameState = (pvpTarget) => {
+  const path = window.location.pathname;
+  if (ROUTE_MAP[path]) return ROUTE_MAP[path];
+  
   const currentUser = localStorage.getItem('panini_currentUser');
   if (currentUser && pvpTarget) {
     const storedSquad = JSON.parse(localStorage.getItem(`panini_${currentUser}_squad`)) || [];
@@ -77,10 +100,60 @@ const [gameState, setGameState] = useState(() => {
     if (finalCollection.length < 11) return 'packOpening';
     return 'teamBuilder';
   }
+  
+  // Return lobby by default if user is logged in but no path specified or path is '/'
+  if (currentUser) {
+    if (path === '/' || path === '') return 'lobby';
+    // Otherwise fallback to 'lobby' anyway since landing is for unauthenticated
+  } else {
+     if (path === '/' || path === '') return 'landing';
+  }
+
   return 'lobby';
-}); // 'lobby', 'packOpening', 'teamBuilder', 'matchEngine', 'quests', 'multiplayer'
+};
+
+const [gameState, setGameState] = useState(() => getInitialGameState(pvpTarget));
 
 // 'lobby', 'packOpening', 'teamBuilder', 'matchEngine', 'quests', 'multiplayer'
+
+// Synchronize URL and Title with gameState
+useEffect(() => {
+  const expectedPath = STATE_MAP[gameState];
+  if (expectedPath && window.location.pathname !== expectedPath) {
+    window.history.pushState(null, '', expectedPath);
+  }
+  
+  const titleMap = {
+    'landing': 'Trang Chủ',
+    'lobby': 'Sảnh Chính',
+    'packOpening': 'Mở Thẻ',
+    'teamBuilder': 'Đội Hình',
+    'matchEngine': 'Thi Đấu',
+    'quests': 'Nhiệm Vụ',
+    'multiplayer': 'PVP',
+    'leaderboard': 'BXH',
+    'profile': 'Hồ Sơ',
+    'showroom': 'Sân Khấu',
+    'userWall': 'Mạng Xã Hội',
+    'admin': 'Admin',
+    'settings': 'Cài Đặt',
+    'howToPlay': 'Hướng Dẫn',
+    'pvpOnlineLobby': 'PVP Online'
+  };
+  document.title = `The Bóng Đá - ${titleMap[gameState] || 'WC 2026'}`;
+}, [gameState]);
+
+// Handle browser Back/Forward buttons
+useEffect(() => {
+  const handlePopState = () => {
+    const path = window.location.pathname;
+    if (ROUTE_MAP[path]) {
+      setGameState(ROUTE_MAP[path]);
+    }
+  };
+  window.addEventListener('popstate', handlePopState);
+  return () => window.removeEventListener('popstate', handlePopState);
+}, []);
 
 const [activePvpTarget, setActivePvpTarget] = useState(pvpTarget);
 
