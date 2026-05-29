@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { database, isConnectedToFirebase } from '../../firebase';
 import { ref, get, set, update } from 'firebase/database';
 import { useGameContext } from '../../context/GameContext';
-import { Users, Settings, Ban, CheckCircle, Save, Edit, Key, Shield, Coins, Gift, TrendingUp, User, X } from 'lucide-react';
+import { Users, Settings, Ban, CheckCircle, Save, Edit, Key, Shield, Coins, Gift, TrendingUp, User, X, Trash2, Search, ChevronDown } from 'lucide-react';
 import { playFx, hashPIN } from '../../utils';
 
 export function AdminScreen() {
@@ -367,6 +367,42 @@ function AdminUserModal({ user, onClose, showAlert }) {
   const [newUsername, setNewUsername] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Card management
+  const [userCollection, setUserCollection] = useState(user.collection || []);
+  const [cardSearch, setCardSearch] = useState('');
+  const [cardRarityFilter, setCardRarityFilter] = useState('all');
+  const [deletingCard, setDeletingCard] = useState(null);
+
+  const RARITY_COLORS = {
+    'Bronze': 'text-amber-700',
+    'Silver': 'text-slate-300',
+    'Gold': 'text-yellow-400',
+    'Platinum': 'text-cyan-400',
+    'Diamond': 'text-blue-400',
+    'Legendary': 'text-purple-400',
+    'Icon': 'text-rose-400',
+  };
+
+  const filteredCards = userCollection.filter(card => {
+    if (cardRarityFilter !== 'all' && card.rarity !== cardRarityFilter) return false;
+    if (cardSearch && !card.name?.toLowerCase().includes(cardSearch.toLowerCase()) && !card.nation?.toLowerCase().includes(cardSearch.toLowerCase())) return false;
+    return true;
+  });
+
+  const handleDeleteCard = async (cardId) => {
+    if (!cardId) return;
+    setDeletingCard(cardId);
+    try {
+      const newCollection = userCollection.filter(c => c.id !== cardId);
+      await update(ref(database, `/users/${user.username}`), { collection: newCollection });
+      setUserCollection(newCollection);
+      showAlert('Đã Xóa', `Xóa thẻ thành công! Bộ sưu tập còn ${newCollection.length} thẻ.`);
+    } catch (err) {
+      showAlert('Lỗi', 'Không thể xóa thẻ.');
+    }
+    setDeletingCard(null);
+  };
+
   const handleUpdateStats = async () => {
     setIsProcessing(true);
     try {
@@ -602,6 +638,82 @@ function AdminUserModal({ user, onClose, showAlert }) {
                 </button>
               </div>
               <p className="text-[9px] text-gray-500 mt-2 leading-tight">Lưu ý: Quá trình này sẽ dời toàn bộ dữ liệu của HLV sang tên mới. HLV có thể bị văng khỏi game nếu đang online.</p>
+            </div>
+          </div>
+
+          {/* Section 5: Card Management */}
+          <div className="bg-slate-900/50 p-6 rounded-2xl border border-fuchsia-500/20 shadow-[inset_0_0_20px_rgba(168,85,247,0.05)]">
+            <h4 className="font-black uppercase text-xs text-fuchsia-400 tracking-widest border-b border-fuchsia-500/20 pb-2 mb-4 flex items-center justify-between gap-2">
+              <span className="flex items-center gap-2"><Trash2 size={14} /> Quản Lý Bộ Thẻ</span>
+              <span className="text-gray-400 font-bold normal-case text-[10px]">Tổng: {userCollection.length} thẻ | Lọc ra: {filteredCards.length} thẻ</span>
+            </h4>
+
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-4">
+              <div className="relative flex-1">
+                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                <input
+                  type="text"
+                  placeholder="Tìm tên cầu thủ hoặc quốc gia..."
+                  className="w-full bg-black/50 border border-white/10 text-white pl-8 pr-3 py-2 rounded-xl text-xs focus:border-fuchsia-500 focus:outline-none"
+                  value={cardSearch}
+                  onChange={e => setCardSearch(e.target.value)}
+                />
+              </div>
+              <select
+                className="bg-black/50 border border-white/10 text-white px-3 py-2 rounded-xl text-xs focus:border-fuchsia-500 focus:outline-none"
+                value={cardRarityFilter}
+                onChange={e => setCardRarityFilter(e.target.value)}
+              >
+                <option value="all">Tất cả độ hiếm</option>
+                <option value="Bronze">Bronze</option>
+                <option value="Silver">Silver</option>
+                <option value="Gold">Gold</option>
+                <option value="Platinum">Platinum</option>
+                <option value="Diamond">Diamond</option>
+                <option value="Legendary">Legendary</option>
+                <option value="Icon">Icon</option>
+              </select>
+            </div>
+
+            {/* Card List */}
+            <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto pr-1 custom-scrollbar">
+              {filteredCards.length === 0 ? (
+                <div className="text-center text-gray-500 text-xs py-8 italic">Không có thẻ nào phù hợp bộ lọc.</div>
+              ) : filteredCards.map((card, i) => (
+                <div key={card.id || i} className="flex items-center gap-3 bg-black/40 p-2.5 rounded-xl border border-white/5 hover:border-fuchsia-500/30 transition-colors group">
+                  <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 bg-slate-800 border border-white/10">
+                    {card.image ? (
+                      <img src={card.image} alt={card.name} className="w-full h-full object-cover object-top" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-500 font-black">{(card.name || '?').charAt(0)}</div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-xs text-white truncate">{card.name || 'Không tên'}</div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[9px] font-black ${RARITY_COLORS[card.rarity] || 'text-gray-400'}`}>{card.rarity || '?'}</span>
+                      {card.nation && <span className="text-[9px] text-gray-500">{card.nation}</span>}
+                      {card.position && <span className="text-[9px] text-gray-600 uppercase">{card.position}</span>}
+                    </div>
+                  </div>
+                  <div className="text-[9px] text-gray-600 font-bold shrink-0">
+                    OVR {card.stats ? Math.max(card.stats.attack || 0, card.stats.defense || 0, card.stats.control || 0) : '?'}
+                  </div>
+                  <button
+                    className="shrink-0 p-1.5 rounded-lg bg-red-900/0 hover:bg-red-900/60 border border-transparent hover:border-red-500/50 text-gray-600 hover:text-red-400 transition-all"
+                    onClick={() => handleDeleteCard(card.id)}
+                    disabled={deletingCard === card.id}
+                    title={`Xóa thẻ ${card.name}`}
+                  >
+                    {deletingCard === card.id ? (
+                      <div className="w-3.5 h-3.5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Trash2 size={14} />
+                    )}
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
 
