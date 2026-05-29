@@ -1458,6 +1458,53 @@ const handleCreatePost = async () => {
   }
 };
 
+const handleCreateGlobalPost = async (text) => {
+  if (!text || !text.trim()) return;
+  if (text.length > 500) {
+    showAlert("⚠️ Lỗi bài viết", "Bài viết của bạn vượt quá giới hạn 500 ký tự!");
+    return;
+  }
+  playFx('upgrade');
+  const postData = {
+    author: currentUser,
+    authorLevel: level,
+    content: text.trim(),
+    timestamp: Date.now(),
+    likes: {},
+    comments: {}
+  };
+  if (isConnectedToFirebase) {
+    try {
+      const globalRef = ref(database, `/global_posts`);
+      const newGlobalRef = push(globalRef);
+      await set(newGlobalRef, postData);
+      const postsRef = ref(database, `/user_walls/${currentUser}/posts`);
+      const newPostRef = push(postsRef);
+      await set(newPostRef, postData);
+    } catch (err) {
+      console.error("Error creating post:", err);
+      showAlert("❌ Thất bại", "Không thể gửi bài viết lên server.");
+    }
+  } else {
+    const fakeId = 'local_post_' + Date.now();
+    const localGlobal = localStorage.getItem('thebongda_local_global_posts');
+    const globalData = localGlobal ? JSON.parse(localGlobal) : {};
+    globalData[fakeId] = postData;
+    localStorage.setItem('thebongda_local_global_posts', JSON.stringify(globalData));
+    const list = Object.values(globalData).sort((a, b) => b.timestamp - a.timestamp);
+    setGlobalPosts(list.map((p, i) => ({
+      ...p,
+      id: Object.keys(globalData)[i]
+    })));
+    setUserWallPosts(list.filter(p => p.author === currentUser).map((p, i) => ({
+      ...p,
+      id: Object.keys(globalData).filter(k => globalData[k].author === currentUser)[i]
+    })));
+  }
+};
+
+window.handleCreateGlobalPost = handleCreateGlobalPost;
+
 // ================= TẶNG XU =================
 
 // ================= TẶNG XU =================

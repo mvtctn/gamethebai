@@ -130,23 +130,42 @@ export const ShareModal = ({ data, currentUser, isConnectedToFirebase, showAlert
         </div>
 
         <div className="flex flex-col gap-3.5 w-full mt-1">
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <button 
-              className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs uppercase tracking-widest py-3.5 rounded-xl transition-all cursor-pointer active:scale-98 shadow-md border border-emerald-400/20"
+              className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-[10px] sm:text-xs uppercase tracking-widest py-3.5 rounded-xl transition-all cursor-pointer active:scale-98 shadow-md border border-emerald-400/20"
               onClick={handleNativeShare}
+              title="Chia sẻ qua HĐH"
             >
-              🚀 {navigator.share ? 'Chia Sẻ Nhanh' : 'Sao Chép'}
+              🚀 {navigator.share ? 'NHANH' : 'COPY'}
             </button>
             
             <button 
-              className={`flex-1 flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest py-3.5 rounded-xl border transition-all cursor-pointer active:scale-98 ${
+              className={`flex-1 flex items-center justify-center gap-2 font-black text-[10px] sm:text-xs uppercase tracking-widest py-3.5 rounded-xl border transition-all cursor-pointer active:scale-98 ${
                 copied 
                   ? 'bg-green-900/30 border-green-500/50 text-green-400 shadow-[0_0_15px_rgba(74,222,128,0.2)]'
                   : 'bg-slate-800 hover:bg-slate-700 border-white/10 text-white'
               }`}
               onClick={handleCopy}
+              title="Copy nội dung"
             >
-              {copied ? '✓ Đã Sao Chép!' : '📋 Sao Chép'}
+              {copied ? '✓ ĐÃ COPY' : '📋 COPY'}
+            </button>
+
+            <button 
+              className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-black text-[10px] sm:text-xs uppercase tracking-widest py-3.5 rounded-xl transition-all cursor-pointer active:scale-98 shadow-md border border-cyan-400/20"
+              onClick={() => {
+                if (window.handleCreateGlobalPost) {
+                  playFx('winPoint');
+                  window.handleCreateGlobalPost(postText);
+                  showAlert('Thành Công 🎉', 'Đã đăng chiến tích lên Mạng xã hội HLV toàn cầu!');
+                  onClose();
+                } else {
+                  showAlert('Lỗi', 'Tính năng chưa sẵn sàng!');
+                }
+              }}
+              title="Đăng bài lên Tường MXH Game"
+            >
+              🐦 ĐĂNG TƯỜNG
             </button>
           </div>
 
