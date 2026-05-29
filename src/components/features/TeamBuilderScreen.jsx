@@ -1,4 +1,6 @@
 import React from 'react';
+import { isConnectedToFirebase } from '../../firebase';
+
 import playersData from '../../players.json';
 import { 
   PITCH_POSITIONS, TIERS, AVATAR_PRESETS, BANNER_PRESETS, LEVEL_MILESTONES, 
