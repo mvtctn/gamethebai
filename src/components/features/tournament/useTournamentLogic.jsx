@@ -5,7 +5,6 @@ import { playFx } from '../../../utils';
 
 export function useTournamentLogic(currentUser, level, showAlert) {
   const [activeTournamentId, setActiveTournamentId] = useState(null);
-  const [activeTournamentMatchId, setActiveTournamentMatchId] = useState(null);
   const [tournamentData, setTournamentData] = useState(null);
   const [tournamentChat, setTournamentChat] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -257,8 +256,6 @@ export function useTournamentLogic(currentUser, level, showAlert) {
   return {
     activeTournamentId,
     setActiveTournamentId,
-    activeTournamentMatchId,
-    setActiveTournamentMatchId,
     tournamentData,
     tournamentChat,
     createTournament,

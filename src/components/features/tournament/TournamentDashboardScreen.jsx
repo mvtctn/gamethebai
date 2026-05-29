@@ -15,6 +15,8 @@ export function TournamentDashboardScreen() {
     sendTournamentChat,
     setActivePvpTarget,
     activeTournamentId,
+    setActiveTournamentMatchId,
+    sendChallengeInvite,
     showAlert,
     handleCreatePost
   } = useGameContext();
@@ -260,13 +262,12 @@ export function TournamentDashboardScreen() {
                               className="btn !bg-emerald-600 hover:!bg-emerald-500 !py-2 !px-4 text-xs font-black uppercase tracking-wider rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.3)] animate-pulse flex items-center gap-1.5"
                               onClick={() => {
                                 playFx('click');
-                                // In a real flow, this would send an invite to the opponent or wait for them.
-                                // Since we already have sendChallengeInvite, we can just use that mechanism.
-                                // For simplicity, we just copy their name and go to Lobby to invite.
-                                showAlert("Thách đấu", `Hãy Chat hẹn giờ và ấn vào tên ${m.p1 === currentUser ? m.p2 : m.p1} ở Kênh Chat Nhóm để gửi lời mời thách đấu!`);
+                                const opponent = m.p1 === currentUser ? m.p2 : m.p1;
+                                setActiveTournamentMatchId(m.id);
+                                sendChallengeInvite(opponent, null, activeTournamentId, m.id);
                               }}
                             >
-                              <Play size={14} /> Tới Lượt
+                              <Play size={14} /> Thách Đấu
                             </button>
                           )}
                           {m.status === 'completed' && <CheckCircle2 className="text-emerald-500 opacity-50" />}
