@@ -19,7 +19,17 @@ export function AdminScreen() {
   // Config state
   const [configForm, setConfigForm] = useState({
     initialCoins: 500,
-    checkInRewardBase: 50
+    checkInRewardBase: 50,
+    matchWinCoins: 120,
+    matchWinXp: 120,
+    matchDrawCoins: 40,
+    matchDrawXp: 50,
+    matchLoseCoins: 25,
+    matchLoseXp: 30,
+    packCostStandard: 100,
+    packCostPremium: 300,
+    packCostUltimate: 600,
+    packCostChampion: 1000
   });
 
   useEffect(() => {
@@ -30,7 +40,17 @@ export function AdminScreen() {
     if (gameConfig) {
       setConfigForm({
         initialCoins: gameConfig.initialCoins || 500,
-        checkInRewardBase: gameConfig.checkInRewardBase || 50
+        checkInRewardBase: gameConfig.checkInRewardBase || 50,
+        matchWinCoins: gameConfig.matchWinCoins || 120,
+        matchWinXp: gameConfig.matchWinXp || 120,
+        matchDrawCoins: gameConfig.matchDrawCoins || 40,
+        matchDrawXp: gameConfig.matchDrawXp || 50,
+        matchLoseCoins: gameConfig.matchLoseCoins || 25,
+        matchLoseXp: gameConfig.matchLoseXp || 30,
+        packCostStandard: gameConfig.packCostStandard || 100,
+        packCostPremium: gameConfig.packCostPremium || 300,
+        packCostUltimate: gameConfig.packCostUltimate || 600,
+        packCostChampion: gameConfig.packCostChampion || 1000
       });
     }
     fetchUsers();
@@ -76,7 +96,17 @@ export function AdminScreen() {
     try {
       await update(ref(database, '/config'), {
         initialCoins: Number(configForm.initialCoins),
-        checkInRewardBase: Number(configForm.checkInRewardBase)
+        checkInRewardBase: Number(configForm.checkInRewardBase),
+        matchWinCoins: Number(configForm.matchWinCoins),
+        matchWinXp: Number(configForm.matchWinXp),
+        matchDrawCoins: Number(configForm.matchDrawCoins),
+        matchDrawXp: Number(configForm.matchDrawXp),
+        matchLoseCoins: Number(configForm.matchLoseCoins),
+        matchLoseXp: Number(configForm.matchLoseXp),
+        packCostStandard: Number(configForm.packCostStandard),
+        packCostPremium: Number(configForm.packCostPremium),
+        packCostUltimate: Number(configForm.packCostUltimate),
+        packCostChampion: Number(configForm.packCostChampion)
       });
       showAlert('Thành Công', 'Đã lưu cấu hình Game mới!');
     } catch (err) {
@@ -210,39 +240,103 @@ export function AdminScreen() {
         )}
 
         {activeTab === 'config' && (
-          <div className="w-full max-w-2xl mx-auto flex flex-col gap-6 py-6">
-            <div className="bg-black/30 p-6 rounded-2xl border border-white/5">
-              <h3 className="text-lg font-black text-white uppercase tracking-wider mb-4 border-b border-white/10 pb-2">Tham Số Mặc Định</h3>
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Xu Khởi Tạo (Cho User Mới)</label>
-                  <input 
-                    type="number" 
-                    className="auth-input !bg-slate-900 !border-slate-700 !text-white !p-3 rounded-xl focus:!border-red-500"
-                    value={configForm.initialCoins}
-                    onChange={e => setConfigForm({...configForm, initialCoins: e.target.value})}
-                  />
-                  <p className="text-[10px] text-gray-500">Số lượng Xu mặc định tặng cho người chơi khi họ mới tạo tài khoản.</p>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Thưởng Check-in (Xu Cơ Bản)</label>
-                  <input 
-                    type="number" 
-                    className="auth-input !bg-slate-900 !border-slate-700 !text-white !p-3 rounded-xl focus:!border-red-500"
-                    value={configForm.checkInRewardBase}
-                    onChange={e => setConfigForm({...configForm, checkInRewardBase: e.target.value})}
-                  />
-                  <p className="text-[10px] text-gray-500">Mức Xu cơ bản cho phần thưởng điểm danh hàng ngày.</p>
+          <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 py-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {/* General Config */}
+              <div className="bg-black/30 p-6 rounded-2xl border border-white/5">
+                <h3 className="text-sm font-black text-white uppercase tracking-wider mb-4 border-b border-white/10 pb-2">Hệ Thống Cơ Bản</h3>
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Xu Khởi Tạo</label>
+                    <input type="number" className="auth-input !bg-slate-900 !border-slate-700 !text-white !p-2 rounded-xl" value={configForm.initialCoins} onChange={e => setConfigForm({...configForm, initialCoins: e.target.value})} />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Thưởng Điểm Danh</label>
+                    <input type="number" className="auth-input !bg-slate-900 !border-slate-700 !text-white !p-2 rounded-xl" value={configForm.checkInRewardBase} onChange={e => setConfigForm({...configForm, checkInRewardBase: e.target.value})} />
+                  </div>
                 </div>
               </div>
-              <div className="mt-8">
-                <button 
-                  className="btn !bg-red-600 hover:!bg-red-500 w-full !py-3 font-black text-sm uppercase tracking-widest rounded-xl shadow-lg shadow-red-900/40"
-                  onClick={handleSaveConfig}
-                >
-                  <Save size={18} className="inline mr-2 -mt-1" /> Cập Nhật Cấu Hình Game
-                </button>
+
+              {/* Pack Prices */}
+              <div className="bg-black/30 p-6 rounded-2xl border border-fuchsia-500/20">
+                <h3 className="text-sm font-black text-fuchsia-400 uppercase tracking-wider mb-4 border-b border-fuchsia-500/20 pb-2">Giá Mua Thẻ (Xu)</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Tiêu Chuẩn</label>
+                    <input type="number" className="auth-input !bg-slate-900 !border-slate-700 !text-white !p-2 rounded-xl" value={configForm.packCostStandard} onChange={e => setConfigForm({...configForm, packCostStandard: e.target.value})} />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Cao Cấp</label>
+                    <input type="number" className="auth-input !bg-slate-900 !border-slate-700 !text-white !p-2 rounded-xl" value={configForm.packCostPremium} onChange={e => setConfigForm({...configForm, packCostPremium: e.target.value})} />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Tuyển Chọn</label>
+                    <input type="number" className="auth-input !bg-slate-900 !border-slate-700 !text-white !p-2 rounded-xl" value={configForm.packCostUltimate} onChange={e => setConfigForm({...configForm, packCostUltimate: e.target.value})} />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Vô Địch</label>
+                    <input type="number" className="auth-input !bg-slate-900 !border-slate-700 !text-white !p-2 rounded-xl" value={configForm.packCostChampion} onChange={e => setConfigForm({...configForm, packCostChampion: e.target.value})} />
+                  </div>
+                </div>
               </div>
+
+              {/* Match Rewards */}
+              <div className="bg-black/30 p-6 rounded-2xl border border-blue-500/20 md:col-span-2">
+                <h3 className="text-sm font-black text-blue-400 uppercase tracking-wider mb-4 border-b border-blue-500/20 pb-2">Thưởng Đá Trận PvP (Xu / XP)</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  
+                  {/* Win */}
+                  <div className="flex flex-col gap-3 bg-green-950/20 p-4 rounded-xl border border-green-500/20">
+                    <div className="font-bold text-green-400 text-sm uppercase text-center mb-2">Thắng Trận</div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold w-6 text-yellow-400">Xu:</span>
+                      <input type="number" className="w-full bg-slate-900 border border-slate-700 text-white p-2 rounded-lg text-sm" value={configForm.matchWinCoins} onChange={e => setConfigForm({...configForm, matchWinCoins: e.target.value})} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold w-6 text-indigo-400">XP:</span>
+                      <input type="number" className="w-full bg-slate-900 border border-slate-700 text-white p-2 rounded-lg text-sm" value={configForm.matchWinXp} onChange={e => setConfigForm({...configForm, matchWinXp: e.target.value})} />
+                    </div>
+                  </div>
+
+                  {/* Draw */}
+                  <div className="flex flex-col gap-3 bg-yellow-950/20 p-4 rounded-xl border border-yellow-500/20">
+                    <div className="font-bold text-yellow-400 text-sm uppercase text-center mb-2">Hòa Trận</div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold w-6 text-yellow-400">Xu:</span>
+                      <input type="number" className="w-full bg-slate-900 border border-slate-700 text-white p-2 rounded-lg text-sm" value={configForm.matchDrawCoins} onChange={e => setConfigForm({...configForm, matchDrawCoins: e.target.value})} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold w-6 text-indigo-400">XP:</span>
+                      <input type="number" className="w-full bg-slate-900 border border-slate-700 text-white p-2 rounded-lg text-sm" value={configForm.matchDrawXp} onChange={e => setConfigForm({...configForm, matchDrawXp: e.target.value})} />
+                    </div>
+                  </div>
+
+                  {/* Lose */}
+                  <div className="flex flex-col gap-3 bg-red-950/20 p-4 rounded-xl border border-red-500/20">
+                    <div className="font-bold text-red-400 text-sm uppercase text-center mb-2">Thua Trận</div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold w-6 text-yellow-400">Xu:</span>
+                      <input type="number" className="w-full bg-slate-900 border border-slate-700 text-white p-2 rounded-lg text-sm" value={configForm.matchLoseCoins} onChange={e => setConfigForm({...configForm, matchLoseCoins: e.target.value})} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold w-6 text-indigo-400">XP:</span>
+                      <input type="number" className="w-full bg-slate-900 border border-slate-700 text-white p-2 rounded-lg text-sm" value={configForm.matchLoseXp} onChange={e => setConfigForm({...configForm, matchLoseXp: e.target.value})} />
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+
+            <div className="mt-4">
+              <button 
+                className="btn !bg-red-600 hover:!bg-red-500 w-full !py-3 font-black text-sm uppercase tracking-widest rounded-xl shadow-lg shadow-red-900/40"
+                onClick={handleSaveConfig}
+              >
+                <Save size={18} className="inline mr-2 -mt-1" /> Cập Nhật Cấu Hình Game
+              </button>
             </div>
           </div>
         )}

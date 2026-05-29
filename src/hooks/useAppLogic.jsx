@@ -2758,7 +2758,7 @@ const PACK_CONFIGS = {
   standard: {
     name: 'Gói Tiêu Chuẩn',
     emoji: '📦',
-    cost: 100,
+    cost: gameConfig?.packCostStandard !== undefined ? gameConfig.packCostStandard : 100,
     isFree: false,
     cards: 8,
     common: 0.60,
@@ -2771,7 +2771,7 @@ const PACK_CONFIGS = {
   premium: {
     name: 'Gói Cao Cấp',
     emoji: '💫',
-    cost: 300,
+    cost: gameConfig?.packCostPremium !== undefined ? gameConfig.packCostPremium : 300,
     isFree: false,
     cards: 12,
     common: 0.45,
@@ -2784,7 +2784,7 @@ const PACK_CONFIGS = {
   ultimate: {
     name: 'Gói Tuyển Chọn',
     emoji: '👑',
-    cost: 600,
+    cost: gameConfig?.packCostUltimate !== undefined ? gameConfig.packCostUltimate : 600,
     isFree: false,
     cards: 16,
     common: 0.30,
@@ -2797,7 +2797,7 @@ const PACK_CONFIGS = {
   champion: {
     name: 'Gói Siêu Vô Địch',
     emoji: '🏆',
-    cost: 1000,
+    cost: gameConfig?.packCostChampion !== undefined ? gameConfig.packCostChampion : 1000,
     isFree: false,
     cards: 5,
     common: 0.00,
@@ -3565,32 +3565,38 @@ const logLocalPvpMatch = (result, opponentName, myScore, opponentScore) => {
 
 const handlePvpEnd = (result, opponentName = null, myScore = null, opponentScore = null) => {
   if (result === 'win') {
-    setCoins(c => c + 120);
-    gainXp(120);
+    const winCoins = gameConfig?.matchWinCoins !== undefined ? Number(gameConfig.matchWinCoins) : 120;
+    const winXp = gameConfig?.matchWinXp !== undefined ? Number(gameConfig.matchWinXp) : 120;
+    setCoins(c => c + winCoins);
+    gainXp(winXp);
     setStats(s => ({
       ...s,
       played: s.played + 1,
       wins: s.wins + 1
     }));
-    showAlert("🏆 Chiến Thắng PvP!", "Xuất sắc! Bạn đánh bại đối thủ thật sự. Nhận: +120 Xu & +120 XP.");
+    showAlert("🏆 Chiến Thắng PvP!", `Xuất sắc! Bạn đánh bại đối thủ thật sự. Nhận: +${winCoins} Xu & +${winXp} XP.`);
   } else if (result === 'draw') {
-    setCoins(c => c + 40);
-    gainXp(50);
+    const drawCoins = gameConfig?.matchDrawCoins !== undefined ? Number(gameConfig.matchDrawCoins) : 40;
+    const drawXp = gameConfig?.matchDrawXp !== undefined ? Number(gameConfig.matchDrawXp) : 50;
+    setCoins(c => c + drawCoins);
+    gainXp(drawXp);
     setStats(s => ({
       ...s,
       played: s.played + 1,
       draws: s.draws + 1
     }));
-    showAlert("🤝 Hòa Trận PvP!", "Cuộc chiến ngang tài ngang sức! Nhận: +40 Xu & +50 XP.");
+    showAlert("🤝 Hòa Trận PvP!", `Cuộc chiến ngang tài ngang sức! Nhận: +${drawCoins} Xu & +${drawXp} XP.`);
   } else if (result === 'lose') {
-    setCoins(c => c + 25);
-    gainXp(30);
+    const loseCoins = gameConfig?.matchLoseCoins !== undefined ? Number(gameConfig.matchLoseCoins) : 25;
+    const loseXp = gameConfig?.matchLoseXp !== undefined ? Number(gameConfig.matchLoseXp) : 30;
+    setCoins(c => c + loseCoins);
+    gainXp(loseXp);
     setStats(s => ({
       ...s,
       played: s.played + 1,
       losses: s.losses + 1
     }));
-    showAlert("😤 Thất Bại PvP — Vẫn Có Thưởng!", "Bạn thua trận này nhưng đã cố gắng! Nhận: +25 Xu & +30 XP. Tập luyện thêm và thử lại!");
+    showAlert("😤 Thất Bại PvP — Vẫn Có Thưởng!", `Bạn thua trận này nhưng đã cố gắng! Nhận: +${loseCoins} Xu & +${loseXp} XP. Tập luyện thêm và thử lại!`);
   }
   if (opponentName && result) {
     const actualMyScore = myScore !== null ? myScore : 0;
