@@ -2210,6 +2210,7 @@ const sendChallengeInvite = (targetUser, targetPeerId) => {
     if (status === 'accepted') {
       unsubscribeStatus();
       set(targetInviteRef, null);
+      setGameAlert(null);
       setIsRandomPvp(false);
       setActivePvpTarget("");
       setGameState('multiplayer');
@@ -2250,6 +2251,7 @@ const sendRandomChallengeInvite = (targetUser, targetPeerId) => {
     if (status === 'accepted') {
       unsubscribeStatus();
       set(targetInviteRef, null);
+      setGameAlert(null);
       setIsRandomPvp(true);
       setActivePvpTarget("");
       setGameState('multiplayer');
